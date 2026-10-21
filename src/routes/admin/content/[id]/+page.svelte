@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import ContentPreview from '$lib/components/admin/content-preview.svelte';
 	import { formatDate } from '$lib/format';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -55,7 +56,7 @@
 {/if}
 
 <form method="POST" class="mt-7">
-	<div class="grid gap-8 lg:grid-cols-[1fr_18rem]">
+	<div class="grid gap-8 lg:grid-cols-[1fr_1.05fr]">
 		<div>
 			<label for="value" class="mb-2 block text-[10px] font-medium text-ink-soft">Draft value</label>
 			{#if isJson}
@@ -111,16 +112,24 @@
 			{/if}
 		</div>
 
-		<aside class="border border-rule bg-paper p-5">
-			<p class="font-mono text-[9px] text-ink-soft">Published value</p>
-			{#if data.block.published_value}
-				<pre class="mt-3 max-h-72 overflow-auto whitespace-pre-wrap break-words font-mono text-[10px] leading-relaxed text-ink-soft">{data.block.published_value}</pre>
-			{:else}
-				<p class="mt-3 text-[11px] text-ink-soft">Not published yet.</p>
-			{/if}
-			<p class="mt-5 border-t border-rule pt-3 text-[9px] leading-relaxed text-ink-soft">
-				Public pages read only the published value. A draft is invisible to visitors.
-			</p>
-		</aside>
+		<div>
+			<ContentPreview
+				blockKey={data.block.key}
+				label={data.block.label}
+				type={data.block.type}
+				value={value}
+			/>
+
+			<details class="mt-4 border border-rule bg-paper">
+				<summary class="cursor-pointer px-4 py-3 font-mono text-[9px] text-ink-soft [&::-webkit-details-marker]:hidden">
+					Published value
+				</summary>
+				{#if data.block.published_value}
+					<pre class="max-h-72 overflow-auto border-t border-rule px-4 py-3 whitespace-pre-wrap break-words font-mono text-[10px] leading-relaxed text-ink-soft">{data.block.published_value}</pre>
+				{:else}
+					<p class="border-t border-rule px-4 py-3 text-[11px] text-ink-soft">Not published yet.</p>
+				{/if}
+			</details>
+		</div>
 	</div>
 </form>
