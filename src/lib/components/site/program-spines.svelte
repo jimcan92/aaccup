@@ -8,7 +8,7 @@
 <div class="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:flex lg:items-start lg:justify-end">
 	{#each programs as program, index (program.slug)}
 		<a
-			href={`/programs/${program.slug}`}
+			href={`/${program.slug}`}
 			class="group relative flex min-h-[220px] min-w-0 flex-col justify-between overflow-hidden border border-white/15 p-5 text-white transition-[transform,border-color] duration-300 hover:-translate-y-1.5 hover:border-white/35 focus-visible:-translate-y-1.5 lg:h-[382px] lg:w-[204px] lg:even:translate-y-8 lg:even:hover:translate-y-6"
 			style:--spine={program.accent}
 			style:--spine-soft={program.accentSoft}
@@ -32,7 +32,9 @@
 			</span>
 
 			<span class="relative z-10 mt-8 flex items-end justify-between gap-3 border-t border-white/15 pt-4">
-				<span class="font-mono text-[10px] text-white/55">{program.areas.length} areas</span>
+				<span class="font-mono text-[10px] text-white/55">
+					{program.areas.length} past · {program.currentVisitAreas.length} now
+				</span>
 				<span class="inline-flex items-center gap-1.5 text-[11px] font-medium text-white/85">
 					Open volume
 					<ArrowUpRight class="size-3.5 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />

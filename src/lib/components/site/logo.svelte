@@ -25,6 +25,6 @@
 	</span>
 	<span class="leading-none">
 		<span class="block font-display text-[14px] font-semibold tracking-[-0.02em]">CTU Moalboal</span>
-		<span class="mt-1 block text-[10px] tracking-[0.02em] text-current/55">AACCUP Level III</span>
+		<span class="mt-1 block text-[10px] tracking-[0.02em] text-current/55">AACCUP 2026</span>
 	</span>
 </a>

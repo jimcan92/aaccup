@@ -1,31 +1,49 @@
-# CTU Moalboal AACCUP Level III dossier
+# CTU Moalboal AACCUP 2026
 
-A fast, static evidence portal for the **BSIE** and **BSFI** Level III accreditation visits at Cebu Technological University — Moalboal Campus.
+A fast, static accreditation dossier for **BSIE** and **BSFI** at Cebu Technological University — Moalboal Campus.
 
-The site is the index. The evidence stays in Google Drive. There is no database, no login, no upload, and no server to maintain.
+Each program is its own volume. The current 2026 visit areas come first, the previous visit’s 10-area recommendations sit behind them, and the institutional record is shared. Evidence stays in Google Drive. Editable site content — carousel images, VMGO, wordings, program/area/document metadata — moves to Supabase with a custom admin.
 
-**Stack:** SvelteKit 2, Svelte 5, shadcn-svelte, Tailwind CSS 4, Vercel.
+**Stack:** SvelteKit 2, Svelte 5, shadcn-svelte, Tailwind CSS 4, Supabase, Vercel.
 
----
-
-## What is in the site
-
-- `/` — cover sheet, the two program volumes, the ten-area index, recently linked evidence, and the institutional record.
-- `/programs/bsie` and `/programs/bsfi` — one volume per program.
-- `/programs/[program]/areas/[area]` — one AACCUP area and its document groups.
-- `/documents` — searchable index of every record, with program / area / type filters and shareable URLs.
-- `/resources` — certification, BOR resolution, COPC, checklist, and program-wide evidence.
-- `/about` — what a Level III visit asks for, how the dossier is organised, Drive access guidance, and the campus timeline.
-
-The content is seeded as follows:
-
-- **BSFI** — ten areas linked to the public 2024 BSFI evidence index, plus program-wide extension, library, and linkages records.
-- **BSIE** — the same ten-area structure, with all Drive links marked **pending**. Replace them with the current visit's files.
-- **Institutional record** — certification and checklist are pending; the BOR resolution and COPC cards point to the existing public reference pages.
-
-A pending row is deliberate. It says "Link pending" and does not pretend to work.
+> **Phase 1 status:** the Supabase schema, RLS, and seed content are in [`supabase/`](supabase/). The admin UI and the public read layer are the next phase. Until they are wired, the public site uses the static TypeScript content as a fallback.
 
 ---
+
+## The structure
+
+```text
+/                                   Campus landing: volumes, VMGO, carousel, records
+/bsie                               BSIE volume
+/bsie/visit/faculty-development     Current visit — 4 areas
+/bsie/visit/instruction
+/bsie/visit/extension
+/bsie/visit/linkages
+/bsie/areas/01-vmgo                 Previous visit — 10 areas
+...
+/bsie/areas/10-administration
+/bsie/documents                     Search scoped to BSIE
+/bsie/records                       Shared institutional record
+/bsie/about                         About the visit
+/bsfi/...                           Same structure
+```
+
+Two different layers, two different words:
+
+- **Current visit** — the four areas under review in 2026. These are the top-level links in each volume.
+- **Previous visit — 10 areas** — the last survey’s recommendations and compliance record. These live under `More` and inside the volume.
+
+Do not mix the two. The previous-area pages explicitly say they are not current evidence.
+
+## Content status
+
+- **BSFI** — previous 10 areas are seeded from the public 2024 BSFI index. Current-visit areas are in preparation.
+- **BSIE** — previous and current areas are in place, but all Drive links are in preparation.
+- **Records** — certification and checklist are in preparation; BOR and COPC point to public reference pages.
+- **Status wording** — the site says **Level III visit**, not “Level III accredited.” The official campus status page still lists BSFI and BSIE as Level II; the 2026 visit is the Level III application.
+- **VMGO** — Vision and Mission only, linked to the official CTU Moalboal page. The old “By the end of 2024” goals are deliberately not published.
+
+A missing row is intentional. It says **In preparation** and does not pretend to work.
 
 ## Run locally
 
@@ -33,24 +51,20 @@ Requirements: Node.js 22+ and pnpm.
 
 ```bash
 pnpm install
+cp .env.example .env
 pnpm dev
 ```
 
-Open the URL printed by Vite (usually `http://localhost:5173`).
+Add the Supabase values to `.env` if you are working on the content layer. The public site falls back to static data when the env vars are absent. See [`supabase/README.md`](supabase/README.md) for the project setup, migration, auth roles, and RLS smoke test.
 
-Type check:
+Check and build:
 
 ```bash
 pnpm check
-```
-
-Production build:
-
-```bash
 pnpm build
 ```
 
-Preview the exact prerendered output without Vite:
+Preview the exact prerendered output:
 
 ```bash
 node scripts/serve-static.mjs .vercel/output/static 4173
@@ -58,109 +72,72 @@ node scripts/serve-static.mjs .vercel/output/static 4173
 
 Then open `http://127.0.0.1:4173`.
 
----
+## Editing content
 
-## The one file you edit
+Content lives in **`src/lib/data/accreditation.ts`**; campus copy, VMGO, carousel slides, and contact details live in **`src/lib/data/site.ts`**.
 
-Almost all content lives in **`src/lib/data/accreditation.ts`**. Campus-wide copy and contact notes live in **`src/lib/data/site.ts`**.
+See [CONTENT.md](CONTENT.md) for the full guide.
 
-See [CONTENT.md](CONTENT.md) for the data shape, examples, and the exact steps to replace a pending link or add a document.
+The short version for a current-visit link:
 
-The short version:
-
-1. Find the `pending(...)` entry for the area.
-2. Replace it with `linked(...)`.
-3. Put the Google Drive file URL in the fourth argument.
+1. Find the area in `currentVisitAreasFrom(...)`.
+2. Replace the `pending(...)` entry with `linked(...)`.
+3. Paste the Drive URL as the fourth argument.
 4. Run `pnpm check` and `pnpm build`.
-5. Commit and push; Vercel redeploys.
+5. Commit and push.
 
----
+## Google Drive permissions
 
-## Drive permissions — the part that breaks most dossiers
+Every file and folder must be shared as **Anyone with the link — Viewer**. Test from a signed-out browser. A link that works for the task force but not for an evaluator is the most common failure in a digital dossier.
 
-Every linked file **and folder** must be shared as:
+## Deploy
 
-> **Anyone with the link — Viewer**
+1. Push the repository to GitHub.
+2. Import it at [vercel.com/new](https://vercel.com/new).
+3. Vercel detects SvelteKit; keep `pnpm build` and the default output.
+4. Add `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and `PUBLIC_SITE_URL` in **Settings → Environment Variables**.
+5. Add the production domain under **Settings → Domains**.
 
-Test each important link from a signed-out browser, not from your own Google account. A link that works for the task force but not for an external evaluator is the most common failure in a digital accreditation dossier.
-
-If a file is inside a restricted folder, sharing the file alone may not be enough for a folder link. Share the folder and let the files inherit, or share each file explicitly.
-
----
-
-## Deploy to Vercel
-
-1. Push this repository to GitHub (or GitLab / Bitbucket).
-2. Go to [vercel.com/new](https://vercel.com/new) and import the repository.
-3. Vercel detects **SvelteKit**. Keep the default build command (`pnpm build`) and the default output settings; `@sveltejs/adapter-vercel` handles the rest.
-4. No environment variables are required.
-5. Add the production domain under **Settings → Domains** once the campus decides on one.
-
-CLI alternative, if the Vercel CLI is already logged in:
-
-```bash
-vercel
-vercel --prod
-```
-
-The site is fully prerendered. There is no database, no API route, and no server state, so the deployment is static and cheap to host.
-
----
+The public pages are cached SSR once the content layer is wired; the admin is dynamic. The service-role key stays server-only.
 
 ## Project shape
 
-```
+```text
 src/
-  app.css                         design tokens, fonts, base styles
   lib/
-    components/
-      site/                       header, footer, volume spines, area table, document rows
-      ui/                         shadcn-svelte primitives
-    data/
-      accreditation.ts            programs, areas, documents, institutional records
-      site.ts                     campus copy, nav, survey metadata
-      types.ts                    content types
-    format.ts                     date, file-format, and kind labels
-    utils.ts                      shadcn class helpers
+    components/site/     header, footer, carousel, spines, area table, document rows
+    components/ui/       shadcn-svelte primitives
+    data/                accreditation.ts, site.ts, types.ts
   routes/
-    +layout.svelte                global shell
-    +layout.ts                    prerender enabled
-    +page.svelte                  home
-    programs/[program]/          program volume
-    programs/[program]/areas/[area]/  area page
-    documents/                    search and filters
-    resources/                    institutional record
-    about/                        visit context
+    +page.svelte         campus landing
+    [program]/           program volume, visit, areas, documents, records, about
+supabase/
+  migrations/            schema, RLS, storage, seed content
+  README.md              setup, auth roles, workflow, smoke tests
 scripts/
-  serve-static.mjs                local preview for the Vercel static output
+  serve-static.mjs       local preview for the Vercel static output
 ```
 
-- `export const prerender = true` is set once in `src/routes/+layout.ts`, so every route is generated at build time.
-- Dynamic program and area routes expose `entries()` so SvelteKit prerenders every combination.
-- Search is client-side over the static document index. The URL keeps `q`, `program`, `area`, and `kind` so a filtered view can be shared.
+The old browser artifacts and screenshots are ignored. `.vercelignore` keeps them out of CLI deployments.
 
----
+## Design
 
-## Design notes
+**Two Volumes, One Campus.** Maroon for BSIE, green for BSFI, deep petrol and salt paper. Bricolage Grotesque for display, Instrument Sans for body, IBM Plex Mono for metadata. The two spines are the program selector; the rest of the chrome is program-scoped.
 
-The visual direction is **Two Volumes, One Record**: a bound dossier with maroon for BSIE and green for BSFI, set against a deep-petrol ground and a cool salt page. Display type is Bricolage Grotesque; body and UI are Instrument Sans; document metadata is IBM Plex Mono.
+The carousel uses official CTU Moalboal campus images by URL, with a text fallback if an image cannot load. It auto-advances slowly, pauses on hover/focus, has previous/pause/next controls, and respects `prefers-reduced-motion`.
 
-The site intentionally avoids the Google Sites look: no stock hero image, no card grid, no carousel. The two program spines, the ten-row ledger, and the folder-tab institutional cards carry the identity.
+The full brief is in [`docs/superpowers/specs/2026-10-21-aaccup-site-design.md`](docs/superpowers/specs/2026-10-21-aaccup-site-design.md).
 
-The full design brief is in [`docs/superpowers/specs/2026-10-21-aaccup-site-design.md`](docs/superpowers/specs/2026-10-21-aaccup-site-design.md).
+## Before publishing
 
----
+- [ ] `pnpm check` and `pnpm build` pass.
+- [ ] The Supabase migration has run and the RLS smoke test passes.
+- [ ] The first admin and focal accounts have the correct `app_metadata` role.
+- [ ] Every linked document opens in a signed-out browser.
+- [ ] The four current-visit areas match the official 2026 assignment.
+- [ ] The previous 10-area pages are clearly the archive, not current evidence.
+- [ ] The Level III visit wording matches the official status.
+- [ ] The carousel images load on the production domain.
+- [ ] The Vercel preview is tested on a phone.
 
-## Verification checklist before publishing
-
-- [ ] `pnpm check` passes.
-- [ ] `pnpm build` passes.
-- [ ] Every `linked` document opens in a signed-out browser.
-- [ ] Every area page has the right recommendations and compliance report.
-- [ ] The survey year and level in `src/lib/data/site.ts` and `src/lib/data/accreditation.ts` match the official AACCUP schedule.
-- [ ] The Vercel preview URL is tested on a phone.
-- [ ] The production domain is connected.
-
----
-
-Prepared for the Campus AACCUP Task Force, CTU Moalboal. Built by the Campus MIS Team.
+Prepared for the Campus AACCUP Task Force, CTU Moalboal.

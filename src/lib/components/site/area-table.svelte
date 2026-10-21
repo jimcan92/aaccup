@@ -32,7 +32,7 @@
 		{@const linked = countLinked(area.documents)}
 		{@const total = area.documents.length}
 		<a
-			href={`/programs/${program.slug}/areas/${area.slug}`}
+			href={`/${program.slug}/areas/${area.slug}`}
 			class="group grid grid-cols-[2.5rem_1fr_auto] items-center gap-3 border-b border-rule py-4 transition-colors hover:bg-[var(--area-soft)] sm:grid-cols-[3rem_1fr_9rem_7rem] sm:gap-4"
 			aria-label={`Area ${area.number}: ${area.title}`}
 		>

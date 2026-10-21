@@ -14,7 +14,7 @@
 		<DocumentFormat format={document.format} />
 		{#if !linked}
 			<span class="border border-dashed border-ink/25 px-1.5 py-0.5 font-mono text-[9px] text-ink-soft">
-				Link pending
+				In preparation
 			</span>
 		{/if}
 	</div>
@@ -25,7 +25,7 @@
 		<p class="mt-2 text-[12px] leading-relaxed text-ink-soft">{document.note}</p>
 	{/if}
 	<span class="mt-6 inline-flex items-center gap-1.5 text-[10px] font-medium text-ink-soft">
-		{linked ? 'Open record' : 'Awaiting link'}
+		{linked ? 'Open record' : 'In preparation'}
 		{#if linked}
 			<ArrowUpRight class="size-3.5" />
 		{/if}

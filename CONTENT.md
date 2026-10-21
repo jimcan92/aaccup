@@ -1,199 +1,195 @@
 # Editing the AACCUP dossier
 
-All content is in **`src/lib/data/accreditation.ts`**. Site-wide copy is in **`src/lib/data/site.ts`**.
+Content is in **`src/lib/data/accreditation.ts`**. Campus copy, VMGO, carousel slides, and contact details are in **`src/lib/data/site.ts`**.
 
-There is no database and no admin screen. The content is TypeScript, checked at build time, and deployed with the site.
+No database, no admin screen. The content is TypeScript, checked at build time, and deployed with the site.
 
 ---
 
-## 1. The document shape
+## 1. The two layers
+
+Do not mix them.
+
+### Current visit
+
+The four areas under review in 2026:
+
+```ts
+currentVisitAreas: currentVisitAreasFrom('bsie')
+```
+
+Each area has `number`, `slug`, `title`, `shortTitle`, `description`, `focus`, and `documents`. It appears in the header and on the program home.
+
+### Previous visit — 10 areas
+
+The last survey’s recommendations:
+
+```ts
+areas: areasFrom(bsieAreaDocs)
+```
+
+These pages are explicitly framed as the archive. They should contain recommendations and compliance reports from the previous survey, not current-visit evidence.
+
+### Shared records
+
+`institutionalDocuments` is used by both `/bsie/records` and `/bsfi/records`. The URL is program-scoped; the data is shared.
+
+---
+
+## 2. Document shape
 
 ```ts
 {
-  id: 'bsie-a1-rec',                       // unique, stable, kebab-case
-  title: 'Area 1 — Recommendations 1–8',   // shown in the row
-  kind: 'recommendation',                  // recommendation | compliance | narrative | supporting | checklist | presentation | institutional | form
-  format: 'pdf',                           // pdf | docx | xlsx | pptx | folder | link
-  status: 'linked',                        // linked | pending
+  id: 'bsie-visit-instruction-narrative',    // unique, stable, kebab-case
+  title: 'Instruction — Narrative report',
+  kind: 'narrative',                          // recommendation | compliance | narrative | supporting | checklist | presentation | institutional | form
+  format: 'pdf',                              // pdf | docx | xlsx | pptx | folder | link
+  status: 'linked',                           // linked | pending
   driveUrl: 'https://drive.google.com/file/d/FILE_ID/view',
-  updated: '2026-09-30',                   // optional, ISO date
-  note: 'Recommendation and compliance evidence are combined in one file.' // optional
+  updated: '2026-09-30',                      // optional
+  note: '...'                                 // optional
 }
 ```
 
-Use the helpers at the top of `accreditation.ts`:
+Helpers:
 
 ```ts
-linked(
-  'bsie-a1-rec',
-  'Area 1 — Recommendations 1–8',
-  'recommendation',
-  driveFile('FILE_ID'),
-  { updated: '2026-09-30', note: 'Combined recommendation and compliance file.' }
-)
+linked('id', 'Title', 'narrative', driveFile('FILE_ID'), {
+  updated: '2026-09-30',
+  note: 'Optional note.'
+});
+
+pending('id', 'Title', 'narrative', 'Why it is not linked yet.');
 ```
 
-```ts
-pending(
-  'bsie-a1-rec',
-  'Area 1 — Recommendations',
-  'recommendation',
-  'Drive link to be supplied by the area chair.'
-)
-```
-
-A pending row is not clickable and shows **Link pending**. A linked row opens Drive in a new tab.
+A pending row is not clickable and says **In preparation**.
 
 ---
 
-## 2. Replace a pending BSIE link
+## 3. Replace a current-visit link
 
-This is the most common task before the visit.
+The current-visit placeholder generator is `currentVisitAreasFrom(prefix)` near the top of `accreditation.ts`.
 
-1. Open `src/lib/data/accreditation.ts`.
-2. Find the `bsieAreaDocs` block near the bottom.
-3. Locate the `pending(...)` entry for the area, for example:
+For BSIE, find:
 
 ```ts
-pending('bsie-a1-rec', 'Area 1 — Recommendations', 'recommendation')
+pending(
+  'bsie-visit-instruction-narrative',
+  'Instruction — Narrative report',
+  'narrative',
+  'The narrative for this current-visit area is being prepared by the task force.'
+)
 ```
 
-4. Replace it with a `linked(...)` call:
+Replace it with:
 
 ```ts
 linked(
-  'bsie-a1-rec',
-  'Area 1 — Recommendations 1–8',
-  'recommendation',
+  'bsie-visit-instruction-narrative',
+  'Instruction — Narrative report',
+  'narrative',
   driveFile('1AbCdEfGhIjKlMnOpQrStUvWxYz'),
   { updated: '2026-10-15' }
 )
 ```
 
-5. Do the same for the compliance row.
-6. Run `pnpm check` and `pnpm build`.
-7. Commit and push.
+Do the same for the supporting evidence and evidence matrix rows.
 
 ### Getting the file ID
 
-From a Google Drive URL:
-
-```
-https://drive.google.com/file/d/1AbCdEfGhIjKlMnOpQrStUvWxYz/view?usp=sharing
-                                  └────────── this is the ID ──────────┘
+```text
+https://drive.google.com/file/d/1AbCdEfGhIjKlMnOpQrStUvWxYz/view
+                                  └──────── this is the ID ────────┘
 ```
 
-Use `driveFile('1AbCdEfGhIjKlMnOpQrStUvWxYz')` or paste the full `/view` URL as the fourth argument. Both work.
-
-For a Google Docs file, copy the full URL and use `format: 'docx'`:
-
-```ts
-linked('bsie-a1-rec', 'Area 1 — Recommendations', 'recommendation',
-  'https://docs.google.com/document/d/FILE_ID/edit', { format: 'docx' })
-```
-
-For a Drive folder, use the folder URL and `format: 'folder'`:
-
-```ts
-linked('bsie-a1-rec', 'Area 1 — Evidence folder', 'supporting',
-  'https://drive.google.com/drive/folders/FOLDER_ID', { format: 'folder' })
-```
+For Google Docs, paste the full URL and set `format: 'docx'`. For a folder, use the folder URL and `format: 'folder'`.
 
 ---
 
-## 3. Add a document to an existing area
+## 4. Replace a previous-visit link
 
-Inside the relevant `bsieAreaDocs` or `bsfiAreaDocs` array, add another object:
+The previous 10 areas use `bsfiAreaDocs` and `bsieAreaDocs`. They are seeded with the 2024 public BSFI index. Replace the `linked(...)` URL when the current archive link changes.
+
+The previous pages must stay labelled as the previous visit. Do not paste current-visit evidence into them.
+
+---
+
+## 5. Add a document
+
+Inside the relevant `documents` array, add another object. Keep the `id` unique across the whole site.
 
 ```ts
 linked(
-  'bsfi-a3-syllabi',
-  'Area 3 — Course syllabi, 2023–2026',
+  'bsie-visit-instruction-syllabi',
+  'Instruction — Course syllabi, 2023–2026',
   'supporting',
   driveFile('FILE_ID'),
-  { format: 'folder', updated: '2026-09-12' }
+  { format: 'folder', updated: '2026-08-20' }
 )
 ```
 
-Keep `id` unique across the whole site. Prefix it with the program and area.
+It appears on the area page, in the scoped document search, and in the relevant counts.
 
 ---
 
-## 4. Add a program-wide document
+## 6. Add or rename a current-visit area
 
-Program-wide evidence lives in `bsieProgramDocs` or `bsfiProgramDocs`:
+Edit `CURRENT_VISIT_DEFINITIONS` near the top of `accreditation.ts`:
 
 ```ts
-linked(
-  'bsfi-library-inventory',
-  'Library — Inventory of book materials',
-  'supporting',
-  driveFile('FILE_ID'),
-  { format: 'xlsx', updated: '2026-08-20' }
-)
+{
+  number: 5,
+  slug: 'research',
+  title: 'Research',
+  shortTitle: 'Research',
+  description: '...',
+  focus: 'What the evaluator will look for.'
+}
 ```
 
-These rows appear on the program page and in the global document index.
+The header, program home, current-visit pages, and search pick it up automatically. Keep `number` and `slug` unique.
+
+If the four current areas change, update `CURRENT_VISIT_DEFINITIONS` only. Do not rename the 10-area archive to match them; the two layers are separate by design.
 
 ---
 
-## 5. Add an institutional record
+## 7. Change the visit wording
 
-Institutional records are in `institutionalDocuments`:
+The site currently says **Level III visit** and **Applying for Level III accreditation**.
 
-```ts
-linked(
-  'inst-certification',
-  'AACCUP certification',
-  'institutional',
-  driveFile('FILE_ID'),
-  { updated: '2026-10-01' }
-)
-```
+- Whole-site copy: `src/lib/data/site.ts` → `level`, `statusNote`, `surveyYear`.
+- Per-program copy: `src/lib/data/accreditation.ts` → each program’s `visitLevel`, `level`, `statusNote`, `surveyYear`, `previousVisitLabel`.
 
-They appear on `/resources` and on the home page's institutional strip.
+Do not change this to “Level III accredited” unless the official AACCUP status supports it. The official campus page still lists BSFI and BSIE as Level II.
 
 ---
 
-## 6. Change the survey year, level, or copy
+## 8. VMGO and campus details
 
-- **Survey year and level for the whole site:** `src/lib/data/site.ts` → `surveyYear`, `level`.
-- **Per-program year and level:** `src/lib/data/accreditation.ts` → each program's `surveyYear`, `surveyWindow`, `level`.
-- **Campus name, address, intro, contact note:** `src/lib/data/site.ts`.
-- **Program summaries and titles:** `src/lib/data/accreditation.ts` → `summary`, `summaryTitle`.
-- **Area descriptions:** `AREA_DEFINITIONS` near the top of `accreditation.ts`. These are shared by both programs.
+- `vmgo.vision`, `vmgo.mission`, `vmgo.source` in `site.ts`.
+- Only Vision and Mission are published. The old “By the end of 2024” goals are intentionally omitted until the campus issues the updated VMGO.
+- `campusUpdates` holds the carousel slides. Each slide needs `src`, `alt`, `caption`, and `meta`.
+- `site.address`, `site.phone`, `site.email`, `site.website`.
 
-If the survey year changes, update both `site.ts` and each program so the cover, footer, and program pages agree.
-
----
-
-## 7. Add a program
-
-1. Add a new slug to `ProgramSlug` in `src/lib/data/types.ts`, for example `'bsit'`.
-2. Create an area document map (or reuse `pendingAreaDocs`).
-3. Add an object to the `programs` array with `slug`, `code`, `name`, `degree`, `level`, `surveyYear`, `surveyWindow`, `accent`, `accentSoft`, `accentInk`, `summary`, `summaryTitle`, `areas`, and `programDocuments`.
-4. The header, home spine shelf, program pages, area pages, and document index pick it up automatically.
-5. Add its pages to any external links or printed materials.
-
-Use an accent colour that is clearly distinct from maroon and green. Keep the accent for UI edges and large text, not body copy.
+If an official campus image URL stops working, replace it in `campusUpdates`. The carousel has a text fallback if the image fails.
 
 ---
 
-## 8. Drive permissions
+## 9. Drive permissions
 
 For every file and folder:
 
 1. Right-click → **Share**.
-2. Under **General access**, choose **Anyone with the link**.
-3. Set the role to **Viewer**.
+2. **General access** → **Anyone with the link**.
+3. Role → **Viewer**.
 4. Copy the link.
-5. Test it in a private/incognito window while signed out.
+5. Test it in an incognito window while signed out.
 
-If the file is in a shared drive or a folder with restricted access, check the folder's sharing too. A file can look public while its folder is not.
+If a file is inside a restricted folder, share the folder too.
 
 ---
 
-## 9. Checks before you commit
+## 10. Checks before you commit
 
 ```bash
 pnpm check
@@ -201,23 +197,21 @@ pnpm build
 node scripts/serve-static.mjs .vercel/output/static 4173
 ```
 
-Then open `http://127.0.0.1:4173` and check:
+Then verify:
 
-- The new row appears under the right area.
+- The new row appears under the right current-visit area.
 - The row opens the correct Drive file.
-- The filter `program=…&area=…` shows the row.
-- The mobile layout still works at 390px wide.
+- The program selector preserves the page when switching BSIE ↔ BSFI.
+- The `More` menu shows the 10 previous areas.
+- The mobile sheet groups Current visit first and Previous visit second.
+- The document search is scoped to the active program.
+- The page still works at 390px wide.
 
 ---
 
-## 10. What not to edit
+## 11. What not to edit
 
-- `src/lib/components/ui/**` — generated shadcn-svelte primitives. Regenerate with the CLI if you need to update them.
-- `src/app.css` — design tokens. Changing the palette is possible, but check contrast and the program accents.
-- `.vercel/output/**` — build output. Never edit by hand.
-
-If you need a new UI primitive, use:
-
-```bash
-pnpm exec shadcn-svelte add <component>
-```
+- `src/lib/components/ui/**` — generated shadcn-svelte primitives.
+- `src/app.css` — design tokens; check contrast if you change colours.
+- `.vercel/output/**` — build output.
+- The two-layer copy: current visit vs previous visit. That distinction is the whole navigation model.

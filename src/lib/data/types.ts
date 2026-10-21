@@ -34,19 +34,27 @@ export interface Area {
 	documents: EvidenceDocument[];
 }
 
+export interface CurrentVisitArea extends Area {
+	focus: string;
+}
+
 export interface Program {
 	slug: ProgramSlug;
 	code: string;
 	name: string;
 	degree: string;
+	visitLevel: string;
 	level: string;
+	statusNote: string;
 	surveyYear: number;
 	surveyWindow: string;
+	previousVisitLabel: string;
 	accent: string;
 	accentSoft: string;
 	accentInk: string;
 	summary: string;
 	summaryTitle: string;
+	currentVisitAreas: CurrentVisitArea[];
 	areas: Area[];
 	programDocuments: EvidenceDocument[];
 }
@@ -58,5 +66,6 @@ export interface IndexedDocument extends EvidenceDocument {
 	areaNumber?: number;
 	areaTitle?: string;
 	areaShortTitle?: string;
-	scope: 'area' | 'program' | 'institutional';
+	scope: 'current' | 'previous' | 'program' | 'records';
+	sectionLabel: string;
 }

@@ -1,8 +1,24 @@
 # CTU Moalboal AACCUP Evidence Site — Design
 
-**Status:** Approved in principle — scope corrected to BSIE + BSFI, both Level III
+**Status:** Revised implementation — program-scoped IA
 **Date:** 2026-10-21
 **Owner:** CTU Moalboal MIS / AACCUP Task Force
+
+## Revision — program-scoped architecture (2026-10-21)
+
+The first build treated the site as one shared dossier with a program filter. That was wrong for the task force’s mental model. The implemented architecture is now:
+
+- `/` is a campus landing page: the two volumes, campus carousel, CTU Vision and Mission, shared records, and campus contact.
+- `/bsie` and `/bsfi` are separate volumes. The program selector is the only shared control.
+- **Current visit** = four areas under review in 2026: Faculty Development, Instruction, Extension, Linkages. These are top-level links in each volume.
+- **Previous visit: 10 areas** = the last survey’s recommendations and compliance record. These live in the `More` menu and on `/bsie/areas/...`.
+- **Records** = certification, BOR, COPC, checklist. Per-program URL (`/bsie/records`), one shared data source.
+- Documents search is scoped to the active program.
+- The site says **Level III visit**, not “Level III accredited.” The official status page still lists BSFI and BSIE as Level II.
+- VMGO publishes Vision and Mission only; the dated 2024 goals are omitted.
+- The home carousel uses official campus images, pauses on hover/focus, has controls, and respects reduced motion.
+
+The earlier sections of this document describe the visual system, content model, and quality bar that still apply. Route names, navigation, and the previous/current split are superseded by this revision.
 
 ## 1. Intent
 

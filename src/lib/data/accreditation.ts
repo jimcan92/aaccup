@@ -1,5 +1,6 @@
 import type {
 	Area,
+	CurrentVisitArea,
 	DocumentFormat,
 	DocumentKind,
 	EvidenceDocument,
@@ -134,6 +135,75 @@ function areasFrom(byArea: Record<number, EvidenceDocument[]>): Area[] {
 	}));
 }
 
+const CURRENT_VISIT_DEFINITIONS: Omit<CurrentVisitArea, 'documents'>[] = [
+	{
+		number: 1,
+		slug: 'faculty-development',
+		title: 'Faculty Development',
+		shortTitle: 'Faculty Development',
+		description:
+			'The program’s plan for faculty qualifications, professional growth, workload, and the impact of development on instruction.',
+		focus:
+			'Look for a documented faculty development plan, participation records, and evidence that development activities changed teaching practice.'
+	},
+	{
+		number: 2,
+		slug: 'instruction',
+		title: 'Instruction',
+		shortTitle: 'Instruction',
+		description:
+			'Curriculum delivery, assessment practices, learning resources, and the program’s system for reviewing and improving instruction.',
+		focus:
+			'Look for syllabi, assessment maps, classroom observations, and evidence that instruction is reviewed against intended learning outcomes.'
+	},
+	{
+		number: 3,
+		slug: 'extension',
+		title: 'Extension',
+		shortTitle: 'Extension',
+		description:
+			'Community engagement projects, beneficiary outcomes, and the participation of faculty and students in extension work.',
+		focus:
+			'Look for extension plans, MOAs, activity reports, beneficiary data, and evidence of measurable community impact.'
+	},
+	{
+		number: 4,
+		slug: 'linkages',
+		title: 'Linkages',
+		shortTitle: 'Linkages',
+		description:
+			'Partnerships, MOAs, industry collaboration, and the evidence that linkages are active rather than ceremonial.',
+		focus:
+			'Look for signed agreements, activity records, counterpart contributions, and evidence that partnerships benefit students and faculty.'
+	}
+];
+
+function currentVisitAreasFrom(prefix: string): CurrentVisitArea[] {
+	return CURRENT_VISIT_DEFINITIONS.map((area) => ({
+		...area,
+		documents: [
+			pending(
+				`${prefix}-visit-${area.slug}-narrative`,
+				`${area.title} — Narrative report`,
+				'narrative',
+				'The narrative for this current-visit area is being prepared by the task force.'
+			),
+			pending(
+				`${prefix}-visit-${area.slug}-supporting`,
+				`${area.title} — Supporting evidence`,
+				'supporting',
+				'Supporting files will be linked here once the area chair supplies the Drive folder.'
+			),
+			pending(
+				`${prefix}-visit-${area.slug}-matrix`,
+				`${area.title} — Evidence matrix`,
+				'compliance',
+				'The evidence matrix will be posted with the current visit files.'
+			)
+		]
+	}));
+}
+
 const bsfiAreaDocs: Record<number, EvidenceDocument[]> = {
 	1: [
 		linked('bsfi-a1-rec', 'Area 1 — Recommendations 1–8', 'recommendation', driveFile('1x5A_gwFaF2tLXErxvsVojA49PEMNwK1C'), {
@@ -216,9 +286,13 @@ export const programs: Program[] = [
 		code: 'BSIE',
 		name: 'Bachelor of Science in Industrial Engineering',
 		degree: 'BS Industrial Engineering',
-		level: 'Level III',
+		visitLevel: 'Level III',
+		level: 'Level III visit',
+		statusNote: 'Applying for Level III accreditation',
 		surveyYear: 2026,
 		surveyWindow: '2026 survey visit',
+		previousVisitLabel: '',
+		currentVisitAreas: currentVisitAreasFrom('bsie'),
 		accent: '#7A1E2B',
 		accentSoft: '#F1E2E4',
 		accentInk: '#3B0D14',
@@ -233,9 +307,13 @@ export const programs: Program[] = [
 		code: 'BSFI',
 		name: 'Bachelor of Science in Fisheries',
 		degree: 'BS Fisheries',
-		level: 'Level III',
+		visitLevel: 'Level III',
+		level: 'Level III visit',
+		statusNote: 'Applying for Level III accreditation',
 		surveyYear: 2026,
 		surveyWindow: '2026 survey visit',
+		previousVisitLabel: '2024 survey',
+		currentVisitAreas: currentVisitAreasFrom('bsfi'),
 		accent: '#1D5B3A',
 		accentSoft: '#E2EDE4',
 		accentInk: '#0B2C1B',
@@ -294,43 +372,60 @@ export function countLinked(documents: EvidenceDocument[]): number {
 	return documents.filter((document) => document.status === 'linked').length;
 }
 
-export function documentIndex(): IndexedDocument[] {
+export function documentIndex(program: Program): IndexedDocument[] {
 	const rows: IndexedDocument[] = [];
 
-	for (const program of programs) {
-		for (const area of program.areas) {
-			for (const document of area.documents) {
-				rows.push({
-					...document,
-					programSlug: program.slug,
-					programCode: program.code,
-					programName: program.name,
-					areaNumber: area.number,
-					areaTitle: area.title,
-					areaShortTitle: area.shortTitle,
-					scope: 'area'
-				});
-			}
-		}
-
-		for (const document of program.programDocuments) {
+	for (const area of program.currentVisitAreas) {
+		for (const document of area.documents) {
 			rows.push({
 				...document,
 				programSlug: program.slug,
 				programCode: program.code,
 				programName: program.name,
-				scope: 'program'
+				areaNumber: area.number,
+				areaTitle: area.title,
+				areaShortTitle: area.shortTitle,
+				scope: 'current',
+				sectionLabel: `Current visit · ${area.title}`
 			});
 		}
+	}
+
+	for (const area of program.areas) {
+		for (const document of area.documents) {
+			rows.push({
+				...document,
+				programSlug: program.slug,
+				programCode: program.code,
+				programName: program.name,
+				areaNumber: area.number,
+				areaTitle: area.title,
+				areaShortTitle: area.shortTitle,
+				scope: 'previous',
+				sectionLabel: `Previous visit · Area ${area.number}`
+			});
+		}
+	}
+
+	for (const document of program.programDocuments) {
+		rows.push({
+			...document,
+			programSlug: program.slug,
+			programCode: program.code,
+			programName: program.name,
+			scope: 'program',
+			sectionLabel: 'Previous visit · Program-wide'
+		});
 	}
 
 	for (const document of institutionalDocuments) {
 		rows.push({
 			...document,
-			programSlug: 'bsie',
-			programCode: 'CTU',
-			programName: 'Institutional record',
-			scope: 'institutional'
+			programSlug: program.slug,
+			programCode: program.code,
+			programName: program.name,
+			scope: 'records',
+			sectionLabel: 'Shared record'
 		});
 	}
 

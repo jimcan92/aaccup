@@ -30,10 +30,10 @@
 				Back to the dossier
 			</a>
 			<a
-				href="/documents"
+				href="/bsie/documents"
 				class="inline-flex h-10 items-center justify-center border border-ink/20 px-4 text-[12px] font-medium text-ink"
 			>
-				Search documents
+				Search BSIE documents
 			</a>
 		</div>
 	</div>
