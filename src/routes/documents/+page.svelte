@@ -270,7 +270,7 @@
 				<span class="font-medium text-ink">{results.length}</span>
 				{results.length === 1 ? 'record' : 'records'} · {linkedResults} linked
 			</p>
-			<p class="text-[10px] text-ink-soft">Every linked row opens Google Drive in a new tab.</p>
+			<p class="text-[10px] text-ink-soft">Every linked row opens its source in a new tab.</p>
 		</div>
 
 		<div class="mt-4 border-t border-rule">

@@ -21,6 +21,13 @@
 
 	const linked = $derived(document.status === 'linked' && Boolean(document.driveUrl));
 	const date = $derived(formatDate(document.updated));
+	const actionLabel = $derived(
+		document.format === 'link'
+			? 'Open record'
+			: document.format === 'folder'
+				? 'Open folder'
+				: 'Open in Drive'
+	);
 </script>
 
 {#snippet body()}
@@ -60,7 +67,7 @@
 				class="inline-flex items-center gap-1 text-[10px] font-medium"
 				style:color={linked ? accent : undefined}
 			>
-				{linked ? 'Open in Drive' : 'Awaiting link'}
+				{linked ? actionLabel : 'Awaiting link'}
 				{#if linked}
 					<ArrowUpRight class="size-3.5" />
 				{/if}
@@ -79,7 +86,7 @@
 			className
 		)}
 		style:--row-soft={soft}
-		aria-label={`${document.title} — opens in Google Drive`}
+		aria-label={`${document.title} — opens in a new tab`}
 	>
 		{@render body()}
 	</a>
