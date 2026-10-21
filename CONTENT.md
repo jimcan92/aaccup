@@ -1,8 +1,21 @@
 # Editing the AACCUP dossier
 
-Content is in **`src/lib/data/accreditation.ts`**. Campus copy, VMGO, carousel slides, and contact details are in **`src/lib/data/site.ts`**.
+## Phase 1: editable site content
 
-No database, no admin screen. The content is TypeScript, checked at build time, and deployed with the site.
+These are now stored in Supabase `content_blocks` and editable at `/admin/content`:
+
+- VMGO — `vmgo.vision`, `vmgo.mission`, `vmgo.source`
+- Home hero — `home.hero.title`, `home.hero.intro`
+- Site copy — title, description, intro, status note, contact note, address, phone, email
+- Carousel — `home.carousel` as JSON
+
+Each block has `draft_value` and `published_value`. **Publish** copies the draft to the published value. The public home reads only published values and caches for 60 seconds.
+
+The TypeScript files below remain the fallback for programs, areas, documents, and the default content when Supabase is unavailable.
+
+---
+
+Content is in **`src/lib/data/accreditation.ts`**. Campus defaults are in **`src/lib/data/site.ts`**.
 
 ---
 

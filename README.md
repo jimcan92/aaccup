@@ -72,9 +72,27 @@ node scripts/serve-static.mjs .vercel/output/static 4173
 
 Then open `http://127.0.0.1:4173`.
 
-## Editing content
+## Admin editing
 
-Content lives in **`src/lib/data/accreditation.ts`**; campus copy, VMGO, carousel slides, and contact details live in **`src/lib/data/site.ts`**.
+The admin lives at `/admin/login`. After sign-in:
+
+- `/admin` — dashboard
+- `/admin/content` — list of editable blocks
+- `/admin/content/[id]` — edit VMGO, hero copy, site wordings, or the carousel JSON
+
+Each block has a **draft** and a **published** value:
+
+- **Save draft** updates only the draft.
+- **Submit for review** moves it to `in_review`.
+- **Publish** copies the draft to the published value and writes a revision.
+
+The public home reads `published_value` from `content_blocks` and caches the response for 60 seconds. A publish appears within about a minute.
+
+The carousel is editable as JSON (`home.carousel`): an array of `{src, alt, caption, meta}`. Image upload to Supabase Storage is the next UI pass; for now, paste a public image URL.
+
+## Editing content in code
+
+Programs, areas, and documents still fall back to **`src/lib/data/accreditation.ts`**; campus defaults are in **`src/lib/data/site.ts`**. The database is the source of truth for the content blocks above.
 
 See [CONTENT.md](CONTENT.md) for the full guide.
 

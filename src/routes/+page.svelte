@@ -7,7 +7,11 @@
 	import ProgramSpines from '$lib/components/site/program-spines.svelte';
 	import SectionHeading from '$lib/components/site/section-heading.svelte';
 	import { institutionalDocuments, programs } from '$lib/data/accreditation';
-	import { site, vmgo } from '$lib/data/site';
+	import { site } from '$lib/data/site';
+	import type { PageProps } from './$types';
+
+	let { data }: PageProps = $props();
+	const content = $derived(data.content);
 
 	const steps = [
 		{
@@ -27,12 +31,12 @@
 		}
 	];
 
-	const jsonLd = {
+	const jsonLd = $derived({
 		'@context': 'https://schema.org',
 		'@type': 'EducationalOrganization',
 		name: site.campus,
 		alternateName: 'CTU Moalboal',
-		description: site.description,
+		description: content.description,
 		address: {
 			'@type': 'PostalAddress',
 			addressLocality: 'Moalboal',
@@ -40,14 +44,14 @@
 			postalCode: '6032',
 			addressCountry: 'PH'
 		}
-	};
+	});
 </script>
 
 <svelte:head>
-	<title>{site.title}</title>
-	<meta name="description" content={site.description} />
-	<meta property="og:title" content={site.title} />
-	<meta property="og:description" content={site.description} />
+	<title>{content.title}</title>
+	<meta name="description" content={content.description} />
+	<meta property="og:title" content={content.title} />
+	<meta property="og:description" content={content.description} />
 	<meta property="og:type" content="website" />
 	{@html `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>`}
 </svelte:head>
@@ -69,11 +73,11 @@
 			<h1
 				class="mt-6 text-balance font-display text-[clamp(3rem,5.6vw,5.1rem)] font-semibold leading-[0.92] tracking-[-0.06em]"
 			>
-				Two volumes.<br />One campus.
+				{content.heroTitle}
 			</h1>
 
 			<p class="mt-6 max-w-xl text-pretty text-[15px] leading-relaxed text-paper/65 sm:text-base">
-				{site.intro}
+				{content.heroIntro}
 			</p>
 
 			<div class="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -110,7 +114,7 @@
 	</div>
 </section>
 
-<CampusCarousel />
+<CampusCarousel slides={content.carousel} />
 
 <section id="visit" class="scroll-mt-20 border-b border-rule bg-salt">
 	<div class="mx-auto max-w-[1280px] px-5 py-16 sm:px-8 lg:py-24">
@@ -149,21 +153,21 @@
 				<h2
 					class="mt-4 max-w-2xl text-balance font-display text-[clamp(2rem,4vw,3.4rem)] font-semibold leading-[0.98] tracking-[-0.045em]"
 				>
-					“{vmgo.vision}”
+					“{content.vision}”
 				</h2>
 				<p class="mt-4 font-mono text-[9px] text-ink-soft">University vision</p>
 			</div>
 
 			<div class="lg:pt-10">
 				<p class="font-mono text-[9px] text-ink-soft">University mission</p>
-				<p class="mt-4 text-[14px] leading-relaxed text-ink-soft">{vmgo.mission}</p>
+				<p class="mt-4 text-[14px] leading-relaxed text-ink-soft">{content.mission}</p>
 				<a
-					href={vmgo.source}
+					href={content.vmgoSource}
 					target="_blank"
 					rel="noopener noreferrer"
 					class="mt-6 inline-flex items-center gap-1.5 border-b border-ink pb-1 text-[10px] font-medium text-ink"
 				>
-					{vmgo.sourceLabel}
+					Official CTU Moalboal VMGO
 					<ArrowUpRight class="size-3.5" />
 				</a>
 			</div>
@@ -233,9 +237,9 @@
 		<div class="border border-rule bg-paper p-6">
 			<p class="font-mono text-[9px] text-ink-soft">Campus contact</p>
 			<p class="mt-4 text-[13px] leading-relaxed text-ink">
-				{site.address}<br />
-				<a href={`tel:${site.phone.replace(/[^+\d]/g, '')}`} class="text-ink-soft hover:text-ink">{site.phone}</a><br />
-				<a href={`mailto:${site.email}`} class="text-ink-soft hover:text-ink">{site.email}</a>
+				{content.address}<br />
+				<a href={`tel:${content.phone.replace(/[^+\d]/g, '')}`} class="text-ink-soft hover:text-ink">{content.phone}</a><br />
+				<a href={`mailto:${content.email}`} class="text-ink-soft hover:text-ink">{content.email}</a>
 			</p>
 			<a
 				href={site.website}
@@ -246,7 +250,7 @@
 				Official campus website
 				<ArrowUpRight class="size-3.5" />
 			</a>
-			<p class="mt-5 text-[10px] leading-relaxed text-ink-soft">{site.contactNote}</p>
+			<p class="mt-5 text-[10px] leading-relaxed text-ink-soft">{content.contactNote}</p>
 		</div>
 	</div>
 </section>

@@ -61,7 +61,13 @@
 							<p class="mt-1 text-[8px] text-ink-soft">{formatDate(block.updated_at?.slice(0, 10))}</p>
 						</div>
 						<div class="flex items-start justify-end">
-							<Type class="size-4 text-ink-soft" />
+							<a
+								href={`/admin/content/${block.id}`}
+								class="inline-flex items-center gap-1.5 border-b border-ink pb-0.5 text-[10px] font-medium text-ink"
+							>
+								Edit
+								<Type class="size-3.5" />
+							</a>
 						</div>
 					</div>
 				{/each}

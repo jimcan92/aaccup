@@ -6,12 +6,21 @@
 	import Play from '@lucide/svelte/icons/play';
 	import { campusUpdates, site } from '$lib/data/site';
 
+	type Slide = {
+		src: string;
+		alt: string;
+		caption: string;
+		meta: string;
+	};
+
+	let { slides = campusUpdates }: { slides?: readonly Slide[] } = $props();
+
 	let index = $state(0);
 	let paused = $state(false);
 	let reduced = $state(false);
 	let timer: ReturnType<typeof setInterval> | null = null;
 
-	const total = campusUpdates.length;
+	const total = $derived(slides.length);
 
 	function stop() {
 		if (timer) {
@@ -95,7 +104,7 @@
 			}}
 		>
 			<div class="relative h-[260px] sm:h-[340px] lg:h-[430px]">
-				{#each campusUpdates as slide, slideIndex (slide.src)}
+				{#each slides as slide, slideIndex (slide.src)}
 					<div
 						class="absolute inset-0 transition-opacity duration-700"
 						class:opacity-100={slideIndex === index}
@@ -128,7 +137,7 @@
 
 			<div class="flex items-center justify-between gap-4 border-t border-paper/10 bg-ink px-4 py-2.5">
 				<div class="flex items-center gap-1.5">
-					{#each campusUpdates as slide, slideIndex (slide.src)}
+					{#each slides as slide, slideIndex (slide.src)}
 						<button
 							type="button"
 							onclick={() => go(slideIndex)}
