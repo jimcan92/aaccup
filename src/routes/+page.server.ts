@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/public';
 import { campusUpdates, site as defaultSite, vmgo as defaultVmgo } from '$lib/data/site';
 import type { PageServerLoad } from './$types';
@@ -43,7 +44,18 @@ function parseSlides(raw: string | undefined): CarouselSlide[] {
 	}
 }
 
-export const load: PageServerLoad = async ({ setHeaders }) => {
+export const load: PageServerLoad = async ({ setHeaders, url }) => {
+	// Supabase falls back to the Site URL when emailRedirectTo is not allowlisted.
+	// If the magic-link code lands on the home page, forward it to the callback.
+	const code = url.searchParams.get('code');
+
+	if (code && url.pathname === '/') {
+		redirect(
+			303,
+			`/auth/callback?code=${encodeURIComponent(code)}&next=${encodeURIComponent(url.searchParams.get('next') || '/admin')}`
+		);
+	}
+
 	setHeaders({
 		'cache-control': 'public, s-maxage=60, stale-while-revalidate=300'
 	});
