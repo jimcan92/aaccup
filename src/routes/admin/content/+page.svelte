@@ -21,7 +21,7 @@
 		The editable copy.
 	</h1>
 	<p class="mt-3 max-w-2xl text-[12px] leading-relaxed text-ink-soft">
-		VMGO, hero text, carousel JSON, and site wordings. The list is read-only in this build; the inline editor and publish controls are the next step.
+		VMGO, hero text, carousel slides, and site wordings. Click <strong class="font-medium text-ink">Edit</strong> to open the split-view editor. The carousel editor supports image upload, captions, alt text, and slide order.
 	</p>
 </div>
 
@@ -46,7 +46,7 @@
 							<div class="flex flex-wrap items-center gap-2">
 								<p class="text-[12px] font-medium">{block.label}</p>
 								<span class="border border-rule px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-[0.06em]">
-									{block.type}
+									{block.key === 'home.carousel' ? 'carousel' : block.type}
 								</span>
 							</div>
 							<p class="mt-1 font-mono text-[8px] text-ink-soft">{block.key}</p>
@@ -65,7 +65,7 @@
 								href={`/admin/content/${block.id}`}
 								class="inline-flex items-center gap-1.5 border-b border-ink pb-0.5 text-[10px] font-medium text-ink"
 							>
-								Edit
+								{block.key === 'home.carousel' ? 'Edit slides' : 'Edit'}
 								<Type class="size-3.5" />
 							</a>
 						</div>
