@@ -1,6 +1,8 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
+export const prerender = false;
+
 export const load: PageServerLoad = async ({ url }) => {
 	return {
 		next: url.searchParams.get('next') || '/admin',
