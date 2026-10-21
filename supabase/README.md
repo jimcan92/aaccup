@@ -15,6 +15,17 @@ This is the content layer for the AACCUP 2026 site. The public UI is already bui
 
 Run them in order. `0002` adds program status, editor attribution, the workflow guards, the submit/review/publish RPCs, and the admin role-sync function.
 
+### CLI option
+
+If the Supabase CLI is installed and logged in:
+
+```bash
+supabase link --project-ref brtsnluqccoqhlgheodg
+supabase db push
+```
+
+`link` prompts for the database password, then `db push` applies both files in order. The password is the **database password**, not the anon or service-role key.
+
 It creates:
 
 | Table | Purpose |
