@@ -41,8 +41,14 @@ const server = createServer(async (request, response) => {
 		response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
 		response.end(body);
 	} catch {
-		response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
-		response.end('Not found');
+		try {
+			const body = await readFile(join(root, '404.html'));
+			response.writeHead(404, { 'content-type': 'text/html; charset=utf-8' });
+			response.end(body);
+		} catch {
+			response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+			response.end('Not found');
+		}
 	}
 });
 

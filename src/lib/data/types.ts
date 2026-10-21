@@ -46,6 +46,7 @@ export interface Program {
 	accentSoft: string;
 	accentInk: string;
 	summary: string;
+	summaryTitle: string;
 	areas: Area[];
 	programDocuments: EvidenceDocument[];
 }

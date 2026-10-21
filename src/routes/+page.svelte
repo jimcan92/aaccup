@@ -76,7 +76,7 @@
 			</div>
 
 			<h1
-				class="mt-6 text-balance font-display text-[clamp(3rem,6.2vw,5.8rem)] font-semibold leading-[0.9] tracking-[-0.06em]"
+				class="mt-6 text-balance font-display text-[clamp(3rem,5.6vw,5.1rem)] font-semibold leading-[0.92] tracking-[-0.06em]"
 			>
 				Two programs.<br />One clear record.
 			</h1>

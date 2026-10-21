@@ -224,6 +224,7 @@ export const programs: Program[] = [
 		accentInk: '#3B0D14',
 		summary:
 			'Industrial engineering at Moalboal prepares students to design, improve, and manage integrated systems of people, materials, information, and energy. The Level III dossier documents the program’s systems, its faculty, and its evidence of continuous improvement.',
+		summaryTitle: 'The industrial engineering record.',
 		areas: areasFrom(bsieAreaDocs),
 		programDocuments: bsieProgramDocs
 	},
@@ -240,6 +241,7 @@ export const programs: Program[] = [
 		accentInk: '#0B2C1B',
 		summary:
 			'Fisheries is the campus’s founding discipline. The Level III dossier traces the program from its coastal field work to its research, extension, and instruction record, with the evidence organised area by area.',
+		summaryTitle: 'The fisheries record.',
 		areas: areasFrom(bsfiAreaDocs),
 		programDocuments: bsfiProgramDocs
 	}

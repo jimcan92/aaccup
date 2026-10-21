@@ -99,7 +99,7 @@
 	<div class="mx-auto grid max-w-[1280px] gap-10 px-5 py-12 sm:px-8 lg:grid-cols-[1fr_18rem] lg:py-16">
 		<div>
 			{#if pending}
-				<div class="border border-dashed border-ink/25 bg-paper p-4 text-[12px] leading-relaxed text-ink-soft">
+				<div class="mb-6 border border-dashed border-ink/25 bg-paper p-4 text-[12px] leading-relaxed text-ink-soft">
 					The Drive links for this area are being prepared by the task force. The structure is in place; each row will open its source file once the URL is supplied.
 				</div>
 			{/if}

@@ -90,7 +90,7 @@
 		<div>
 			<SectionHeading
 				eyebrow="Program summary"
-				title="The record for this volume."
+				title={program.summaryTitle}
 				description={program.summary}
 			/>
 
