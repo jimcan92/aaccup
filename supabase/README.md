@@ -6,12 +6,14 @@ This is the content layer for the AACCUP 2026 site. The public UI is already bui
 
 ---
 
-## 1. Run the migration
+## 1. Run the migrations
 
 1. Open the Supabase project.
 2. Go to **SQL Editor → New query**.
-3. Paste the whole of [`migrations/202610210001_init.sql`](migrations/202610210001_init.sql).
-4. Run it once.
+3. Paste the whole of [`migrations/202610210001_init.sql`](migrations/202610210001_init.sql). Run it once.
+4. New query again: paste [`migrations/202610210002_workflow.sql`](migrations/202610210002_workflow.sql). Run it once.
+
+Run them in order. `0002` adds program status, editor attribution, the workflow guards, the submit/review/publish RPCs, and the admin role-sync function.
 
 It creates:
 
@@ -114,7 +116,7 @@ PUBLIC_SITE_URL=https://aaccup.vercel.app
 
 ## 5. Seed the programs and areas
 
-The SQL seeds the editable copy and carousel in `content_blocks`, but the program/area/document rows start empty. Two options:
+`0001` seeds the editable copy and carousel in `content_blocks`; `0002` seeds the BSIE and BSFI program rows. The area and document rows start empty. Two options:
 
 - **Admin UI (next phase):** the focal person creates them in `/admin`.
 - **Seed script:** use the service role key to import the existing TypeScript data. This is the faster bridge; it needs the project keys first.
@@ -192,7 +194,52 @@ draft → in_review → approved → published
 
 `revisions` stores a JSON snapshot of the entity on publish. `publish_log` records what went live and who did it.
 
-## 10. Public delivery
+### Workflow RPCs
+
+Use these from the admin server actions; do not update `status` directly from the client.
+
+```sql
+select public.submit_content_block('<block-uuid>');
+select public.review_content_block('<block-uuid>', true);
+select public.publish_content_block('<block-uuid>');
+
+select public.submit_area('<area-uuid>');
+select public.publish_area('<area-uuid>');
+
+select public.submit_document('<document-uuid>');
+select public.publish_document('<document-uuid>');
+```
+
+`publish_content_block` copies `draft_value` to `published_value`, sets `published_at`, writes a revision, and writes a publish log entry.
+
+The workflow guards stop an area chair from setting `approved` or `published` directly, even through the REST API.
+
+### Admin role sync
+
+`admin_set_role` updates both `profiles` and `auth.users.raw_app_meta_data` in one transaction:
+
+```sql
+select public.admin_set_role(
+	'<user-uuid>',
+	'area_chair',
+	'<program-uuid>',
+	null
+);
+```
+
+The user must sign out and sign in again for the new JWT to carry the role.
+
+## 10. Published content read
+
+The public site should call:
+
+```sql
+select * from public.published_content();
+```
+
+It returns only `published` blocks. Published programs/areas/documents are read through their tables. Do not expose the `draft_value` to the public client.
+
+## 11. Public delivery
 
 Phase 1 public reads will use **SSR + 60-second cache**:
 
@@ -202,7 +249,7 @@ Phase 1 public reads will use **SSR + 60-second cache**:
 
 Until the read layer is wired, the public site uses the static TypeScript content as a fallback. That fallback is intentional so the site still builds without Supabase env vars.
 
-## 11. Backups
+## 12. Backups
 
 The Supabase free tier is not a backup strategy. Before each accreditation cycle:
 
@@ -210,7 +257,7 @@ The Supabase free tier is not a backup strategy. Before each accreditation cycle
 - Keep the migration and seed script in Git.
 - Use `revisions` to recover a published block.
 
-## 12. What is not built yet
+## 13. What is not built yet
 
 This migration is the foundation. The next phase is the admin app:
 
