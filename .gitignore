@@ -9,6 +9,7 @@ build
 .cache
 .browser*
 screenshots/
+.supabase
+.supabase-home
+supabase/.temp
 .DS_Store
-
-.vercel
