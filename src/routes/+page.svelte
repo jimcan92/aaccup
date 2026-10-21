@@ -56,6 +56,12 @@
 	{@html `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>`}
 </svelte:head>
 
+{#if data.preview}
+	<div class="fixed bottom-4 left-4 z-50 border border-paper/20 bg-ink px-3 py-2 font-mono text-[9px] text-paper shadow-lg">
+		Draft preview · not public
+	</div>
+{/if}
+
 <section id="volumes" class="relative scroll-mt-20 overflow-hidden bg-ink text-paper">
 	<div class="pointer-events-none absolute inset-0 text-foam opacity-[0.11]" aria-hidden="true">
 		<HeroMap />

@@ -44,7 +44,7 @@ function parseSlides(raw: string | undefined): CarouselSlide[] {
 	}
 }
 
-export const load: PageServerLoad = async ({ setHeaders, url }) => {
+export const load: PageServerLoad = async ({ setHeaders, url, locals }) => {
 	// Supabase falls back to the Site URL when emailRedirectTo is not allowlisted.
 	// If the magic-link code lands on the home page, forward it to the callback.
 	const code = url.searchParams.get('code');
@@ -56,26 +56,54 @@ export const load: PageServerLoad = async ({ setHeaders, url }) => {
 		);
 	}
 
-	setHeaders({
-		'cache-control': 'public, s-maxage=60, stale-while-revalidate=300'
-	});
+	let preview = false;
+
+	if (url.searchParams.get('preview') === '1' && locals.supabase) {
+		const { user } = await locals.safeGetSession();
+
+		if (user) {
+			const { data: profile } = await locals.supabase
+				.from('profiles')
+				.select('role')
+				.eq('id', user.id)
+				.maybeSingle();
+
+			preview = ['admin', 'focal', 'reviewer'].includes(profile?.role ?? '');
+		}
+	}
+
+	setHeaders(
+		preview
+			? { 'cache-control': 'no-store' }
+			: { 'cache-control': 'public, s-maxage=60, stale-while-revalidate=300' }
+	);
 
 	const blocks: Record<string, string> = {};
 
 	if (env.PUBLIC_SUPABASE_URL && env.PUBLIC_SUPABASE_ANON_KEY) {
 		try {
-			const supabase = createClient(env.PUBLIC_SUPABASE_URL, env.PUBLIC_SUPABASE_ANON_KEY, {
-				auth: { persistSession: false, autoRefreshToken: false }
-			});
+			if (preview && locals.supabase) {
+				const { data } = await locals.supabase
+					.from('content_blocks')
+					.select('key, draft_value, published_value');
 
-			const { data } = await supabase
-				.from('content_blocks')
-				.select('key, published_value')
-				.eq('status', 'published');
+				for (const row of data ?? []) {
+					const value = row.draft_value ?? row.published_value;
+					if (value !== null) {
+						blocks[row.key] = value;
+					}
+				}
+			} else {
+				const supabase = createClient(env.PUBLIC_SUPABASE_URL, env.PUBLIC_SUPABASE_ANON_KEY, {
+					auth: { persistSession: false, autoRefreshToken: false }
+				});
 
-			for (const row of data ?? []) {
-				if (row.published_value !== null) {
-					blocks[row.key] = row.published_value;
+				const { data } = await supabase.rpc('published_content');
+
+				for (const row of data ?? []) {
+					if (row.value !== null) {
+						blocks[row.key] = row.value;
+					}
 				}
 			}
 		} catch {
@@ -86,6 +114,7 @@ export const load: PageServerLoad = async ({ setHeaders, url }) => {
 	const text = (key: string, fallback: string) => blocks[key] ?? fallback;
 
 	return {
+		preview,
 		content: {
 			title: text('site.title', defaultSite.title),
 			description: text('site.description', defaultSite.description),

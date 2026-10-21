@@ -78,7 +78,13 @@ The admin lives at `/admin/login`. After sign-in:
 
 - `/admin` — dashboard
 - `/admin/content` — list of editable blocks
-- `/admin/content/[id]` — edit VMGO, hero copy, site wordings, or the carousel JSON
+- `/admin/content/[id]` — edit VMGO, hero copy, site wordings, or the carousel
+
+The editor is split-view: fields on the left, **live preview** on the right. It also has:
+
+- **Autosave** — draft saves after a short pause; the status shows Saving / Saved.
+- **Preview home** — opens a full-page iframe of `/?preview=1`, which reads the draft values for signed-in staff.
+- **Carousel upload** — images go to the public `public-images` bucket; captions, meta, alt text, and order are editable.
 
 Each block has a **draft** and a **published** value:
 
@@ -86,9 +92,7 @@ Each block has a **draft** and a **published** value:
 - **Submit for review** moves it to `in_review`.
 - **Publish** copies the draft to the published value and writes a revision.
 
-The public home reads `published_value` from `content_blocks` and caches the response for 60 seconds. A publish appears within about a minute.
-
-The carousel is editable as JSON (`home.carousel`): an array of `{src, alt, caption, meta}`. Image upload to Supabase Storage is the next UI pass; for now, paste a public image URL.
+The public home reads `published_value` from `content_blocks` and caches the response for 60 seconds. A publish appears within about a minute. The preview route is `no-store` and only shows drafts to admin/focal/reviewer sessions.
 
 ## Editing content in code
 

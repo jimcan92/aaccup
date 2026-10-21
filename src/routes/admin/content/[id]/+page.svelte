@@ -1,21 +1,61 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
+	import CarouselEditor from '$lib/components/admin/carousel-editor.svelte';
 	import ContentPreview from '$lib/components/admin/content-preview.svelte';
 	import { formatDate } from '$lib/format';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
 
 	let value = $state('');
+	let saveState = $state<'idle' | 'saving' | 'saved' | 'error'>('idle');
+	let previewOpen = $state(false);
+	let previewVersion = $state(0);
+	let saveTimer: ReturnType<typeof setTimeout> | undefined;
 
 	const canEdit = $derived(data.profile?.role === 'admin' || data.profile?.role === 'focal');
 	const isJson = $derived(data.block.type === 'json');
+	const isCarousel = $derived(data.block.key === 'home.carousel');
 
 	$effect(() => {
 		value = form?.value ?? data.block.draft_value ?? data.block.published_value ?? '';
 	});
+
+	onMount(() => () => clearTimeout(saveTimer));
+
+	function scheduleSave() {
+		if (!canEdit) return;
+		saveState = 'idle';
+		clearTimeout(saveTimer);
+		saveTimer = setTimeout(saveDraft, 900);
+	}
+
+	async function saveDraft() {
+		saveState = 'saving';
+
+		try {
+			const response = await fetch(`/admin/content/${data.block.id}/autosave`, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ value })
+			});
+
+			if (!response.ok) {
+				throw new Error('Autosave failed');
+			}
+
+			saveState = 'saved';
+			previewVersion += 1;
+		} catch {
+			saveState = 'error';
+		}
+	}
+
 </script>
 
 <svelte:head>
@@ -40,6 +80,14 @@
 			{data.block.status}
 		</span>
 		<p class="mt-2 text-[9px] text-ink-soft">Updated {formatDate(data.block.updated_at?.slice(0, 10))}</p>
+		<button
+			type="button"
+			onclick={() => (previewOpen = true)}
+			class="mt-3 inline-flex items-center gap-1.5 border-b border-ink pb-0.5 text-[10px] font-medium text-ink"
+		>
+			Preview home
+			<ArrowUpRight class="size-3.5" />
+		</button>
 	</div>
 </div>
 
@@ -55,15 +103,19 @@
 	</div>
 {/if}
 
-<form method="POST" class="mt-7">
+<form method="POST" class="mt-7" onsubmit={() => clearTimeout(saveTimer)}>
 	<div class="grid gap-8 lg:grid-cols-[1fr_1.05fr]">
 		<div>
 			<label for="value" class="mb-2 block text-[10px] font-medium text-ink-soft">Draft value</label>
-			{#if isJson}
+			{#if isCarousel}
+				<CarouselEditor bind:value onchange={scheduleSave} disabled={!canEdit} />
+				<textarea name="value" bind:value class="hidden" aria-hidden="true"></textarea>
+			{:else if isJson}
 				<textarea
 					id="value"
 					name="value"
 					bind:value
+					oninput={scheduleSave}
 					rows="18"
 					disabled={!canEdit}
 					class="w-full resize-y border border-rule bg-paper p-4 font-mono text-[11px] leading-relaxed text-ink outline-none focus:border-ink disabled:opacity-60"
@@ -74,6 +126,7 @@
 					id="value"
 					name="value"
 					bind:value
+					oninput={scheduleSave}
 					rows="10"
 					disabled={!canEdit}
 					class="w-full resize-y border border-rule bg-paper p-4 text-[13px] leading-relaxed text-ink outline-none focus:border-ink disabled:opacity-60"
@@ -83,14 +136,15 @@
 					id="value"
 					name="value"
 					bind:value
+					oninput={scheduleSave}
 					disabled={!canEdit}
 					class="h-11 rounded-none border-rule bg-paper text-[13px]"
 				/>
 			{/if}
 
-			{#if isJson}
+			{#if isJson && !isCarousel}
 				<p class="mt-2 text-[10px] leading-relaxed text-ink-soft">
-					JSON array for the carousel. Each slide needs <code class="font-mono">src</code>, <code class="font-mono">alt</code>, <code class="font-mono">caption</code>, and <code class="font-mono">meta</code>.
+					JSON value. Keep the brackets and quotes balanced.
 				</p>
 			{/if}
 
@@ -106,9 +160,22 @@
 						Publish
 					</Button>
 				</div>
-				<p class="mt-3 text-[9px] leading-relaxed text-ink-soft">
-					Saving updates the draft only. Publish copies the draft to the live value.
-				</p>
+				<div class="mt-3 flex flex-wrap items-center gap-3 text-[9px] leading-relaxed text-ink-soft">
+					<span>
+						Saving updates the draft only. Publish copies the draft to the live value.
+					</span>
+					<span class="font-mono" aria-live="polite">
+						{#if saveState === 'saving'}
+							Saving…
+						{:else if saveState === 'saved'}
+							Draft autosaved
+						{:else if saveState === 'error'}
+							Autosave failed
+						{:else}
+							Autosave on
+						{/if}
+					</span>
+				</div>
 			{/if}
 		</div>
 
@@ -133,3 +200,32 @@
 		</div>
 	</div>
 </form>
+
+<Dialog.Root bind:open={previewOpen}>
+	<Dialog.Content class="max-w-[min(96vw,84rem)] gap-0 p-0 sm:max-w-[min(96vw,84rem)]">
+		<div class="flex items-center justify-between gap-4 border-b border-rule p-4">
+			<div>
+				<Dialog.Title class="font-display text-[18px] font-semibold tracking-[-0.03em]">
+					Home preview
+				</Dialog.Title>
+				<Dialog.Description class="mt-1 text-[10px] text-ink-soft">
+					Draft content · last autosaved value
+				</Dialog.Description>
+			</div>
+			<a
+				href="/?preview=1"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="inline-flex items-center gap-1.5 border-b border-ink pb-0.5 text-[10px] font-medium text-ink"
+			>
+				Open in new tab
+				<ArrowUpRight class="size-3.5" />
+			</a>
+		</div>
+		<iframe
+			src={`/?preview=1&v=${previewVersion}`}
+			title="Full-page home preview"
+			class="h-[75vh] w-full bg-salt"
+		></iframe>
+	</Dialog.Content>
+</Dialog.Root>

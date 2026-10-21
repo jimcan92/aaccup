@@ -12,8 +12,9 @@ This is the content layer for the AACCUP 2026 site. The public UI is already bui
 2. Go to **SQL Editor → New query**.
 3. Paste the whole of [`migrations/202610210001_init.sql`](migrations/202610210001_init.sql). Run it once.
 4. New query again: paste [`migrations/202610210002_workflow.sql`](migrations/202610210002_workflow.sql). Run it once.
+5. New query again: paste [`migrations/202610210003_public_content_security.sql`](migrations/202610210003_public_content_security.sql). Run it once.
 
-Run them in order. `0002` adds program status, editor attribution, the workflow guards, the submit/review/publish RPCs, and the admin role-sync function.
+Run them in order. `0002` adds program status, editor attribution, the workflow guards, the submit/review/publish RPCs, and the admin role-sync function. `0003` revokes direct anon reads on `content_blocks` and makes `published_content()` the only public read path, so drafts are not exposed through the REST API.
 
 ### CLI option
 
@@ -268,16 +269,21 @@ The Supabase free tier is not a backup strategy. Before each accreditation cycle
 - Keep the migration and seed script in Git.
 - Use `revisions` to recover a published block.
 
-## 13. What is not built yet
+## 13. What is built and what is next
 
-This migration is the foundation. The next phase is the admin app:
+Built:
 
 - `/admin/login` — email/password and magic link.
 - `/admin` — dashboard.
-- `/admin/content` — site copy, VMGO, hero.
-- `/admin/carousel` — image upload, reorder, alt text.
-- `/admin/review` — draft → approved → published.
-- `/admin/areas` and `/admin/documents` — area-chair CRUD.
-- `/admin/users` — roles and program assignment.
+- `/admin/content` — site copy, VMGO, hero, carousel.
+- Live block preview, full-page home preview (`/?preview=1`), autosave draft.
+- Carousel image upload to `public-images`.
+- Draft → review → publish for content blocks.
+- Public home reads `published_content()` with 60s cache.
 
-The public site currently uses the static data fallback; do not expect edits to appear until the read layer and admin are wired.
+Next:
+
+- `/admin/areas` and `/admin/documents` — area-chair CRUD.
+- `/admin/users` — role and program assignment.
+- Full draft/published versioning for areas and documents (their current workflow is row-level).
+- Seed the existing programs/areas/documents into the database.
