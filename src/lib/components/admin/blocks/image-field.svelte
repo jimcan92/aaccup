@@ -5,7 +5,8 @@
 	import { field, uploadImage } from './ui';
 
 	// A photo or logo: a thumbnail, a link field, and an Upload button.
-	let { value = $bindable(''), programId, label = 'Photo', contain = false }: { value?: string; programId: string; label?: string; contain?: boolean } = $props();
+	// No fallback on `value`: Svelte refuses bind:value={undefined} on a prop with one, and saved items may lack the field.
+	let { value = $bindable(), programId, label = 'Photo', contain = false }: { value?: string; programId: string; label?: string; contain?: boolean } = $props();
 
 	let uploading = $state(false);
 
