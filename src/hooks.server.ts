@@ -15,7 +15,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		(event.url.pathname.startsWith('/admin') || event.url.searchParams.get('preview') === '1');
 
 	if (needsStaff) {
-		const ssoUser = await getSsoUser(event.request);
+		const ssoUser = await getSsoUser(event.request, event.cookies);
 		event.locals.ssoUser = ssoUser;
 
 		if (ssoUser) {
