@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import FolderOpen from '@lucide/svelte/icons/folder-open';
+	import House from '@lucide/svelte/icons/house';
 	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 	import LogOut from '@lucide/svelte/icons/log-out';
 	import Menu from '@lucide/svelte/icons/menu';
@@ -23,6 +24,7 @@
 		[
 			{ href: '/admin', label: 'Overview', icon: LayoutDashboard },
 			{ href: '/admin/programs', label: 'Programs', icon: FolderOpen },
+			{ href: '/admin/home', label: 'Home page', icon: House },
 			{ href: '/admin/content', label: 'Site content', icon: Type },
 			data.staff?.role === 'admin' ? { href: '/admin/people', label: 'People', icon: Users } : null
 		].filter((item) => item !== null)

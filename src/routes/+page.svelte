@@ -2,6 +2,7 @@
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import BrandMarks from '$lib/components/site/brand-marks.svelte';
 	import HomeQuickActions from '$lib/components/site/home-quick-actions.svelte';
+	import LandingBlocks from '$lib/components/program/landing-blocks.svelte';
 	import Logo from '$lib/components/site/logo.svelte';
 	import ManageLink from '$lib/components/site/manage-link.svelte';
 	import SiteFooter from '$lib/components/site/site-footer.svelte';
@@ -91,6 +92,9 @@
 		</ul>
 	</div>
 </main>
+
+<!-- Home page blocks (history, organization, events…), set under Admin → Home page. -->
+<LandingBlocks blocks={data.blocks} />
 
 <SiteFooter contactNote={content.contactNote} />
 
