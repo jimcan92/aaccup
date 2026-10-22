@@ -7,6 +7,15 @@
 	import History from '@lucide/svelte/icons/history';
 	import Images from '@lucide/svelte/icons/images';
 	import Type from '@lucide/svelte/icons/type';
+	import CircleHelp from '@lucide/svelte/icons/circle-help';
+	import Columns2 from '@lucide/svelte/icons/columns-2';
+	import Handshake from '@lucide/svelte/icons/handshake';
+	import Megaphone from '@lucide/svelte/icons/megaphone';
+	import Newspaper from '@lucide/svelte/icons/newspaper';
+	import Quote from '@lucide/svelte/icons/quote';
+	import Target from '@lucide/svelte/icons/target';
+	import Users from '@lucide/svelte/icons/users';
+	import Video from '@lucide/svelte/icons/video';
 	import LandingBlockEditor from '$lib/components/admin/landing-block-editor.svelte';
 	import PageHeader from '$lib/components/admin/page-header.svelte';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
@@ -22,7 +31,16 @@
 		{ kind: 'gallery', label: 'Photo gallery', icon: Images, hint: 'A grid of photos; the first one is the banner' },
 		{ kind: 'stats', label: 'Highlights', icon: BarChart3, hint: 'Short figures: passing rate, graduates, years' },
 		{ kind: 'text', label: 'Text section', icon: Type, hint: 'A heading and paragraphs: about, objectives' },
-		{ kind: 'timeline', label: 'Timeline', icon: History, hint: 'Dated milestones down a line: the program’s history' }
+		{ kind: 'timeline', label: 'Timeline', icon: History, hint: 'Dated milestones down a line: the program’s history' },
+		{ kind: 'people', label: 'Faculty & staff', icon: Users, hint: 'Photo cards with name, position and degree' },
+		{ kind: 'vmgo', label: 'Vision & mission', icon: Target, hint: 'Vision and mission, with numbered goals and objectives' },
+		{ kind: 'media', label: 'Photo & text', icon: Columns2, hint: 'A photo beside a heading, text and a button' },
+		{ kind: 'partners', label: 'Partners & linkages', icon: Handshake, hint: 'Logos of partner agencies, LGUs and companies' },
+		{ kind: 'testimonials', label: 'Testimonials', icon: Quote, hint: 'Short quotes from alumni and partners' },
+		{ kind: 'faq', label: 'FAQ', icon: CircleHelp, hint: 'Questions that open to show the answer' },
+		{ kind: 'video', label: 'Video', icon: Video, hint: 'A YouTube or Google Drive video' },
+		{ kind: 'cta', label: 'Call to action', icon: Megaphone, hint: 'A coloured band with a line of text and buttons' },
+		{ kind: 'news', label: 'Announcements', icon: Newspaper, hint: 'Dated news with optional links' }
 	] as const;
 </script>
 
@@ -72,7 +90,7 @@
 {#if data.canEdit}
 	<section class="mt-8" aria-labelledby="add-heading">
 		<h2 id="add-heading" class="font-display text-[18px] font-semibold tracking-[-0.02em]">Add a block</h2>
-		<div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+		<div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 			{#each add as option (option.kind)}
 				{@const Icon = option.icon}
 				<form method="POST" action="?/add" use:enhance>

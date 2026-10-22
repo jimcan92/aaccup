@@ -9,12 +9,21 @@
 	import { toast } from 'svelte-sonner';
 	import StatusBadge from '$lib/components/admin/status-badge.svelte';
 	import { imageSrc } from '$lib/image-url';
-	import { blockLabel, type GalleryItem, type StatItem, type TimelineItem } from '$lib/landing';
+	import { blockLabel, type BlockKind, type GalleryItem, type StatItem, type TimelineItem } from '$lib/landing';
+	import CtaEditor from './blocks/cta-editor.svelte';
+	import FaqEditor from './blocks/faq-editor.svelte';
+	import MediaEditor from './blocks/media-editor.svelte';
+	import NewsEditor from './blocks/news-editor.svelte';
+	import PartnersEditor from './blocks/partners-editor.svelte';
+	import PeopleEditor from './blocks/people-editor.svelte';
+	import TestimonialsEditor from './blocks/testimonials-editor.svelte';
+	import VideoEditor from './blocks/video-editor.svelte';
+	import VmgoEditor from './blocks/vmgo-editor.svelte';
 
 	type Block = {
 		id: string;
-		kind: 'gallery' | 'stats' | 'text' | 'timeline';
-		draft: { title?: string; body?: string; items?: (GalleryItem | StatItem | TimelineItem)[] };
+		kind: BlockKind;
+		draft: { title?: string; body?: string; items?: (GalleryItem | StatItem | TimelineItem)[]; [key: string]: unknown };
 		published: unknown;
 		status: string;
 	};
@@ -44,9 +53,22 @@
 	let layout = $state<'grid' | 'carousel'>((block.draft as { layout?: string }).layout === 'carousel' ? 'carousel' : 'grid');
 	let uploading = $state<number | null>(null);
 
+	// The newer kinds each have their own editor working on a copy of the whole draft; lists start empty when missing.
+	const ownEditor = ['people', 'vmgo', 'media', 'partners', 'testimonials', 'faq', 'video', 'cta', 'news'];
+	const lists: Record<string, string[]> = { vmgo: ['goals', 'objectives'], cta: ['buttons'] };
+	// svelte-ignore state_referenced_locally
+	let extra = $state<any>(
+		Object.fromEntries([
+			...(lists[block.kind] ?? (block.kind === 'media' || block.kind === 'video' ? [] : ['items'])).map((key) => [key, []]),
+			...Object.entries(structuredClone(block.draft))
+		])
+	);
+
 	const content = $derived(
 		JSON.stringify(
-			block.kind === 'text'
+			ownEditor.includes(block.kind)
+				? { ...extra, title }
+				: block.kind === 'text'
 				? { title, body }
 				: block.kind === 'stats'
 					? { title, items: stats }
@@ -115,7 +137,7 @@
 		<fieldset disabled={!canEdit} class="grid gap-4">
 			<label class="grid gap-1.5 text-[13px] font-medium">
 				{block.kind === 'text' ? 'Heading' : 'Heading (optional)'}
-				<input bind:value={title} class={field} placeholder={block.kind === 'gallery' ? 'Campus life' : block.kind === 'stats' ? 'Highlights' : block.kind === 'timeline' ? 'Our history' : 'About the program'} />
+				<input bind:value={title} class={field} placeholder={block.kind === 'gallery' ? 'Campus life' : block.kind === 'stats' ? 'Highlights' : block.kind === 'timeline' ? 'Our history' : block.kind === 'text' ? 'About the program' : blockLabel(block.kind)} />
 			</label>
 
 			{#if block.kind === 'gallery'}
@@ -132,7 +154,25 @@
 				</fieldset>
 			{/if}
 
-			{#if block.kind === 'text'}
+			{#if block.kind === 'people'}
+				<PeopleEditor bind:value={extra} {programId} />
+			{:else if block.kind === 'vmgo'}
+				<VmgoEditor bind:value={extra} />
+			{:else if block.kind === 'media'}
+				<MediaEditor bind:value={extra} {programId} />
+			{:else if block.kind === 'partners'}
+				<PartnersEditor bind:value={extra} {programId} />
+			{:else if block.kind === 'testimonials'}
+				<TestimonialsEditor bind:value={extra} {programId} />
+			{:else if block.kind === 'faq'}
+				<FaqEditor bind:value={extra} />
+			{:else if block.kind === 'video'}
+				<VideoEditor bind:value={extra} />
+			{:else if block.kind === 'cta'}
+				<CtaEditor bind:value={extra} />
+			{:else if block.kind === 'news'}
+				<NewsEditor bind:value={extra} />
+			{:else if block.kind === 'text'}
 				<label class="grid gap-1.5 text-[13px] font-medium">
 					Text
 					<textarea bind:value={body} rows="8" class="w-full border border-rule bg-salt p-3 text-[14px] leading-relaxed outline-none focus:border-ink" placeholder="Leave an empty line between paragraphs."></textarea>

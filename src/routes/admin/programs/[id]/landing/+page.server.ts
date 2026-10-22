@@ -1,18 +1,13 @@
 import { error, fail } from '@sveltejs/kit';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { canManage, dbFail, isHttpUrl, requireStaff, text } from '$lib/server/admin';
+import { cleaners } from '$lib/server/landing-content';
 import type { StaffProfile } from '$lib/server/sso';
+import { blockLabels, sampleContent, type BlockKind } from '$lib/landing';
 import type { Actions, PageServerLoad } from './$types';
 
-const KINDS = ['gallery', 'stats', 'text', 'timeline'] as const;
-type Kind = (typeof KINDS)[number];
-
-const EMPTY: Record<Kind, object> = {
-	gallery: { title: '', items: [] },
-	stats: { title: 'Highlights', items: [] },
-	text: { title: '', body: '' },
-	timeline: { title: 'Our history', items: [] }
-};
+const KINDS = Object.keys(blockLabels) as BlockKind[];
+type Kind = BlockKind;
 
 function canEditProgram(staff: StaffProfile, programId: string) {
 	return canManage(staff) || (staff.role === 'area_chair' && staff.program_id === programId);
@@ -33,6 +28,7 @@ function cleanContent(kind: Kind, raw: string): object | string {
 		return 'The block could not be read. Reload the page and try again.';
 	}
 	const title = String(value.title ?? '').trim().slice(0, 200);
+	if (kind in cleaners) return cleaners[kind](value, title);
 
 	if (kind === 'text') {
 		return { title, body: String(value.body ?? '').trim().slice(0, 20000) };
@@ -133,11 +129,12 @@ export const actions: Actions = {
 		const { error: insertError } = await supabase.from('program_blocks').insert({
 			program_id: params.id,
 			kind,
-			draft: carousel ? { title: '', layout: 'carousel', items: [] } : EMPTY[kind],
+			draft: carousel ? { title: '', layout: 'carousel', items: [] } : sampleContent[kind],
 			sort_order: (list.at(-1)?.sort_order ?? -1) + 1,
 			status: 'draft'
 		});
-		return dbFail(insertError) ?? { message: `${carousel ? 'Photo carousel' : 'Block'} added. Fill it in, then save.` };
+		const filled = kind in cleaners ? ' It starts with sample text; replace it, then save.' : ' Fill it in, then save.';
+		return dbFail(insertError) ?? { message: `${carousel ? 'Photo carousel' : blockLabels[kind]} added.${filled}` };
 	},
 
 	save: async ({ request, locals, params }) => {

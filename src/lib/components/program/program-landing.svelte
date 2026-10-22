@@ -8,11 +8,20 @@
 	import DocumentRow from '$lib/components/site/document-row.svelte';
 	import PhotoCarousel from './photo-carousel.svelte';
 	import ProgramTimeline from './program-timeline.svelte';
+	import CtaBlock from './blocks/cta-block.svelte';
+	import FaqBlock from './blocks/faq-block.svelte';
+	import MediaBlock from './blocks/media-block.svelte';
+	import NewsBlock from './blocks/news-block.svelte';
+	import PartnersBlock from './blocks/partners-block.svelte';
+	import PeopleBlock from './blocks/people-block.svelte';
+	import TestimonialsBlock from './blocks/testimonials-block.svelte';
+	import VideoBlock from './blocks/video-block.svelte';
+	import VmgoBlock from './blocks/vmgo-block.svelte';
 	import { dossierPath, sectionsOf } from '$lib/data/accreditation';
 	import { isLinked } from '$lib/drive-url';
 	import type { Program, Visit } from '$lib/data/types';
 	import { imageSrc, paragraphs } from '$lib/image-url';
-	import type { GalleryItem, LandingBlock } from '$lib/landing';
+	import { hasContent, type GalleryItem, type LandingBlock } from '$lib/landing';
 
 	let { program, visit, blocks }: { program: Program; visit: Visit; blocks: LandingBlock[] } = $props();
 
@@ -22,11 +31,7 @@
 	const credentials = $derived(sectionsOf(visit, 'common').flatMap((section) => section.documents).filter(isLinked));
 
 	// Only blocks with something to show; backgrounds alternate paper and salt down the page.
-	const visible = $derived(
-		blocks.filter((block) =>
-			block.kind === 'text' ? Boolean(block.content.title || block.content.body) : Boolean(block.content.items?.length)
-		)
-	);
+	const visible = $derived(blocks.filter(hasContent));
 	const tone = (index: number) => (index % 2 === 0 ? 'paper' : 'salt') as 'paper' | 'salt';
 	const background = { paper: 'bg-paper', salt: 'bg-salt' };
 
@@ -120,6 +125,24 @@
 				</div>
 			</div>
 		</section>
+	{:else if block.kind === 'people'}
+		<PeopleBlock content={block.content} tone={tone(index)} />
+	{:else if block.kind === 'vmgo'}
+		<VmgoBlock content={block.content} tone={tone(index)} />
+	{:else if block.kind === 'media'}
+		<MediaBlock content={block.content} tone={tone(index)} />
+	{:else if block.kind === 'partners'}
+		<PartnersBlock content={block.content} tone={tone(index)} />
+	{:else if block.kind === 'testimonials'}
+		<TestimonialsBlock content={block.content} tone={tone(index)} />
+	{:else if block.kind === 'faq'}
+		<FaqBlock content={block.content} tone={tone(index)} />
+	{:else if block.kind === 'video'}
+		<VideoBlock content={block.content} tone={tone(index)} />
+	{:else if block.kind === 'cta'}
+		<CtaBlock content={block.content} />
+	{:else if block.kind === 'news'}
+		<NewsBlock content={block.content} tone={tone(index)} />
 	{:else if block.kind === 'timeline'}
 		<ProgramTimeline items={block.content.items} title={block.content.title} tone={tone(index)} />
 	{:else if block.kind === 'gallery' && block.content.layout === 'carousel'}
