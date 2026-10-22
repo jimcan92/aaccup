@@ -1,6 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { canManage, dbFail, HEX, integer, optional, requireStaff, SLUG, text, VISIT_SLUG } from '$lib/server/admin';
 import { loadDriveSetup } from '$lib/server/drive-setup';
+import { renameProgramCode } from '$lib/server/program-code';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
@@ -45,7 +46,8 @@ export const actions: Actions = {
 		const form = await request.formData();
 
 		const values = {
-			code: text(form, 'code').toUpperCase(),
+			// Kept exactly as typed: "BSFi" stays "BSFi".
+			code: text(form, 'code'),
 			name: text(form, 'name'),
 			slug: text(form, 'slug').toLowerCase(),
 			degree: optional(form, 'degree'),
@@ -64,8 +66,21 @@ export const actions: Actions = {
 			return fail(400, { message: 'Colors must be six-digit hex values like #7a1e2b.' });
 		}
 
+		const { data: before } = await supabase.from('programs').select('code').eq('id', params.id).single();
+
 		const { error: updateError } = await supabase.from('programs').update(values).eq('id', params.id);
-		return dbFail(updateError) ?? { message: 'Program saved. The public site updates within a minute.', ok: true };
+		const failed = dbFail(updateError);
+		if (failed) return failed;
+
+		let renamedNote = '';
+		if (before?.code && before.code !== values.code) {
+			const renamed = await renameProgramCode(supabase, params.id, before.code, values.code);
+			if (renamed.documents || renamed.sections) {
+				renamedNote = ` Renamed ${before.code} → ${values.code} in ${renamed.documents} document ${renamed.documents === 1 ? 'title' : 'titles'} and ${renamed.sections} section ${renamed.sections === 1 ? 'description' : 'descriptions'}.`;
+			}
+		}
+
+		return { message: `Program saved.${renamedNote} The public site updates within a minute.`, ok: true };
 	},
 
 	createVisit: async ({ request, locals, params }) => {
