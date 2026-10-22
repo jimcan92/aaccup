@@ -202,8 +202,8 @@
 		</header>
 
 		<div class={adminUi.compact ? 'lg:pl-16' : 'lg:pl-64'}>
-			<!-- Editor pages with a preview use the full width (their load returns wide: true). -->
-			<main id="main" class="mx-auto px-5 py-8 sm:px-8 lg:py-12 {page.data.wide ? 'max-w-none' : 'max-w-[1120px]'}">
+			<!-- Full width only while a block editor shows its side preview; otherwise the usual page width. -->
+			<main id="main" class="mx-auto px-5 py-8 sm:px-8 lg:py-12 {adminUi.compact ? 'max-w-none' : 'max-w-[1120px]'}">
 				{@render children()}
 			</main>
 		</div>
