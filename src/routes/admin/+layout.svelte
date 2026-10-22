@@ -10,6 +10,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import BrandMarks from '$lib/components/site/brand-marks.svelte';
 	import * as Sheet from '$lib/components/ui/sheet/index.js';
+	import { fresh } from '$lib/fresh-link';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
 	import { initials, roleInfo } from '$lib/admin';
 	import type { LayoutProps } from './$types';
@@ -70,7 +71,7 @@
 			</div>
 		</div>
 		<div class="mt-4 grid gap-1">
-			<a href="/" class="flex items-center justify-between px-1 py-1.5 text-[13px] text-paper/70 hover:text-paper">
+			<a href="/" use:fresh class="flex items-center justify-between px-1 py-1.5 text-[13px] text-paper/70 hover:text-paper">
 				View public site
 				<ArrowUpRight class="size-3.5" />
 			</a>
