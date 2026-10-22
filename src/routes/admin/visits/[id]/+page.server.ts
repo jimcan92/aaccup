@@ -1,7 +1,8 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { RESERVED_SECTION_SLUGS } from '$lib/data/accreditation';
 import { canManage, dbFail, integer, optional, requireStaff, SLUG, text, VISIT_SLUG } from '$lib/server/admin';
-import { driveConfigured, folderIdFrom, folderName, serviceAccountEmail } from '$lib/server/drive';
+import { driveConfigured, folderIdFrom, folderName } from '$lib/server/drive';
+import { loadDriveSetup } from '$lib/server/drive-setup';
 import { summary, syncVisit } from '$lib/server/drive-sync';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -15,7 +16,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		.maybeSingle();
 	if (!visit) error(404, 'Visit not found');
 
-	const [{ data: areas }, { data: sources }, { data: runs }] = await Promise.all([
+	const [{ data: areas }, { data: sources }, drive] = await Promise.all([
 		supabase
 			.from('areas')
 			.select('id, kind, number, slug, title, short_title, status, sort_order, drive_folder_id, drive_folder_name, documents(id, status, workflow, drive_public, drive_missing)')
@@ -29,13 +30,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			.neq('id', params.id)
 			.eq('areas.kind', 'common')
 			.order('year', { ascending: false }),
-		supabase
-			.from('drive_sync_runs')
-			.select('started_at, trigger, added, updated, missing, not_public, errors')
-			.eq('visit_id', params.id)
-			.is('area_id', null)
-			.order('started_at', { ascending: false })
-			.limit(1)
+		loadDriveSetup(supabase, params.id)
 	]);
 
 	return {
@@ -47,11 +42,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			unpublished: area.documents.filter((document) => document.workflow !== 'published').length,
 			driveIssues: area.documents.filter((document) => document.drive_public === false || document.drive_missing).length
 		})),
-		drive: {
-			configured: driveConfigured(),
-			email: serviceAccountEmail(),
-			lastRun: runs?.[0] ?? null
-		},
+		drive,
 		sources: (sources ?? []).map((source) => ({
 			id: source.id,
 			label: `${(source.program as unknown as { code: string } | null)?.code ?? ''} · ${source.year} ${source.label}`
