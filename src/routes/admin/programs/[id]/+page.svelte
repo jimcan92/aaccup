@@ -12,6 +12,9 @@
 
 	let { data, form }: PageProps = $props();
 
+	// Kept in a variable: inside a Svelte attribute, `{6}` would be read as an expression.
+	const HEX_PATTERN = '#[0-9a-fA-F]{6}';
+
 	// svelte-ignore state_referenced_locally
 	let colors = $state({
 		program: data.program.theme_program ?? '#335052',
@@ -87,7 +90,7 @@
 						{item.label}
 						<span class="flex gap-2">
 							<input type="color" bind:value={colors[item.key]} class="h-11 w-14 shrink-0 cursor-pointer border border-rule bg-salt p-1" aria-label={`${item.label} picker`} />
-							<input name={`theme_${item.key}`} bind:value={colors[item.key]} pattern="#[0-9a-fA-F]{6}" required class="{field} font-mono" />
+							<input name={`theme_${item.key}`} bind:value={colors[item.key]} pattern={HEX_PATTERN} required class="{field} font-mono" />
 						</span>
 						<span class="text-[12px] font-normal text-ink-soft">{item.hint}</span>
 					</label>

@@ -6,6 +6,7 @@
 	import Search from '@lucide/svelte/icons/search';
 	import X from '@lucide/svelte/icons/x';
 	import Logo from '$lib/components/site/logo.svelte';
+	import ManageLink from '$lib/components/site/manage-link.svelte';
 	import * as Sheet from '$lib/components/ui/sheet/index.js';
 	import { visitBase } from '$lib/data/accreditation';
 	import type { Program, Visit } from '$lib/data/types';
@@ -112,6 +113,8 @@
 				<Search class="size-4" />
 				Search
 			</a>
+
+			<ManageLink compact class="border border-program-contrast/35 px-2 hover:bg-program-contrast/10 sm:px-3" />
 
 			<a
 				href={portalUrl()}
