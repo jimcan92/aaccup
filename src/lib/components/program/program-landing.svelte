@@ -7,6 +7,7 @@
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import DocumentRow from '$lib/components/site/document-row.svelte';
 	import PhotoCarousel from './photo-carousel.svelte';
+	import ProgramTimeline from './program-timeline.svelte';
 	import { dossierPath, sectionsOf } from '$lib/data/accreditation';
 	import { isLinked } from '$lib/drive-url';
 	import type { Program, Visit } from '$lib/data/types';
@@ -110,6 +111,8 @@
 				</div>
 			</div>
 		</section>
+	{:else if block.kind === 'timeline' && block.content.items?.length}
+		<ProgramTimeline items={block.content.items} title={block.content.title} />
 	{:else if block.kind === 'gallery' && block.content.layout === 'carousel' && block.content.items?.length}
 		<PhotoCarousel items={block.content.items} title={block.content.title} onopen={(index) => (viewer = { items: block.content.items, index })} />
 	{:else if block.kind === 'gallery' && block.content.items?.length}
