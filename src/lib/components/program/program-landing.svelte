@@ -21,6 +21,15 @@
 	// Program credentials (COPC, BOR, certification…): shown only once they are linked in Drive.
 	const credentials = $derived(sectionsOf(visit, 'common').flatMap((section) => section.documents).filter(isLinked));
 
+	// Only blocks with something to show; backgrounds alternate paper and salt down the page.
+	const visible = $derived(
+		blocks.filter((block) =>
+			block.kind === 'text' ? Boolean(block.content.title || block.content.body) : Boolean(block.content.items?.length)
+		)
+	);
+	const tone = (index: number) => (index % 2 === 0 ? 'paper' : 'salt') as 'paper' | 'salt';
+	const background = { paper: 'bg-paper', salt: 'bg-salt' };
+
 	// The first photo of the first gallery is the banner behind the hero.
 	const banner = $derived.by(() => {
 		for (const block of blocks) if (block.kind === 'gallery' && block.content.items?.[0]?.src) return block.content.items[0];
@@ -85,9 +94,9 @@
 </section>
 
 <!-- Landing blocks, in the order set in the admin -->
-{#each blocks as block (block.id)}
-	{#if block.kind === 'stats' && block.content.items?.length}
-		<section class="border-b border-rule bg-paper">
+{#each visible as block, index (block.id)}
+	{#if block.kind === 'stats'}
+		<section class="border-b border-rule {background[tone(index)]}">
 			<div class="mx-auto max-w-[1280px] px-5 py-12 sm:px-8">
 				{#if block.content.title}<h2 class="font-display text-[clamp(1.4rem,2.6vw,1.9rem)] font-semibold tracking-[-0.035em]">{block.content.title}</h2>{/if}
 				<dl class="mt-6 grid grid-cols-2 gap-px border border-rule bg-rule md:grid-cols-4">
@@ -100,8 +109,8 @@
 				</dl>
 			</div>
 		</section>
-	{:else if block.kind === 'text' && (block.content.title || block.content.body)}
-		<section class="border-b border-rule bg-salt">
+	{:else if block.kind === 'text'}
+		<section class="border-b border-rule {background[tone(index)]}">
 			<div class="mx-auto grid max-w-[1280px] gap-6 px-5 py-14 sm:px-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
 				{#if block.content.title}
 					<h2 class="text-balance font-display text-[clamp(1.6rem,3.2vw,2.6rem)] font-semibold leading-[1.02] tracking-[-0.04em] text-ink">{block.content.title}</h2>
@@ -111,12 +120,12 @@
 				</div>
 			</div>
 		</section>
-	{:else if block.kind === 'timeline' && block.content.items?.length}
-		<ProgramTimeline items={block.content.items} title={block.content.title} />
-	{:else if block.kind === 'gallery' && block.content.layout === 'carousel' && block.content.items?.length}
-		<PhotoCarousel items={block.content.items} title={block.content.title} onopen={(index) => (viewer = { items: block.content.items, index })} />
-	{:else if block.kind === 'gallery' && block.content.items?.length}
-		<section class="border-b border-rule bg-paper">
+	{:else if block.kind === 'timeline'}
+		<ProgramTimeline items={block.content.items} title={block.content.title} tone={tone(index)} />
+	{:else if block.kind === 'gallery' && block.content.layout === 'carousel'}
+		<PhotoCarousel items={block.content.items} title={block.content.title} tone={tone(index)} onopen={(index) => (viewer = { items: block.content.items, index })} />
+	{:else if block.kind === 'gallery'}
+		<section class="border-b border-rule {background[tone(index)]}">
 			<div class="mx-auto max-w-[1280px] px-5 py-12 sm:px-8">
 				{#if block.content.title}<h2 class="font-display text-[clamp(1.4rem,2.6vw,1.9rem)] font-semibold tracking-[-0.035em]">{block.content.title}</h2>{/if}
 				<ul class="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3">
@@ -142,7 +151,7 @@
 {/each}
 
 {#if credentials.length}
-	<section class="border-b border-rule bg-paper" aria-labelledby="credentials-heading">
+	<section class="border-b border-rule {background[tone(visible.length)]}" aria-labelledby="credentials-heading">
 		<div class="mx-auto max-w-[1280px] px-5 py-12 sm:px-8">
 			<h2 id="credentials-heading" class="font-display text-[clamp(1.4rem,2.6vw,1.9rem)] font-semibold tracking-[-0.035em]">Credentials</h2>
 			<div class="mt-5 border-t border-rule">
