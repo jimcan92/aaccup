@@ -23,7 +23,7 @@ export const actions: Actions = {
 	create: async ({ request, locals }) => {
 		const { supabase } = requireStaff(locals, ['admin', 'focal']);
 		const form = await request.formData();
-		const code = text(form, 'code').toUpperCase();
+		const code = text(form, 'code');
 		const name = text(form, 'name');
 		const slug = (text(form, 'slug') || code).toLowerCase();
 
