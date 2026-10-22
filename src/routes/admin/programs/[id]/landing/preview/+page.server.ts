@@ -5,6 +5,9 @@ import { loadBlocks } from '$lib/server/landing-blocks';
 import type { LandingBlock } from '$lib/landing';
 import type { PageServerLoad } from './$types';
 
+// This page skips the admin layout (+page@), so it must opt out of prerendering itself.
+export const prerender = false;
+
 // The program page as it would look with every draft published; shown in the editor's preview frame.
 export const load: PageServerLoad = async ({ locals, params, setHeaders }) => {
 	const { supabase } = requireStaff(locals);
