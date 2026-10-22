@@ -4,6 +4,7 @@
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import Copy from '@lucide/svelte/icons/copy';
+	import FolderSync from '@lucide/svelte/icons/folder-sync';
 	import FormMessage from '$lib/components/admin/form-message.svelte';
 	import PageHeader from '$lib/components/admin/page-header.svelte';
 	import StatusBadge from '$lib/components/admin/status-badge.svelte';
@@ -73,6 +74,8 @@
 									<span class="block truncate text-[14px] font-medium">{section.title}</span>
 									<span class="block text-[12px] text-ink-soft">
 										{section.linked}/{section.total} linked{section.unpublished ? ` · ${section.unpublished} not published` : ''}
+										{#if section.drive_folder_name}· Drive: {section.drive_folder_name}{/if}
+										{#if section.driveIssues}<span class="font-medium text-destructive"> · {section.driveIssues} need attention</span>{/if}
 									</span>
 								</span>
 								<span class="hidden sm:block"><StatusBadge status={section.status} /></span>
@@ -132,6 +135,41 @@
 		</form>
 
 		{#if data.canManage}
+			<section class="border border-rule bg-paper p-5">
+				<p class="flex items-center gap-2 font-display text-[18px] font-semibold"><FolderSync class="size-4" /> Google Drive</p>
+				{#if !data.drive.configured}
+					<p class="mt-2 text-[13px] leading-relaxed text-destructive">
+						Drive sync is off on this deployment. It needs <code class="font-mono text-[12px]">GOOGLE_SERVICE_ACCOUNT_JSON</code>.
+					</p>
+				{:else}
+					<p class="mt-2 text-[13px] leading-relaxed text-ink-soft">
+						Share the root folder with <strong class="break-all font-medium text-ink">{data.drive.email}</strong> as Viewer. Subfolders named
+						“Common…”, “Area 1”…“Area 10”, or a section title are matched automatically. New files arrive as drafts.
+					</p>
+				{/if}
+				<form method="POST" action="?/setRootFolder" use:enhance={() => async ({ update }) => update({ reset: false })} class="mt-4 grid gap-2">
+					<label class="grid gap-1.5 text-[13px] font-medium">
+						Root folder link
+						<input name="folder" value={data.visit.drive_root_folder_id ? `https://drive.google.com/drive/folders/${data.visit.drive_root_folder_id}` : ''} placeholder="https://drive.google.com/drive/folders/…" class="{field} font-mono text-[12px]" />
+					</label>
+					<button class="h-10 w-fit border border-ink px-4 text-[13px] font-medium hover:bg-ink hover:text-paper">Save folder</button>
+				</form>
+				{#if data.drive.configured}
+					<form method="POST" action="?/syncDrive" use:enhance class="mt-4 border-t border-rule pt-4">
+						<button class="inline-flex h-10 items-center gap-2 bg-ink px-4 text-[13px] font-medium text-paper hover:bg-ink-soft">
+							<FolderSync class="size-4" /> Sync now
+						</button>
+						{#if data.drive.lastRun}
+							{@const run = data.drive.lastRun}
+							<p class="mt-2 text-[12px] text-ink-soft">
+								Last sync {new Date(run.started_at).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' })}
+								({run.trigger === 'schedule' ? 'scheduled' : 'manual'}): {run.added} new, {run.missing} missing, {run.not_public} not public{(run.errors as string[]).length ? `, ${(run.errors as string[]).length} problems` : ''}.
+							</p>
+						{/if}
+					</form>
+				{/if}
+			</section>
+
 			<form method="POST" action="?/copyCommon" use:enhance class="border border-rule bg-paper p-5">
 				<p class="flex items-center gap-2 font-display text-[18px] font-semibold"><Copy class="size-4" /> Copy common documents</p>
 				<p class="mt-2 text-[13px] leading-relaxed text-ink-soft">
