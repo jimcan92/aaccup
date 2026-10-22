@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { enhance } from '$lib/admin-enhance';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import CarouselEditor from '$lib/components/admin/carousel-editor.svelte';
@@ -90,11 +91,6 @@
 	</div>
 </div>
 
-{#if form?.message}
-	<div class="mt-5 border border-rule bg-paper p-4 text-[13px] leading-relaxed text-ink">
-		{form.message}
-	</div>
-{/if}
 
 {#if !canEdit}
 	<div class="mt-5 border border-dashed border-ink/25 bg-paper p-4 text-[13px] leading-relaxed text-ink-soft">
@@ -102,7 +98,7 @@
 	</div>
 {/if}
 
-<form method="POST" class="mt-7" onsubmit={() => clearTimeout(saveTimer)}>
+<form method="POST" class="mt-7" onsubmit={() => clearTimeout(saveTimer)} use:enhance={() => async ({ update }) => update({ reset: false })}>
 	<div class="grid gap-8 lg:grid-cols-[1fr_1.05fr]">
 		<div>
 			<label for="value" class="mb-2 block text-[13px] font-medium text-ink-soft">Draft value</label>

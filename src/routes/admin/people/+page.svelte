@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
-	import { page } from '$app/state';
+	import { enhance } from '$lib/admin-enhance';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 	import PageHeader from '$lib/components/admin/page-header.svelte';
@@ -42,14 +41,6 @@
 	description="Access is by invitation. Add a person’s CTU email and role; they sign in with the same CTU account they use for the other campus systems."
 />
 
-{#if form?.message}
-	<div
-		class="mt-6 border p-4 text-[14px] {page.status >= 400 ? 'border-destructive/30 bg-paper text-destructive' : 'border-bsfi/30 bg-bsfi-soft text-ink'}"
-		role="status"
-	>
-		{form.message}
-	</div>
-{/if}
 {#if data.error}
 	<div class="mt-6 border border-destructive/30 bg-paper p-4 text-[14px] text-destructive" role="alert">{data.error}</div>
 {/if}

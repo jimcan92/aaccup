@@ -1,12 +1,11 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { enhance } from '$lib/admin-enhance';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import PageHeader from '$lib/components/admin/page-header.svelte';
 	import StatusBadge from '$lib/components/admin/status-badge.svelte';
 	import DriveSetup from '$lib/components/admin/drive-setup.svelte';
-	import FormMessage from '$lib/components/admin/form-message.svelte';
 	import { contrastRatio } from '$lib/theme';
 	import type { PageProps } from './$types';
 
@@ -61,7 +60,6 @@
 	</PageHeader>
 </div>
 
-<FormMessage {form} />
 
 <div class="mt-8 grid gap-10 xl:grid-cols-[1.2fr_1fr]">
 	<form method="POST" action="?/update" use:enhance={() => async ({ update }) => update({ reset: false })} class="space-y-6">

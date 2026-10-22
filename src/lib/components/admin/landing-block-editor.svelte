@@ -1,11 +1,12 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { enhance } from '$lib/admin-enhance';
 	import ArrowDown from '@lucide/svelte/icons/arrow-down';
 	import ArrowUp from '@lucide/svelte/icons/arrow-up';
 	import ImagePlus from '@lucide/svelte/icons/image-plus';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import X from '@lucide/svelte/icons/x';
+	import { toast } from 'svelte-sonner';
 	import StatusBadge from '$lib/components/admin/status-badge.svelte';
 	import { imageSrc } from '$lib/image-url';
 	import { blockLabels, type GalleryItem, type StatItem } from '$lib/landing';
@@ -38,7 +39,6 @@
 	// svelte-ignore state_referenced_locally
 	let stats = $state<StatItem[]>(block.kind === 'stats' ? ((block.draft.items ?? []) as StatItem[]).map((item) => ({ ...item })) : []);
 	let uploading = $state<number | null>(null);
-	let uploadError = $state('');
 
 	const content = $derived(
 		JSON.stringify(block.kind === 'text' ? { title, body } : block.kind === 'stats' ? { title, items: stats } : { title, items: photos })
@@ -57,7 +57,6 @@
 	async function upload(index: number, file: File | undefined) {
 		if (!file) return;
 		uploading = index;
-		uploadError = '';
 		const form = new FormData();
 		form.set('file', file);
 		form.set('folder', `programs/${programId}`);
@@ -68,7 +67,7 @@
 			photos[index].src = result.url;
 			if (!photos[index].alt) photos[index].alt = file.name.replace(/\.[a-z0-9]+$/i, '').replace(/[_-]+/g, ' ');
 		} catch (err) {
-			uploadError = (err as Error).message;
+			toast.error((err as Error).message, { duration: 9000 });
 		} finally {
 			uploading = null;
 		}
@@ -149,7 +148,6 @@
 							</div>
 						</div>
 					{/each}
-					{#if uploadError}<p class="text-[13px] text-destructive" role="alert">{uploadError}</p>{/if}
 					<button type="button" onclick={() => (photos = [...photos, { src: '', alt: '', caption: '' }])} class="inline-flex h-9 w-fit items-center gap-1.5 border border-rule px-3 text-[13px] font-medium hover:border-ink/30"><Plus class="size-4" /> Add photo</button>
 					<p class="text-[12px] text-ink-soft">Uploads up to 5 MB. Drive photos must be shared as “Anyone with the link”.</p>
 				</div>

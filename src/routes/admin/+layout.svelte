@@ -10,6 +10,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import BrandMarks from '$lib/components/site/brand-marks.svelte';
 	import * as Sheet from '$lib/components/ui/sheet/index.js';
+	import { Toaster } from '$lib/components/ui/sonner/index.js';
 	import { initials, roleInfo } from '$lib/admin';
 	import type { LayoutProps } from './$types';
 
@@ -90,6 +91,9 @@
 		</span>
 	</a>
 {/snippet}
+
+<!-- Form results show here, lower right, wherever the page is scrolled. -->
+<Toaster position="bottom-right" richColors closeButton />
 
 {#if data.isLogin}
 	{@render children()}

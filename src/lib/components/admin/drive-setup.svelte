@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { enhance } from '$lib/admin-enhance';
 	import type { SubmitFunction } from '@sveltejs/kit';
 	import Check from '@lucide/svelte/icons/check';
 	import CircleDashed from '@lucide/svelte/icons/circle-dashed';
@@ -18,23 +18,14 @@
 	const tree = $derived(folderTree(rootName, setup.sections));
 	const matched = $derived(setup.sections.filter((section) => section.folderId).length);
 
-	let message = $state<{ text: string; error: boolean } | null>(null);
 	let editing = $state<string | null>(null);
-	let busy = $state(false);
 	let copied = $state(false);
 
-	// These forms post to the visit and section pages' actions, so show their message here.
-	const submit: SubmitFunction = () => {
-		busy = true;
-		message = null;
-		return async ({ result, update }) => {
-			busy = false;
-			const data = 'data' in result ? (result.data as { message?: string } | undefined) : undefined;
-			if (data?.message) message = { text: data.message, error: result.type === 'failure' };
-			else if (result.type === 'error') message = { text: result.error?.message ?? 'Something went wrong.', error: true };
-			if (result.type === 'success') editing = null;
-			await update({ reset: false });
-		};
+	// These forms post to the visit and section pages' actions; the enhance wrapper shows
+	// their message as a toast and the spinner on the button.
+	const submit: SubmitFunction = () => async ({ result, update }) => {
+		if (result.type === 'success') editing = null;
+		await update({ reset: false });
 	};
 
 	async function copyTree() {
@@ -62,19 +53,14 @@
 		</div>
 		{#if canSync && setup.configured && (visit.rootFolderId || matched)}
 			<form method="POST" action={`/admin/visits/${visit.id}?/syncDrive`} use:enhance={submit}>
-				<button class="inline-flex h-10 items-center gap-2 bg-ink px-4 text-[13px] font-medium text-paper hover:bg-ink-soft disabled:opacity-60" disabled={busy}>
+				<button class="inline-flex h-10 items-center gap-2 bg-ink px-4 text-[13px] font-medium text-paper hover:bg-ink-soft">
 					<FolderSync class="size-4" />
-					{busy ? 'Working…' : 'Sync now'}
+					Sync now
 				</button>
 			</form>
 		{/if}
 	</header>
 
-	{#if message}
-		<p class="mx-5 mt-4 border p-3 text-[13px] {message.error ? 'border-destructive/30 text-destructive' : 'border-bsfi/30 bg-bsfi-soft text-ink'}" role="status">
-			{message.text}
-		</p>
-	{/if}
 
 	<div class="grid gap-6 p-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
 		<div class="min-w-0 space-y-6">
@@ -100,7 +86,7 @@
 							placeholder="https://drive.google.com/drive/folders/…"
 							class={field}
 						/>
-						<button class="h-10 shrink-0 border border-ink px-4 text-[13px] font-medium hover:bg-ink hover:text-paper disabled:opacity-60" disabled={busy}>
+						<button class="h-10 shrink-0 border border-ink px-4 text-[13px] font-medium hover:bg-ink hover:text-paper">
 							Save folder
 						</button>
 					</form>
@@ -170,7 +156,7 @@
 										placeholder="Folder link, or leave empty for automatic"
 										class={field}
 									/>
-									<button class="h-10 shrink-0 bg-ink px-4 text-[13px] font-medium text-paper hover:bg-ink-soft disabled:opacity-60" disabled={busy}>Save</button>
+									<button class="h-10 shrink-0 bg-ink px-4 text-[13px] font-medium text-paper hover:bg-ink-soft">Save</button>
 								</form>
 							{/if}
 						</li>

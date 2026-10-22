@@ -120,6 +120,52 @@
 	--ring: var(--program-contrast);
 }
 
+/* Clickable things get the hand cursor (Tailwind 4 resets buttons to the default arrow). */
+@layer base {
+	button:not(:disabled),
+	[role='button']:not([aria-disabled='true']),
+	summary,
+	select:not(:disabled),
+	label:has(> input[type='file']),
+	input[type='checkbox']:not(:disabled),
+	input[type='radio']:not(:disabled),
+	input[type='color']:not(:disabled) {
+		cursor: pointer;
+	}
+
+	button:disabled,
+	select:disabled {
+		cursor: not-allowed;
+	}
+}
+
+/* A button whose form is being sent (set by $lib/admin-enhance.ts). */
+[data-loading] {
+	pointer-events: none;
+	cursor: progress;
+	opacity: 0.85;
+}
+
+[data-loading]::before {
+	content: '';
+	display: inline-block;
+	flex-shrink: 0;
+	width: 0.95em;
+	height: 0.95em;
+	margin-right: 0.5em;
+	border: 2px solid currentColor;
+	border-right-color: transparent;
+	border-radius: 9999px;
+	vertical-align: -0.15em;
+	animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
 	html {
 		scroll-behavior: auto;

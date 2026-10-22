@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { enhance } from '$lib/admin-enhance';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import ClipboardPaste from '@lucide/svelte/icons/clipboard-paste';
@@ -7,7 +7,6 @@
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import FormMessage from '$lib/components/admin/form-message.svelte';
 	import PageHeader from '$lib/components/admin/page-header.svelte';
 	import StatusBadge from '$lib/components/admin/status-badge.svelte';
 	import DocumentFormat from '$lib/components/site/document-format.svelte';
@@ -103,7 +102,6 @@
 	</PageHeader>
 </div>
 
-<FormMessage {form} />
 
 {#if !data.canEdit}
 	<p class="mt-6 border border-dashed border-ink/30 bg-paper p-4 text-[13px] text-ink-soft">You can read this section. Editing is for admins, focal persons, and the assigned area chair.</p>

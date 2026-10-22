@@ -1,11 +1,10 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { enhance } from '$lib/admin-enhance';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import Copy from '@lucide/svelte/icons/copy';
 	import DriveSetup from '$lib/components/admin/drive-setup.svelte';
-	import FormMessage from '$lib/components/admin/form-message.svelte';
 	import PageHeader from '$lib/components/admin/page-header.svelte';
 	import StatusBadge from '$lib/components/admin/status-badge.svelte';
 	import { pad2 } from '$lib/format';
@@ -55,7 +54,6 @@
 	</PageHeader>
 </div>
 
-<FormMessage {form} />
 
 <div class="mt-8 grid gap-10 xl:grid-cols-[1.35fr_1fr]">
 	<section>
