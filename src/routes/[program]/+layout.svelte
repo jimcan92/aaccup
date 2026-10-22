@@ -3,6 +3,7 @@
 	import DocumentPreview from '$lib/components/program/document-preview.svelte';
 	import ProgramHeader from '$lib/components/program/program-header.svelte';
 	import ProgramHero from '$lib/components/program/program-hero.svelte';
+	import ProgramQuickActions from '$lib/components/program/program-quick-actions.svelte';
 	import SectionNav from '$lib/components/program/section-nav.svelte';
 	import SiteFooter from '$lib/components/site/site-footer.svelte';
 	import { themeStyle } from '$lib/theme';
@@ -41,6 +42,7 @@
 	{/if}
 
 	<DocumentPreview visit={data.visit} {style} />
+	<ProgramQuickActions program={data.program} visit={data.visit} base={data.base} />
 
 	<SiteFooter themed contactNote={data.contactNote}>
 		<p class="font-display text-[18px] font-semibold tracking-[-0.02em]">
