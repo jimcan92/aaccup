@@ -11,6 +11,13 @@ declare global {
 			/** The AACCUP staff profile matched to the SSO user's email. */
 			staff: StaffProfile | null;
 		}
+
+		interface PageState {
+			/** Document shown in the in-page preview (shallow routing). */
+			doc?: string;
+			/** False when the preview was opened from a shared ?doc= link rather than a click. */
+			opened?: boolean;
+		}
 	}
 }
 
