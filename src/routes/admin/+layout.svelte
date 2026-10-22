@@ -10,6 +10,7 @@
 	import Users from '@lucide/svelte/icons/users';
 	import X from '@lucide/svelte/icons/x';
 	import AdminQuickActions from '$lib/components/admin/admin-quick-actions.svelte';
+	import { adminUi } from '$lib/admin-ui.svelte';
 	import BrandMarks from '$lib/components/site/brand-marks.svelte';
 	import * as Sheet from '$lib/components/ui/sheet/index.js';
 	import { fresh } from '$lib/fresh-link';
@@ -153,11 +154,20 @@
 	{@render children()}
 {:else}
 	<div class="min-h-dvh bg-salt text-ink">
-		<aside class="fixed inset-y-0 left-0 z-30 hidden w-16 flex-col items-center bg-ink text-paper lg:flex" style="--ring: #c9973a">
-			<a href="/admin" class="py-5" title="AACCUP Desk"><BrandMarks size={30} /><span class="sr-only">AACCUP Desk</span></a>
-			<nav class="flex-1 py-2" aria-label="Admin">{@render railList()}</nav>
-			<div class="w-full border-t border-paper/10 py-4">{@render railUser()}</div>
-		</aside>
+		<!-- Full sidebar; while a block editor shows its side preview, an icon rail instead. -->
+		{#if adminUi.compact}
+			<aside class="fixed inset-y-0 left-0 z-30 hidden w-16 flex-col items-center bg-ink text-paper lg:flex" style="--ring: #c9973a">
+				<a href="/admin" class="py-5" title="AACCUP Desk"><BrandMarks size={30} /><span class="sr-only">AACCUP Desk</span></a>
+				<nav class="flex-1 py-2" aria-label="Admin">{@render railList()}</nav>
+				<div class="w-full border-t border-paper/10 py-4">{@render railUser()}</div>
+			</aside>
+		{:else}
+			<aside class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col bg-ink text-paper lg:flex" style="--ring: #c9973a">
+				<div class="px-5 py-6">{@render brand()}</div>
+				<nav class="flex-1 overflow-y-auto px-2 py-2" aria-label="Admin">{@render navList()}</nav>
+				<div class="border-t border-paper/10 p-5">{@render userCard()}</div>
+			</aside>
+		{/if}
 
 		<header
 			class="sticky top-0 z-20 flex h-16 items-center justify-between gap-3 bg-ink px-5 text-paper lg:hidden"
@@ -191,7 +201,7 @@
 			</Sheet.Root>
 		</header>
 
-		<div class="lg:pl-16">
+		<div class={adminUi.compact ? 'lg:pl-16' : 'lg:pl-64'}>
 			<!-- Editor pages with a preview use the full width (their load returns wide: true). -->
 			<main id="main" class="mx-auto px-5 py-8 sm:px-8 lg:py-12 {page.data.wide ? 'max-w-none' : 'max-w-[1120px]'}">
 				{@render children()}

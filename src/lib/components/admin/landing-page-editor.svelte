@@ -25,6 +25,7 @@
 	import { onMount } from 'svelte';
 	import { MediaQuery } from 'svelte/reactivity';
 	import { readMessage, type PreviewMessage } from '$lib/block-preview';
+	import { adminUi } from '$lib/admin-ui.svelte';
 	import type { LandingBlock } from '$lib/landing';
 	import X from '@lucide/svelte/icons/x';
 	import { tick } from 'svelte';
@@ -72,6 +73,12 @@
 	let paneHeight = $state(0);
 	let selected = $state<string | null>(null);
 	const showSide = $derived(wide.current && sideOpen);
+
+	// The sidebar shrinks to icons only while the side preview is open; leaving the page restores it.
+	$effect(() => {
+		adminUi.compact = showSide;
+		return () => (adminUi.compact = false);
+	});
 
 	onMount(() => {
 		try {
