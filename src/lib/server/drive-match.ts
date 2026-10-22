@@ -10,38 +10,73 @@ export type MatchSection = {
 	short_title: string | null;
 };
 
-export type MatchFolder = { id: string; name: string };
+/**
+ * A candidate folder for matching. `scope` says where it was found:
+ *  - 'previous': inside a previous-visit group folder ("…Findings Compliance", "Previous visit")
+ *  - 'current':  inside a current-visit group folder ("…Level III Documents", "Current visit")
+ *  - 'any':      directly in the root folder
+ */
+export type MatchFolder = { id: string; name: string; scope?: 'any' | 'previous' | 'current' };
 
 const norm = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 
-/** "Area 3", "AREA-03", "03 - Area 3 Curriculum" → 3. */
+const ROMAN: Record<string, number> = { i: 1, v: 5, x: 10 };
+
+function fromRoman(value: string): number | null {
+	const chars = value.toLowerCase().split('');
+	if (!chars.every((c) => c in ROMAN)) return null;
+	let total = 0;
+	chars.forEach((c, i) => {
+		const current = ROMAN[c];
+		const next = ROMAN[chars[i + 1]] ?? 0;
+		total += current < next ? -current : current;
+	});
+	return total >= 1 && total <= 20 ? total : null;
+}
+
+/** "Area 3", "AREA-03", "Area III – Curriculum", "03 - Area 3 Curriculum" → 3. */
 export function areaNumber(name: string): number | null {
-	const match = name.match(/area[\s._-]*0*(\d{1,2})(?!\d)/i);
-	return match ? Number(match[1]) : null;
+	const match = name.match(/area[\s._-]*([0-9]{1,2}|[ivx]{1,5})(?![a-z0-9])/i);
+	if (!match) return null;
+	return /^\d+$/.test(match[1]) ? Number(match[1]) : fromRoman(match[1]);
+}
+
+/** Which visit a group folder holds, from its name; null when it is not a group folder. */
+export function groupScope(name: string): 'previous' | 'current' | null {
+	// "Area 3 – Extent of Compliance" is a section folder, not a group.
+	if (areaNumber(name) !== null) return null;
+	if (/previous|findings|compliance/i.test(name)) return 'previous';
+	if (/current|level[\s._-]*([ivx]+|\d)\b/i.test(name)) return 'current';
+	return null;
 }
 
 /**
- * Match a visit's subfolders to its sections.
- *  - "Common…" folder → the common section
- *  - "Area N…" folder → previous-visit area N
- *  - remaining folders → current sections and numberless previous sections by title
- * Each folder is used once. Returns sectionId → folder.
+ * Match a visit's folders to its sections. Each folder is used once. Returns sectionId → folder.
+ *  - "Common…"            → the common section
+ *  - "Area N" / "Area IV" → previous-visit area N (unless the folder sits in a current-visit group)
+ *  - otherwise            → a current section, or a numberless previous section, by title
+ * Inside a current-visit group, "Area 1 – Instruction" matches by its title, not its number.
  */
 export function matchFolders(sections: MatchSection[], folders: MatchFolder[]): Map<string, MatchFolder> {
 	const result = new Map<string, MatchFolder>();
 	const used = new Set<string>();
+	const scopeOf = (folder: MatchFolder) => folder.scope ?? 'any';
 	const take = (section: MatchSection, folder: MatchFolder | undefined) => {
 		if (!folder || used.has(folder.id) || result.has(section.id)) return;
 		result.set(section.id, folder);
 		used.add(folder.id);
 	};
+	const free = (folder: MatchFolder) => !used.has(folder.id);
 
 	for (const section of sections.filter((s) => s.kind === 'common')) {
-		take(section, folders.find((folder) => /\bcommon\b/i.test(folder.name)));
+		take(section, folders.find((folder) => free(folder) && scopeOf(folder) !== 'previous' && /\bcommon\b/i.test(folder.name)));
 	}
 
 	for (const section of sections.filter((s) => s.kind === 'previous' && s.number !== null)) {
-		take(section, folders.find((folder) => !used.has(folder.id) && areaNumber(folder.name) === section.number));
+		take(
+			section,
+			folders.find((folder) => free(folder) && scopeOf(folder) !== 'current' && areaNumber(folder.name) === section.number)
+		);
 	}
 
 	// Longer titles first, so "Extension and Community Involvement" is not taken by "Extension".
@@ -55,7 +90,16 @@ export function matchFolders(sections: MatchSection[], folders: MatchFolder[]): 
 	for (const { section, title } of byTitle) {
 		take(
 			section,
-			folders.find((folder) => !used.has(folder.id) && areaNumber(folder.name) === null && norm(folder.name).includes(title))
+			folders.find((folder) => {
+				if (!free(folder)) return false;
+				const scope = scopeOf(folder);
+				// Keep each group's folders for its own visit layer.
+				if (section.kind === 'current' && scope === 'previous') return false;
+				if (section.kind === 'previous' && scope === 'current') return false;
+				// At the root, "Area N" folders belong to the previous-visit areas.
+				if (scope === 'any' && areaNumber(folder.name) !== null) return false;
+				return norm(folder.name).includes(title);
+			})
 		);
 	}
 

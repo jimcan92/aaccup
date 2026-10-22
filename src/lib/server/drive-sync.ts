@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { formatFromMime, isFolder, listFolder, type DriveItem } from './drive';
-import { kindFromName, matchFolders, titleFromName, type MatchSection } from './drive-match';
+import { groupScope, kindFromName, matchFolders, titleFromName, type MatchFolder, type MatchSection } from './drive-match';
 import { supabaseService } from './sso';
 
 /**
@@ -166,10 +166,19 @@ export async function syncVisit(visitId: string, trigger: 'manual' | 'schedule',
 	if (visit?.drive_root_folder_id) {
 		try {
 			const folders = (await listFolder(visit.drive_root_folder_id)).filter(isFolder);
-			// A "Previous visit" folder may hold the Area 1–10 folders one level down.
-			const previous = folders.find((folder) => /previous/i.test(folder.name));
-			const nested = previous ? (await listFolder(previous.id)).filter(isFolder) : [];
-			const candidates = [...folders.filter((folder) => folder !== previous), ...nested];
+			// Group folders ("01 Evidence – 2022 Findings Compliance", "02 Evidence – Level III
+			// Documents", "Previous visit") hold the section folders one level down.
+			const candidates: MatchFolder[] = [];
+			for (const folder of folders) {
+				const scope = groupScope(folder.name);
+				if (!scope) {
+					candidates.push({ id: folder.id, name: folder.name, scope: 'any' });
+					continue;
+				}
+				for (const child of (await listFolder(folder.id)).filter(isFolder)) {
+					candidates.push({ id: child.id, name: child.name, scope });
+				}
+			}
 
 			const auto = areas.filter((area) => area.drive_folder_source === 'auto');
 			const matches = matchFolders(auto, candidates);
