@@ -77,10 +77,16 @@
 			{/if}
 
 			{#if !data.configured}
-				<div class="mt-5 border border-dashed border-ink/30 bg-paper p-4 text-[13px] leading-relaxed text-ink-soft">
-					The admin is not configured on this deployment. It needs <code class="font-mono text-[12px]">PUBLIC_SUPABASE_URL</code>,
-					<code class="font-mono text-[12px]">SUPABASE_SERVICE_ROLE_KEY</code>, and
-					<code class="font-mono text-[12px]">SUPABASE_JWT_SECRET</code>.
+				<div class="mt-5 border border-dashed border-ink/30 bg-paper p-4 text-[13px] leading-relaxed text-ink-soft" role="status">
+					{#if data.signedInAs}
+						You are signed in to CTU Accounts as <strong class="font-medium text-ink">{data.signedInAs}</strong>, but this
+						deployment cannot check the AACCUP list yet.
+					{:else}
+						The admin is not configured on this deployment.
+					{/if}
+					Missing:
+					{#each data.missing as name, index (name)}<code class="font-mono text-[12px] text-ink">{name}</code>{index < data.missing.length - 1 ? ', ' : '.'}{/each}
+					Add {data.missing.length === 1 ? 'it' : 'them'} in Vercel and redeploy.
 				</div>
 			{/if}
 

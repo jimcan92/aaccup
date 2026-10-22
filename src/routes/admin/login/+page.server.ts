@@ -9,12 +9,28 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	// Only same-site paths survive the round trip through Accounts.
 	const returnTo = `${origin}${next.startsWith('/') && !next.startsWith('//') ? next : '/admin'}`;
 
+	const configured = Boolean(
+		publicEnv.PUBLIC_SUPABASE_URL &&
+			publicEnv.PUBLIC_SUPABASE_ANON_KEY &&
+			privateEnv.SUPABASE_SERVICE_ROLE_KEY &&
+			privateEnv.SUPABASE_JWT_SECRET
+	);
+	const missing = [
+		['PUBLIC_SUPABASE_URL', publicEnv.PUBLIC_SUPABASE_URL],
+		['PUBLIC_SUPABASE_ANON_KEY', publicEnv.PUBLIC_SUPABASE_ANON_KEY],
+		['SUPABASE_SERVICE_ROLE_KEY', privateEnv.SUPABASE_SERVICE_ROLE_KEY],
+		['SUPABASE_JWT_SECRET', privateEnv.SUPABASE_JWT_SECRET]
+	]
+		.filter(([, value]) => !value)
+		.map(([name]) => name as string);
+
 	return {
+		missing,
 		loginUrl: ssoLoginUrl(returnTo),
-		// Signed in to CTU Accounts, but not on the AACCUP list.
-		notListed: locals.ssoUser ? { email: locals.ssoUser.email, name: locals.ssoUser.name } : null,
-		configured: Boolean(
-			publicEnv.PUBLIC_SUPABASE_URL && privateEnv.SUPABASE_SERVICE_ROLE_KEY && privateEnv.SUPABASE_JWT_SECRET
-		)
+		// Signed in to CTU Accounts, but not on the AACCUP list. Only meaningful when the
+		// server can look people up; otherwise every user would look unlisted.
+		notListed: configured && locals.ssoUser ? { email: locals.ssoUser.email, name: locals.ssoUser.name } : null,
+		signedInAs: locals.ssoUser?.email ?? null,
+		configured
 	};
 };
