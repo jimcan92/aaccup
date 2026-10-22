@@ -25,4 +25,5 @@
 	canEdit={data.canEdit}
 	canManage={data.canManage}
 	empty="No blocks yet. The home page shows the title and the program cards until you add some."
+	previewSrc="/admin/home/preview"
 />

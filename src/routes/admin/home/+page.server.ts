@@ -8,7 +8,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		...(await loadBlocks(supabase, null)),
 		canEdit: canEditBlocks(staff, null),
-		canManage: canManage(staff)
+		canManage: canManage(staff),
+		// Full width: the editor sits beside a preview.
+		wide: true
 	};
 };
 

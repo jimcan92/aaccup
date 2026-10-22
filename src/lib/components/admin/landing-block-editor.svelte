@@ -37,8 +37,19 @@
 		last,
 		canEdit,
 		canManage,
-		onremove
-	}: { block: Block; programId: string; first: boolean; last: boolean; canEdit: boolean; canManage: boolean; onremove: () => void } = $props();
+		onremove,
+		onchange
+	}: {
+		block: Block;
+		programId: string;
+		first: boolean;
+		last: boolean;
+		canEdit: boolean;
+		canManage: boolean;
+		onremove: () => void;
+		/** The editor's current content (JSON), saved or not, for the live preview. */
+		onchange?: (content: string) => void;
+	} = $props();
 
 	// Each editor keeps its own copy; the page re-mounts it after a save so it starts from the stored draft.
 	// svelte-ignore state_referenced_locally
@@ -80,6 +91,8 @@
 		)
 	);
 	const live = $derived(block.published !== null);
+	$effect(() => onchange?.(content));
+
 	const changed = $derived(live && JSON.stringify(block.published) !== JSON.stringify(block.draft));
 
 	function move<T>(list: T[], index: number, delta: number): T[] {

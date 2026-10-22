@@ -9,7 +9,13 @@
 	import { imageSrc } from '$lib/image-url';
 	import { hasContent, type LandingBlock } from '$lib/landing';
 
-	let { program, visit, blocks }: { program: Program; visit: Visit; blocks: LandingBlock[] } = $props();
+	let {
+		program,
+		visit,
+		blocks,
+		editable = false,
+		drafts = []
+	}: { program: Program; visit: Visit; blocks: LandingBlock[]; editable?: boolean; drafts?: string[] } = $props();
 
 	const dossier = $derived(dossierPath(program, visit));
 
@@ -73,7 +79,7 @@
 </section>
 
 <!-- Landing blocks, in the order set in the admin -->
-<LandingBlocks {blocks} />
+<LandingBlocks {blocks} {editable} {drafts} />
 
 {#if credentials.length}
 	<section class="border-b border-rule {shown % 2 === 0 ? 'bg-paper' : 'bg-salt'}" aria-labelledby="credentials-heading">

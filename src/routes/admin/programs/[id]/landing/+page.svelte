@@ -33,4 +33,5 @@
 	canEdit={data.canEdit}
 	canManage={data.canManage}
 	empty="No blocks yet. The public page shows the program title, summary, and the link to the documents until you add some."
+	previewSrc={`/admin/programs/${data.program.id}/landing/preview`}
 />

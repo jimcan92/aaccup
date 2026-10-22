@@ -58,6 +58,9 @@ export const load: PageServerLoad = async ({ setHeaders, url, locals }) => {
 		preview,
 		programs: cards,
 		blocks: siteBlocks,
+		// Set only by the admin preview, which renders this page with draft blocks.
+		editable: false as boolean,
+		drafts: [] as string[],
 		content: {
 			title: text('site.title', defaultSite.title),
 			description: text('site.description', defaultSite.description),

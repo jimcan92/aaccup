@@ -94,8 +94,8 @@
 </main>
 
 <!-- Home page blocks (history, organization, events…), set under Admin → Home page. -->
-<LandingBlocks blocks={data.blocks} />
+<LandingBlocks blocks={data.blocks} editable={data.editable} drafts={data.drafts} />
 
 <SiteFooter contactNote={content.contactNote} />
 
-<HomeQuickActions programs={data.programs} />
+{#if !data.editable}<HomeQuickActions programs={data.programs} />{/if}

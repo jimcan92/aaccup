@@ -20,7 +20,8 @@
 	import { hasContent, type GalleryItem, type LandingBlock } from '$lib/landing';
 
 	// Landing blocks in the order set in the admin, for a program page or the home page.
-	let { blocks }: { blocks: LandingBlock[] } = $props();
+	// In the admin preview (editable) each block is a click target, and blocks not yet live are tagged.
+	let { blocks, editable = false, drafts = [] }: { blocks: LandingBlock[]; editable?: boolean; drafts?: string[] } = $props();
 
 	// Only blocks with something to show; backgrounds alternate paper and salt down the page.
 	const visible = $derived(blocks.filter(hasContent));
@@ -39,6 +40,8 @@
 </script>
 
 {#each visible as block, index (block.id)}
+<div data-block-id={editable ? block.id : undefined} class={editable ? 'relative cursor-pointer hover:outline-[3px] hover:outline-solid hover:outline-program hover:[outline-offset:-3px]' : 'contents'}>
+	{#if editable && drafts.includes(block.id)}<span class="pointer-events-none absolute right-3 top-3 z-10 bg-ink px-2 py-1 font-mono text-[11px] text-paper">Not live yet</span>{/if}
 	{#if block.kind === 'stats'}
 		<section class="border-b border-rule {background[tone(index)]}">
 			<div class="mx-auto max-w-[1280px] px-5 py-12 sm:px-8">
@@ -114,6 +117,7 @@
 			</div>
 		</section>
 	{/if}
+</div>
 {/each}
 
 <Dialog.Root open={viewer !== null} onOpenChange={(open) => !open && (viewer = null)}>
