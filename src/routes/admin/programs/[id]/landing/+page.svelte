@@ -9,7 +9,8 @@
 	import LandingBlockEditor from '$lib/components/admin/landing-block-editor.svelte';
 	import PageHeader from '$lib/components/admin/page-header.svelte';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import { blockLabel } from '$lib/landing';
+	import { blockLabels } from '$lib/landing';
+	import { fresh } from '$lib/fresh-link';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -39,7 +40,7 @@
 		description={`What visitors see first at /${data.program.slug}: a photo banner, highlights, and text, above the link to the documents. Changes stay as drafts until a focal person or admin publishes them.`}
 	>
 		{#snippet actions()}
-			<a href={`/${data.program.slug}`} target="_blank" rel="noopener noreferrer" class="inline-flex h-10 items-center gap-2 border border-rule bg-paper px-4 text-[13px] font-medium hover:border-ink/30">
+			<a href={`/${data.program.slug}`} use:fresh target="_blank" rel="noopener noreferrer" class="inline-flex h-10 items-center gap-2 border border-rule bg-paper px-4 text-[13px] font-medium hover:border-ink/30">
 				View public page <ArrowUpRight class="size-4" />
 			</a>
 		{/snippet}

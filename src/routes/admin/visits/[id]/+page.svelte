@@ -8,6 +8,7 @@
 	import PageHeader from '$lib/components/admin/page-header.svelte';
 	import StatusBadge from '$lib/components/admin/status-badge.svelte';
 	import { pad2 } from '$lib/format';
+	import { fresh } from '$lib/fresh-link';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -46,7 +47,7 @@
 					<button class="h-10 border border-ink bg-paper px-4 text-[13px] font-medium hover:bg-ink hover:text-paper">Make this the active visit</button>
 				</form>
 			{/if}
-			<a href={publicUrl} target="_blank" rel="noopener noreferrer" class="inline-flex h-10 items-center gap-2 border border-rule bg-paper px-4 text-[13px] font-medium hover:border-ink/30">
+			<a href={publicUrl} use:fresh target="_blank" rel="noopener noreferrer" class="inline-flex h-10 items-center gap-2 border border-rule bg-paper px-4 text-[13px] font-medium hover:border-ink/30">
 				Public page
 				<ArrowUpRight class="size-4" />
 			</a>

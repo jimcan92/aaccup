@@ -6,6 +6,7 @@
 	import { roleInfo } from '$lib/admin';
 	import { formatDate } from '$lib/format';
 	import { themeStyle } from '$lib/theme';
+	import { fresh } from '$lib/fresh-link';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -78,7 +79,7 @@
 					{#if program.waiting}
 						<span class="text-[12px] font-medium text-ink">{program.waiting} waiting for review</span>
 					{/if}
-					<a href={`/${program.slug}`} class="inline-flex items-center gap-1.5 text-[13px] text-ink-soft hover:underline">
+					<a href={`/${program.slug}`} use:fresh class="inline-flex items-center gap-1.5 text-[13px] text-ink-soft hover:underline">
 						Public page
 						<ArrowUpRight class="size-3.5" />
 					</a>

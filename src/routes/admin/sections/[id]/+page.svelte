@@ -13,6 +13,7 @@
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { previewUrl } from '$lib/drive-url';
 	import { formatDate, kindLabel } from '$lib/format';
+	import { fresh } from '$lib/fresh-link';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -95,7 +96,7 @@
 			{#if data.canManage && data.section.status !== 'published'}
 				<form method="POST" action="?/publishSection" use:enhance><button class="h-10 bg-ink px-4 text-[13px] font-medium text-paper hover:bg-ink-soft">Publish section</button></form>
 			{/if}
-			<a href={publicUrl} target="_blank" rel="noopener noreferrer" class="inline-flex h-10 items-center gap-2 border border-rule bg-paper px-4 text-[13px] font-medium hover:border-ink/30">
+			<a href={publicUrl} use:fresh target="_blank" rel="noopener noreferrer" class="inline-flex h-10 items-center gap-2 border border-rule bg-paper px-4 text-[13px] font-medium hover:border-ink/30">
 				Public page <ArrowUpRight class="size-4" />
 			</a>
 		{/snippet}
