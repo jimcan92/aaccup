@@ -4,12 +4,13 @@
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import BarChart3 from '@lucide/svelte/icons/chart-column';
 	import GalleryHorizontal from '@lucide/svelte/icons/gallery-horizontal';
+	import History from '@lucide/svelte/icons/history';
 	import Images from '@lucide/svelte/icons/images';
 	import Type from '@lucide/svelte/icons/type';
 	import LandingBlockEditor from '$lib/components/admin/landing-block-editor.svelte';
 	import PageHeader from '$lib/components/admin/page-header.svelte';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import { blockLabels } from '$lib/landing';
+	import { blockLabel } from '$lib/landing';
 	import { fresh } from '$lib/fresh-link';
 	import type { PageProps } from './$types';
 
@@ -20,7 +21,8 @@
 		{ kind: 'carousel', label: 'Photo carousel', icon: GalleryHorizontal, hint: 'A slideshow of photos with captions, one at a time' },
 		{ kind: 'gallery', label: 'Photo gallery', icon: Images, hint: 'A grid of photos; the first one is the banner' },
 		{ kind: 'stats', label: 'Highlights', icon: BarChart3, hint: 'Short figures: passing rate, graduates, years' },
-		{ kind: 'text', label: 'Text section', icon: Type, hint: 'A heading and paragraphs: about, history, objectives' }
+		{ kind: 'text', label: 'Text section', icon: Type, hint: 'A heading and paragraphs: about, objectives' },
+		{ kind: 'timeline', label: 'Timeline', icon: History, hint: 'Dated milestones down a line: the program’s history' }
 	] as const;
 </script>
 
@@ -70,7 +72,7 @@
 {#if data.canEdit}
 	<section class="mt-8" aria-labelledby="add-heading">
 		<h2 id="add-heading" class="font-display text-[18px] font-semibold tracking-[-0.02em]">Add a block</h2>
-		<div class="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+		<div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
 			{#each add as option (option.kind)}
 				{@const Icon = option.icon}
 				<form method="POST" action="?/add" use:enhance>

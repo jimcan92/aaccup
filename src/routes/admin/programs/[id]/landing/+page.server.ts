@@ -4,13 +4,14 @@ import { canManage, dbFail, isHttpUrl, requireStaff, text } from '$lib/server/ad
 import type { StaffProfile } from '$lib/server/sso';
 import type { Actions, PageServerLoad } from './$types';
 
-const KINDS = ['gallery', 'stats', 'text'] as const;
+const KINDS = ['gallery', 'stats', 'text', 'timeline'] as const;
 type Kind = (typeof KINDS)[number];
 
 const EMPTY: Record<Kind, object> = {
 	gallery: { title: '', items: [] },
 	stats: { title: 'Highlights', items: [] },
-	text: { title: '', body: '' }
+	text: { title: '', body: '' },
+	timeline: { title: 'Our history', items: [] }
 };
 
 function canEditProgram(staff: StaffProfile, programId: string) {
@@ -44,6 +45,18 @@ function cleanContent(kind: Kind, raw: string): object | string {
 			.filter((item) => item.value || item.label);
 		if (clean.some((item) => !item.value || !item.label)) return 'Each highlight needs a value and a label.';
 		return { title, items: clean.slice(0, 12) };
+	}
+
+	if (kind === 'timeline') {
+		const clean = items
+			.map((item) => ({
+				year: String(item?.year ?? '').trim().slice(0, 40),
+				title: String(item?.title ?? '').trim().slice(0, 200),
+				body: String(item?.body ?? '').trim().slice(0, 4000)
+			}))
+			.filter((item) => item.year || item.title || item.body);
+		if (clean.some((item) => !item.year || !item.title)) return 'Each timeline entry needs a year and a title.';
+		return { title, items: clean.slice(0, 60) };
 	}
 
 	const clean = items

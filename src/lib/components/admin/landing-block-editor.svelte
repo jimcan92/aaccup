@@ -9,12 +9,12 @@
 	import { toast } from 'svelte-sonner';
 	import StatusBadge from '$lib/components/admin/status-badge.svelte';
 	import { imageSrc } from '$lib/image-url';
-	import { blockLabel, type GalleryItem, type StatItem } from '$lib/landing';
+	import { blockLabel, type GalleryItem, type StatItem, type TimelineItem } from '$lib/landing';
 
 	type Block = {
 		id: string;
-		kind: 'gallery' | 'stats' | 'text';
-		draft: { title?: string; body?: string; items?: (GalleryItem | StatItem)[] };
+		kind: 'gallery' | 'stats' | 'text' | 'timeline';
+		draft: { title?: string; body?: string; items?: (GalleryItem | StatItem | TimelineItem)[] };
 		published: unknown;
 		status: string;
 	};
@@ -39,11 +39,21 @@
 	// svelte-ignore state_referenced_locally
 	let stats = $state<StatItem[]>(block.kind === 'stats' ? ((block.draft.items ?? []) as StatItem[]).map((item) => ({ ...item })) : []);
 	// svelte-ignore state_referenced_locally
+	let milestones = $state<TimelineItem[]>(block.kind === 'timeline' ? ((block.draft.items ?? []) as TimelineItem[]).map((item) => ({ ...item })) : []);
+	// svelte-ignore state_referenced_locally
 	let layout = $state<'grid' | 'carousel'>((block.draft as { layout?: string }).layout === 'carousel' ? 'carousel' : 'grid');
 	let uploading = $state<number | null>(null);
 
 	const content = $derived(
-		JSON.stringify(block.kind === 'text' ? { title, body } : block.kind === 'stats' ? { title, items: stats } : { title, layout, items: photos })
+		JSON.stringify(
+			block.kind === 'text'
+				? { title, body }
+				: block.kind === 'stats'
+					? { title, items: stats }
+					: block.kind === 'timeline'
+						? { title, items: milestones }
+						: { title, layout, items: photos }
+		)
 	);
 	const live = $derived(block.published !== null);
 	const changed = $derived(live && JSON.stringify(block.published) !== JSON.stringify(block.draft));
@@ -105,7 +115,7 @@
 		<fieldset disabled={!canEdit} class="grid gap-4">
 			<label class="grid gap-1.5 text-[13px] font-medium">
 				{block.kind === 'text' ? 'Heading' : 'Heading (optional)'}
-				<input bind:value={title} class={field} placeholder={block.kind === 'gallery' ? 'Campus life' : block.kind === 'stats' ? 'Highlights' : 'About the program'} />
+				<input bind:value={title} class={field} placeholder={block.kind === 'gallery' ? 'Campus life' : block.kind === 'stats' ? 'Highlights' : block.kind === 'timeline' ? 'Our history' : 'About the program'} />
 			</label>
 
 			{#if block.kind === 'gallery'}
@@ -137,6 +147,27 @@
 						</div>
 					{/each}
 					<button type="button" onclick={() => (stats = [...stats, { value: '', label: '' }])} class="inline-flex h-9 w-fit items-center gap-1.5 border border-rule px-3 text-[13px] font-medium hover:border-ink/30"><Plus class="size-4" /> Add highlight</button>
+				</div>
+			{:else if block.kind === 'timeline'}
+				<div class="grid gap-3">
+					{#each milestones as milestone, index (index)}
+						<div class="grid gap-3 border border-rule p-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+							<div class="grid gap-2">
+								<div class="grid gap-2 sm:grid-cols-[8rem_minmax(0,1fr)]">
+									<input bind:value={milestone.year} aria-label="Year" placeholder="1947" class="{field} font-display text-[16px] font-semibold" />
+									<input bind:value={milestone.title} aria-label="Title" placeholder="Founded as Moalboal Province High School" class={field} />
+								</div>
+								<textarea bind:value={milestone.body} aria-label="Details" rows="3" class="w-full border border-rule bg-salt p-3 text-[14px] leading-relaxed outline-none focus:border-ink" placeholder="What happened (optional). Leave an empty line between paragraphs."></textarea>
+							</div>
+							<div class="flex gap-1 sm:flex-col">
+								<button type="button" onclick={() => (milestones = move(milestones, index, -1))} disabled={index === 0} class={small} aria-label="Move entry up"><ArrowUp class="size-4" /></button>
+								<button type="button" onclick={() => (milestones = move(milestones, index, 1))} disabled={index === milestones.length - 1} class={small} aria-label="Move entry down"><ArrowDown class="size-4" /></button>
+								<button type="button" onclick={() => (milestones = milestones.filter((_, i) => i !== index))} class={small} aria-label="Remove entry"><X class="size-4" /></button>
+							</div>
+						</div>
+					{/each}
+					<button type="button" onclick={() => (milestones = [...milestones, { year: '', title: '', body: '' }])} class="inline-flex h-9 w-fit items-center gap-1.5 border border-rule px-3 text-[13px] font-medium hover:border-ink/30"><Plus class="size-4" /> Add entry</button>
+					<p class="text-[12px] text-ink-soft">Entries show in this order, oldest first is usual. The year can be a range, like 1977–1978.</p>
 				</div>
 			{:else}
 				<div class="grid gap-3">
