@@ -27,16 +27,17 @@
 		alt={decorative ? '' : 'Cebu Technological University seal'}
 		width={size}
 		height={size}
-		class="relative z-10 rounded-full"
+		class="rounded-full"
 		decoding="async"
 	/>
+	<!-- Same as the favicon: AACCUP on top, its edge at the centre of the CTU seal. -->
 	<img
 		src={large ? aaccupLarge : aaccupSmall}
 		alt={decorative ? '' : 'AACCUP logo'}
 		width={size}
 		height={size}
-		class="rounded-full"
-		style:margin-left={`${-size * 0.18}px`}
+		class="relative z-10 rounded-full"
+		style:margin-left={`${-size * 0.5}px`}
 		decoding="async"
 	/>
 </span>
