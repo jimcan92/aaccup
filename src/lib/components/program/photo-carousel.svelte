@@ -7,7 +7,12 @@
 	import { imageSrc } from '$lib/image-url';
 	import type { GalleryItem } from '$lib/landing';
 
-	let { items, title, onopen }: { items: GalleryItem[]; title?: string; onopen: (index: number) => void } = $props();
+	let {
+		items,
+		title,
+		tone = 'paper',
+		onopen
+	}: { items: GalleryItem[]; title?: string; tone?: 'paper' | 'salt'; onopen: (index: number) => void } = $props();
 
 	const reducedMotion = new MediaQuery('prefers-reduced-motion: reduce', false);
 
@@ -30,7 +35,7 @@
 	}
 </script>
 
-<section class="border-b border-rule bg-paper" aria-roledescription="carousel" aria-label={title || 'Photos'}>
+<section class="border-b border-rule {tone === 'salt' ? 'bg-salt' : 'bg-paper'}" aria-roledescription="carousel" aria-label={title || 'Photos'}>
 	<div class="mx-auto max-w-[1280px] px-5 py-12 sm:px-8">
 		{#if title}<h2 class="font-display text-[clamp(1.4rem,2.6vw,1.9rem)] font-semibold tracking-[-0.035em]">{title}</h2>{/if}
 
