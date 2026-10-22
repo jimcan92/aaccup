@@ -49,17 +49,87 @@ function ctuCookies(cookieHeader: string | null): string {
 		.join('; ');
 }
 
-export async function getSsoUser(request: Request): Promise<SsoUser | null> {
-	// Local development cannot receive the .ctu-moalboal.online cookie on localhost.
-	// `dev` is false in production builds, so this override never ships.
-	if (dev && privateEnv.AACCUP_DEV_SSO_EMAIL) {
-		const email = privateEnv.AACCUP_DEV_SSO_EMAIL.toLowerCase();
-		return { id: `dev:${email}`, email, name: email, image: null };
+/**
+ * The Accounts round trip is the slowest part of an admin request, so a confirmed SSO
+ * identity is remembered for a short time in a signed httpOnly cookie. The cache is bound
+ * to the current CTU session token: signing out of CTU Accounts (which clears that cookie)
+ * or switching accounts invalidates it at once. Only a session revoked remotely in Accounts
+ * can stay valid here for up to SSO_CACHE_SECONDS. AACCUP access itself (the profile) is
+ * still checked on every request.
+ */
+const SSO_CACHE_COOKIE = 'aaccup_sso';
+const SSO_CACHE_SECONDS = 120;
+
+type SsoCache = SsoUser & { tok: string; exp: number };
+
+const textEncoder = new TextEncoder();
+const toB64url = (bytes: ArrayBuffer | Uint8Array) => {
+	let binary = '';
+	for (const byte of new Uint8Array(bytes)) binary += String.fromCharCode(byte);
+	return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+};
+const fromB64url = (value: string) => atob(value.replace(/-/g, '+').replace(/_/g, '/'));
+
+let cacheKey: Promise<CryptoKey> | null = null;
+
+/** HMAC key derived from the service-role key, so no extra secret is needed. */
+function signingKey(): Promise<CryptoKey> | null {
+	const secret = privateEnv.SUPABASE_SERVICE_ROLE_KEY;
+	if (!secret) return null;
+	cacheKey ??= crypto.subtle
+		.digest('SHA-256', textEncoder.encode(`aaccup-sso-cache|${secret}`))
+		.then((raw) => crypto.subtle.importKey('raw', raw, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']));
+	return cacheKey;
+}
+
+/** A short fingerprint of the CTU session token, so the cache follows that exact session. */
+async function sessionFingerprint(cookieHeader: string): Promise<string | null> {
+	const token = cookieHeader
+		.split('; ')
+		.find((part) => /^(__Secure-)?ctu\.session_token=/.test(part));
+	if (!token) return null;
+	return toB64url(await crypto.subtle.digest('SHA-256', textEncoder.encode(token))).slice(0, 32);
+}
+
+async function readSsoCache(cookies: Cookies, fingerprint: string): Promise<SsoUser | null> {
+	const raw = cookies.get(SSO_CACHE_COOKIE);
+	const key = signingKey();
+	if (!raw || !key) return null;
+
+	try {
+		const [body, signature] = raw.split('.');
+		const valid = await crypto.subtle.verify(
+			'HMAC',
+			await key,
+			Uint8Array.from(fromB64url(signature), (c) => c.charCodeAt(0)),
+			textEncoder.encode(body)
+		);
+		if (!valid) return null;
+
+		const cache = JSON.parse(fromB64url(body)) as SsoCache;
+		if (cache.tok !== fingerprint || cache.exp < Math.floor(Date.now() / 1000)) return null;
+		return { id: cache.id, email: cache.email, name: cache.name, image: cache.image };
+	} catch {
+		return null;
 	}
+}
 
-	const cookie = ctuCookies(request.headers.get('cookie'));
-	if (!cookie) return null;
+async function writeSsoCache(cookies: Cookies, user: SsoUser, fingerprint: string) {
+	const key = signingKey();
+	if (!key) return;
+	const cache: SsoCache = { ...user, tok: fingerprint, exp: Math.floor(Date.now() / 1000) + SSO_CACHE_SECONDS };
+	const body = toB64url(textEncoder.encode(JSON.stringify(cache)));
+	const signature = toB64url(await crypto.subtle.sign('HMAC', await key, textEncoder.encode(body)));
+	cookies.set(SSO_CACHE_COOKIE, `${body}.${signature}`, {
+		path: '/',
+		httpOnly: true,
+		secure: !dev,
+		sameSite: 'lax',
+		maxAge: SSO_CACHE_SECONDS
+	});
+}
 
+async function fetchSsoUser(cookie: string): Promise<SsoUser | null> {
 	try {
 		const response = await fetch(`${accountsUrl()}/api/auth/get-session`, {
 			headers: { cookie, accept: 'application/json' },
@@ -77,6 +147,30 @@ export async function getSsoUser(request: Request): Promise<SsoUser | null> {
 	} catch {
 		return null;
 	}
+}
+
+export async function getSsoUser(request: Request, cookies: Cookies): Promise<SsoUser | null> {
+	// Local development cannot receive the .ctu-moalboal.online cookie on localhost.
+	// `dev` is false in production builds, so this override never ships.
+	if (dev && privateEnv.AACCUP_DEV_SSO_EMAIL) {
+		const email = privateEnv.AACCUP_DEV_SSO_EMAIL.toLowerCase();
+		return { id: `dev:${email}`, email, name: email, image: null };
+	}
+
+	const cookie = ctuCookies(request.headers.get('cookie'));
+	const fingerprint = cookie ? await sessionFingerprint(cookie) : null;
+	if (!cookie || !fingerprint) {
+		if (cookies.get(SSO_CACHE_COOKIE)) cookies.delete(SSO_CACHE_COOKIE, { path: '/' });
+		return null;
+	}
+
+	const cached = await readSsoCache(cookies, fingerprint);
+	if (cached) return cached;
+
+	const user = await fetchSsoUser(cookie);
+	if (user) await writeSsoCache(cookies, user, fingerprint);
+	else if (cookies.get(SSO_CACHE_COOKIE)) cookies.delete(SSO_CACHE_COOKIE, { path: '/' });
+	return user;
 }
 
 let serviceClient: SupabaseClient | null = null;
