@@ -74,11 +74,12 @@ Then open `http://127.0.0.1:4173`.
 
 ## Admin editing
 
-The admin lives at `/admin/login`. After sign-in:
+The admin (the **AACCUP Desk**) lives at `/admin`. Sign-in goes through **CTU Accounts SSO**, the same account as the other campus systems; access is by invitation. See [`supabase/README.md`](supabase/README.md) for how the session becomes a Supabase JWT.
 
-- `/admin` — dashboard
-- `/admin/content` — list of editable blocks
-- `/admin/content/[id]` — edit VMGO, hero copy, site wordings, or the carousel
+- `/admin` — overview: per-program progress, content waiting for review
+- `/admin/content` — site title, description, footer contact line
+- `/admin/content/[id]` — split-view editor
+- `/admin/people` — admin only: add people by CTU email, set roles, remove access
 
 The editor is split-view: fields on the left, **live preview** on the right. It also has:
 

@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/public';
 import { activeVisit, countLinked, programs, visitDocuments } from '$lib/data/accreditation';
 import { ACTIVE_CONTENT_KEYS, site as defaultSite } from '$lib/data/site';
@@ -8,32 +7,7 @@ import type { PageServerLoad } from './$types';
 export const prerender = false;
 
 export const load: PageServerLoad = async ({ setHeaders, url, locals }) => {
-	// Supabase falls back to the Site URL when emailRedirectTo is not allowlisted.
-	// If the magic-link code lands on the home page, forward it to the callback.
-	const code = url.searchParams.get('code');
-
-	if (code && url.pathname === '/') {
-		redirect(
-			303,
-			`/auth/callback?code=${encodeURIComponent(code)}&next=${encodeURIComponent(url.searchParams.get('next') || '/admin')}`
-		);
-	}
-
-	let preview = false;
-
-	if (url.searchParams.get('preview') === '1' && locals.supabase) {
-		const { user } = await locals.safeGetSession();
-
-		if (user) {
-			const { data: profile } = await locals.supabase
-				.from('profiles')
-				.select('role')
-				.eq('id', user.id)
-				.maybeSingle();
-
-			preview = ['admin', 'focal', 'reviewer'].includes(profile?.role ?? '');
-		}
-	}
+	const preview = url.searchParams.get('preview') === '1' && ['admin', 'focal', 'reviewer'].includes(locals.staff?.role ?? '');
 
 	setHeaders(
 		preview
@@ -46,6 +20,7 @@ export const load: PageServerLoad = async ({ setHeaders, url, locals }) => {
 	if (env.PUBLIC_SUPABASE_URL && env.PUBLIC_SUPABASE_ANON_KEY) {
 		try {
 			if (preview && locals.supabase) {
+				// locals.supabase is the staff member's client here, so drafts are read under RLS.
 				const { data } = await locals.supabase
 					.from('content_blocks')
 					.select('key, draft_value, published_value');

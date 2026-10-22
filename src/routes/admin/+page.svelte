@@ -1,96 +1,125 @@
 <script lang="ts">
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
-	import Type from '@lucide/svelte/icons/type';
+	import PageHeader from '$lib/components/admin/page-header.svelte';
+	import StatusBadge from '$lib/components/admin/status-badge.svelte';
+	import { roleInfo } from '$lib/admin';
 	import { formatDate } from '$lib/format';
+	import { themeStyle } from '$lib/theme';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 
-	const cards = $derived([
-		{ label: 'Content blocks', value: data.counts.blocks, href: '/admin/content' },
-		{ label: 'Areas', value: data.counts.areas, href: null },
-		{ label: 'Documents', value: data.counts.documents, href: null }
-	]);
+	const firstName = $derived((data.staff?.full_name || data.staff?.email || '').split(/[\s@]/)[0]);
+	const role = $derived(roleInfo[data.staff?.role ?? ''] ?? { label: data.staff?.role ?? '', description: '' });
+	const waiting = $derived(data.blocks.filter((block) => block.status === 'in_review' || block.status === 'approved'));
+	const groupLabel = { common: 'Common', current: 'Current visit', previous: 'Previous visit' } as const;
 </script>
 
 <svelte:head>
-	<title>Overview · AACCUP Admin</title>
+	<title>Overview · AACCUP Desk</title>
 </svelte:head>
 
-<div class="flex flex-col gap-6 border-b border-rule pb-6 sm:flex-row sm:items-end sm:justify-between">
+<PageHeader
+	eyebrow={`${role.label} · AACCUP Desk`}
+	title={firstName ? `Good to see you, ${firstName}.` : 'Overview'}
+	description={role.description}
+>
+	{#snippet actions()}
+		<a
+			href="/admin/content"
+			class="inline-flex h-10 items-center gap-2 bg-ink px-4 text-[13px] font-medium text-paper transition-colors hover:bg-ink-soft"
+		>
+			Edit site content
+			<ArrowRight class="size-4" />
+		</a>
+	{/snippet}
+</PageHeader>
+
+<section class="mt-10" aria-labelledby="programs-heading">
+	<div class="flex items-end justify-between gap-4">
+		<h2 id="programs-heading" class="font-display text-[22px] font-semibold tracking-[-0.03em]">Programs</h2>
+		<p class="font-mono text-[12px] text-ink-soft">Documents linked, active visit</p>
+	</div>
+
+	<ul class="mt-4 grid gap-4 md:grid-cols-2">
+		{#each data.programs as program (program.slug)}
+			{@const pct = program.total ? Math.round((program.linked / program.total) * 100) : 0}
+			<li class="program-scope border border-rule bg-paper" style={themeStyle(program.theme)}>
+				<div class="flex items-start justify-between gap-4 border-t-4 border-program p-5">
+					<div class="min-w-0">
+						<p class="font-display text-[30px] font-semibold leading-none tracking-[-0.05em] text-program">{program.code}</p>
+						<p class="mt-2 truncate text-[13px] text-ink-soft">{program.name}</p>
+						<p class="mt-1 font-mono text-[12px] text-ink-soft">{program.visit}</p>
+					</div>
+					<div class="text-right">
+						<p class="font-display text-[28px] font-semibold leading-none tracking-[-0.04em] text-program-ink">{pct}%</p>
+						<p class="mt-1 font-mono text-[12px] text-ink-soft">{program.linked}/{program.total}</p>
+					</div>
+				</div>
+				<div class="px-5">
+					<div class="h-1.5 bg-program-soft" role="progressbar" aria-label={`${program.code} documents linked`} aria-valuemin={0} aria-valuemax={program.total} aria-valuenow={program.linked}>
+						<div class="h-full bg-program" style:width={`${pct}%`}></div>
+					</div>
+				</div>
+				<dl class="grid grid-cols-3 gap-2 px-5 py-4 text-[12px]">
+					{#each program.groups as group (group.kind)}
+						<div>
+							<dt class="text-ink-soft">{groupLabel[group.kind]}</dt>
+							<dd class="mt-0.5 font-mono text-ink">{group.linked}/{group.total}</dd>
+						</div>
+					{/each}
+				</dl>
+				<div class="border-t border-rule px-5 py-3">
+					<a href={`/${program.slug}`} class="inline-flex items-center gap-1.5 text-[13px] font-medium text-program-ink hover:underline">
+						Open the public dossier
+						<ArrowUpRight class="size-3.5" />
+					</a>
+				</div>
+			</li>
+		{/each}
+	</ul>
+	<p class="mt-3 text-[12px] text-ink-soft">
+		Program, visit, and document records are still read from the site code. Editing them here comes with the next phase.
+	</p>
+</section>
+
+<section class="mt-12 grid gap-8 lg:grid-cols-[1.4fr_1fr]">
 	<div>
-		<p class="font-mono text-[9px] text-ink-soft">Admin · {data.profile?.role ?? 'user'}</p>
-		<h1 class="mt-3 font-display text-[clamp(2rem,4vw,3rem)] font-semibold leading-[0.96] tracking-[-0.05em]">
-			The content desk.
-		</h1>
-		<p class="mt-3 max-w-xl text-[12px] leading-relaxed text-ink-soft">
-			Welcome, {data.profile?.full_name || data.user?.email}. This is the Phase 1 admin. The content editor and carousel uploader are next.
-		</p>
-	</div>
-	<a
-		href="/"
-		class="inline-flex w-fit items-center gap-1.5 border-b border-ink pb-1 text-[10px] font-medium text-ink"
-	>
-		View the public site
-		<ArrowUpRight class="size-3.5" />
-	</a>
-</div>
-
-<div class="mt-8 grid gap-4 sm:grid-cols-3">
-	{#each cards as card (card.label)}
-		<div class="border border-rule bg-paper p-5">
-			<p class="font-mono text-[9px] text-ink-soft">{card.label}</p>
-			<p class="mt-3 font-display text-[40px] font-semibold leading-none tracking-[-0.05em]">{card.value}</p>
-			{#if card.href}
-				<a href={card.href} class="mt-4 inline-flex items-center gap-1.5 text-[10px] font-medium text-ink">
-					Open
-					<ArrowUpRight class="size-3" />
-				</a>
+		<h2 class="font-display text-[22px] font-semibold tracking-[-0.03em]">Site content</h2>
+		<ul class="mt-4 border-t border-rule">
+			{#each data.blocks as block (block.id)}
+				<li>
+					<a
+						href={`/admin/content/${block.id}`}
+						class="flex items-center justify-between gap-4 border-b border-rule px-1 py-3.5 transition-colors hover:bg-paper sm:px-3"
+					>
+						<span class="min-w-0">
+							<span class="block truncate text-[14px] font-medium text-ink">{block.label}</span>
+							<span class="block text-[12px] text-ink-soft">Updated {formatDate(block.updated_at?.slice(0, 10))}</span>
+						</span>
+						<StatusBadge status={block.status} />
+					</a>
+				</li>
 			{:else}
-				<p class="mt-4 text-[9px] text-ink-soft">Phase 2</p>
-			{/if}
-		</div>
-	{/each}
-</div>
-
-<div class="mt-10 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-	<div class="border border-rule bg-paper">
-		<div class="flex items-center justify-between border-b border-rule px-5 py-4">
-			<h2 class="font-display text-[18px] font-semibold tracking-[-0.03em]">Recently updated</h2>
-			<a href="/admin/content" class="text-[10px] text-ink-soft hover:text-ink">View all</a>
-		</div>
-		{#if data.recent.length === 0}
-			<p class="p-5 text-[11px] text-ink-soft">No content blocks yet.</p>
-		{:else}
-			<ul class="divide-y divide-rule">
-				{#each data.recent as block (block.key)}
-					<li class="flex items-center justify-between gap-4 px-5 py-3">
-						<div class="min-w-0">
-							<p class="truncate text-[12px] font-medium">{block.label}</p>
-							<p class="mt-0.5 font-mono text-[8px] text-ink-soft">{block.key}</p>
-						</div>
-						<div class="text-right">
-							<span class="border border-rule px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-[0.06em]">
-								{block.status}
-							</span>
-							<p class="mt-1 text-[8px] text-ink-soft">{formatDate(block.updated_at?.slice(0, 10))}</p>
-						</div>
-					</li>
-				{/each}
-			</ul>
-		{/if}
-	</div>
-
-	<div class="border border-rule bg-ink p-5 text-paper">
-		<Type class="size-5 text-paper/50" />
-		<h2 class="mt-4 font-display text-[20px] font-semibold tracking-[-0.03em]">Phase 1 tools</h2>
-		<ul class="mt-4 space-y-3 text-[11px] leading-relaxed text-paper/60">
-			<li class="flex gap-2"><span class="text-paper/30">01</span> Content list and status</li>
-			<li class="flex gap-2"><span class="text-paper/30">02</span> Carousel upload and reorder</li>
-			<li class="flex gap-2"><span class="text-paper/30">03</span> Draft → review → publish</li>
+				<li class="border-b border-rule py-6 text-[13px] text-ink-soft">No content blocks found.</li>
+			{/each}
 		</ul>
-		<p class="mt-5 text-[9px] leading-relaxed text-paper/35">
-			The login session and role guard are live. The editing forms are the next build.
-		</p>
 	</div>
-</div>
+
+	<aside class="h-fit border border-rule bg-paper p-5">
+		<p class="font-mono text-[12px] text-ink-soft">Waiting for review</p>
+		<p class="mt-2 font-display text-[40px] font-semibold leading-none tracking-[-0.05em]">{waiting.length}</p>
+		<p class="mt-2 text-[13px] leading-relaxed text-ink-soft">
+			{waiting.length === 0
+				? 'Nothing is waiting. Drafts submitted by area chairs appear here.'
+				: 'Blocks submitted for review. A focal person or admin can publish them.'}
+		</p>
+		{#each waiting as block (block.id)}
+			<a href={`/admin/content/${block.id}`} class="mt-3 flex items-center justify-between gap-3 text-[13px] font-medium hover:underline">
+				{block.label}
+				<ArrowRight class="size-3.5" />
+			</a>
+		{/each}
+	</aside>
+</section>

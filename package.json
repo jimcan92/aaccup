@@ -32,7 +32,6 @@
 		"@fontsource-variable/instrument-sans": "^5",
 		"@fontsource/ibm-plex-mono": "^5",
 		"@lucide/svelte": "^1.61.0",
-		"@supabase/ssr": "^0.12.7",
 		"@supabase/supabase-js": "^2.118.0",
 		"bits-ui": "^2.18.0",
 		"clsx": "^2",

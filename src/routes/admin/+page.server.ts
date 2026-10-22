@@ -1,33 +1,43 @@
-import { redirect } from '@sveltejs/kit';
+import { activeVisit, countLinked, programs, sectionsOf, visitDocuments } from '$lib/data/accreditation';
+import { ACTIVE_CONTENT_KEYS } from '$lib/data/site';
 import type { PageServerLoad } from './$types';
 
 export const prerender = false;
 
-export const load: PageServerLoad = async ({ locals, parent }) => {
-	const { profile } = await parent();
+export const load: PageServerLoad = async ({ locals }) => {
+	const { data: blocks } = locals.supabase
+		? await locals.supabase
+				.from('content_blocks')
+				.select('id, key, label, status, updated_at')
+				.in('key', [...ACTIVE_CONTENT_KEYS])
+				.order('updated_at', { ascending: false })
+		: { data: [] };
 
-	if (!locals.supabase) {
-		redirect(303, '/admin/login');
-	}
+	// Programs, visits and documents still come from the site data until they move to Supabase.
+	const programSummaries = [...programs]
+		.sort((a, b) => a.sortOrder - b.sortOrder)
+		.map((program) => {
+			const visit = activeVisit(program);
+			const groups = (['common', 'current', 'previous'] as const).map((kind) => {
+				const documents = sectionsOf(visit, kind).flatMap((section) => section.documents);
+				return { kind, linked: countLinked(documents), total: documents.length };
+			});
+			const documents = visitDocuments(visit);
 
-	const [blocks, areas, documents, recent] = await Promise.all([
-		locals.supabase.from('content_blocks').select('*', { count: 'exact', head: true }),
-		locals.supabase.from('areas').select('*', { count: 'exact', head: true }),
-		locals.supabase.from('documents').select('*', { count: 'exact', head: true }),
-		locals.supabase
-			.from('content_blocks')
-			.select('key, label, group_name, status, updated_at')
-			.order('updated_at', { ascending: false })
-			.limit(6)
-	]);
+			return {
+				slug: program.slug,
+				code: program.code,
+				name: program.name,
+				theme: program.theme,
+				visit: `${visit.year} · ${visit.label}`,
+				linked: countLinked(documents),
+				total: documents.length,
+				groups
+			};
+		});
 
 	return {
-		profile,
-		counts: {
-			blocks: blocks.count ?? 0,
-			areas: areas.count ?? 0,
-			documents: documents.count ?? 0
-		},
-		recent: recent.data ?? []
+		blocks: blocks ?? [],
+		programs: programSummaries
 	};
 };

@@ -1,5 +1,7 @@
 <script lang="ts">
-	import Type from '@lucide/svelte/icons/type';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import PageHeader from '$lib/components/admin/page-header.svelte';
+	import StatusBadge from '$lib/components/admin/status-badge.svelte';
 	import { formatDate } from '$lib/format';
 	import type { PageProps } from './$types';
 
@@ -7,76 +9,65 @@
 
 	function preview(value: string | null | undefined) {
 		if (!value) return '—';
-		return value.length > 110 ? `${value.slice(0, 110)}…` : value;
+		return value.length > 140 ? `${value.slice(0, 140)}…` : value;
 	}
 </script>
 
 <svelte:head>
-	<title>Content · AACCUP Admin</title>
+	<title>Site content · AACCUP Desk</title>
 </svelte:head>
 
-<div class="border-b border-rule pb-6">
-	<p class="font-mono text-[9px] text-ink-soft">Content blocks</p>
-	<h1 class="mt-3 font-display text-[clamp(2rem,4vw,3rem)] font-semibold leading-[0.96] tracking-[-0.05em]">
-		The editable copy.
-	</h1>
-	<p class="mt-3 max-w-2xl text-[12px] leading-relaxed text-ink-soft">
-		The site title, description, and footer contact line. Click <strong class="font-medium text-ink">Edit</strong> to open the split-view editor.
-	</p>
-</div>
+<PageHeader
+	eyebrow="Site content"
+	title="The words around the record"
+	description="The site title, description, and footer contact line. Open a block to edit it next to a live preview. Drafts stay private until a focal person or admin publishes them."
+/>
 
 {#if data.error}
-	<div class="mt-6 border border-destructive/30 bg-destructive/5 p-4 text-[11px] text-destructive">
+	<div class="mt-6 border border-destructive/30 bg-paper p-4 text-[13px] text-destructive" role="alert">
 		{data.error}
 	</div>
 {/if}
 
-<div class="mt-8 space-y-8">
+<div class="mt-8 space-y-10">
 	{#each data.groups as group (group.name)}
 		<section>
-			<div class="flex items-center justify-between border-b border-ink/20 pb-2">
-				<h2 class="font-display text-[18px] font-semibold tracking-[-0.03em]">{group.name}</h2>
-				<span class="font-mono text-[9px] text-ink-soft">{group.items.length} blocks</span>
+			<div class="flex items-end justify-between border-b border-ink/20 pb-2">
+				<h2 class="font-display text-[20px] font-semibold tracking-[-0.03em]">{group.name}</h2>
+				<span class="font-mono text-[12px] text-ink-soft">{group.items.length} {group.items.length === 1 ? 'block' : 'blocks'}</span>
 			</div>
 
-			<div class="divide-y divide-rule">
+			<ul>
 				{#each group.items as block (block.key)}
-					<div class="grid gap-3 py-4 sm:grid-cols-[1fr_7rem_7rem] sm:items-start">
-						<div class="min-w-0">
-							<div class="flex flex-wrap items-center gap-2">
-								<p class="text-[12px] font-medium">{block.label}</p>
-								<span class="border border-rule px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-[0.06em]">
-									{block.key === 'home.carousel' ? 'carousel' : block.type}
-								</span>
+					<li>
+						<a
+							href={`/admin/content/${block.id}`}
+							class="group grid gap-3 border-b border-rule px-1 py-4 transition-colors hover:bg-paper sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center sm:gap-6 sm:px-3"
+						>
+							<div class="min-w-0">
+								<p class="text-[15px] font-medium text-ink">{block.label}</p>
+								<p class="mt-1 line-clamp-2 max-w-2xl text-[13px] leading-relaxed text-ink-soft">
+									{preview(block.published_value ?? block.draft_value)}
+								</p>
+								<p class="mt-1.5 font-mono text-[11px] text-ink-soft">{block.key}</p>
 							</div>
-							<p class="mt-1 font-mono text-[8px] text-ink-soft">{block.key}</p>
-							<p class="mt-2 max-w-2xl text-[11px] leading-relaxed text-ink-soft">
-								{preview(block.published_value ?? block.draft_value)}
-							</p>
-						</div>
-						<div>
-							<span class="border border-rule px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-[0.06em]">
-								{block.status}
+							<div class="flex items-center gap-3 sm:flex-col sm:items-end sm:gap-1.5">
+								<StatusBadge status={block.status} />
+								<span class="text-[12px] text-ink-soft">{formatDate(block.updated_at?.slice(0, 10))}</span>
+							</div>
+							<span class="hidden items-center gap-1.5 text-[13px] font-medium text-ink sm:inline-flex">
+								Edit
+								<ArrowRight class="size-4 transition-transform group-hover:translate-x-0.5" />
 							</span>
-							<p class="mt-1 text-[8px] text-ink-soft">{formatDate(block.updated_at?.slice(0, 10))}</p>
-						</div>
-						<div class="flex items-start justify-end">
-							<a
-								href={`/admin/content/${block.id}`}
-								class="inline-flex items-center gap-1.5 border-b border-ink pb-0.5 text-[10px] font-medium text-ink"
-							>
-								{block.key === 'home.carousel' ? 'Edit slides' : 'Edit'}
-								<Type class="size-3.5" />
-							</a>
-						</div>
-					</div>
+						</a>
+					</li>
 				{/each}
-			</div>
+			</ul>
 		</section>
 	{:else}
-		<div class="border border-dashed border-ink/25 bg-paper p-8 text-center">
+		<div class="border border-dashed border-ink/30 bg-paper p-8 text-center">
 			<p class="font-display text-xl font-semibold tracking-[-0.03em]">No content blocks.</p>
-			<p class="mt-2 text-[11px] text-ink-soft">Run the migration to seed the editable copy.</p>
+			<p class="mt-2 text-[13px] text-ink-soft">Run the Supabase migrations to seed the editable copy.</p>
 		</div>
 	{/each}
 </div>
