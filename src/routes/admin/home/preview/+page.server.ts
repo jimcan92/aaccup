@@ -4,6 +4,9 @@ import type { LandingBlock } from '$lib/landing';
 import { load as homeLoad } from '../../../+page.server';
 import type { PageServerLoad } from './$types';
 
+// This page skips the admin layout (+page@), so it must opt out of prerendering itself.
+export const prerender = false;
+
 // The home page as it would look with every draft published; shown in the editor's preview frame.
 export const load: PageServerLoad = async (event) => {
 	const { supabase } = requireStaff(event.locals);
