@@ -1,15 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-	<rect width="64" height="64" fill="#082A2C" />
-	<rect x="10" y="10" width="44" height="44" fill="none" stroke="#F8FAF5" stroke-opacity="0.35" />
-	<text
-		x="32"
-		y="39"
-		fill="#F8FAF5"
-		font-family="Georgia, serif"
-		font-size="18"
-		font-weight="700"
-		text-anchor="middle"
-		letter-spacing="-1"
-	>CM</text>
-	<rect x="17" y="47" width="30" height="1.5" fill="#C9973A" />
+	<!-- AACCUP Desk mark: a heavy "A" on petrol, with a gold crossbar (the site's signal colour). -->
+	<rect width="64" height="64" rx="14" fill="#082a2c" />
+	<path d="M26 9h12l16.5 46H43.2L32 22.4 20.8 55H9.5z" fill="#f8faf5" />
+	<path d="M26.1 38.5h11.8l2.5 7.5H23.6z" fill="#c9973a" />
 </svg>
