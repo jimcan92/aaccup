@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { enhance } from '$lib/admin-enhance';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import Plus from '@lucide/svelte/icons/plus';
 	import PageHeader from '$lib/components/admin/page-header.svelte';
@@ -37,9 +37,6 @@
 	{/snippet}
 </PageHeader>
 
-{#if form?.message}
-	<div class="mt-6 border border-destructive/30 bg-paper p-4 text-[14px] text-destructive" role="alert">{form.message}</div>
-{/if}
 {#if data.error}
 	<div class="mt-6 border border-destructive/30 bg-paper p-4 text-[14px] text-destructive" role="alert">{data.error}</div>
 {/if}

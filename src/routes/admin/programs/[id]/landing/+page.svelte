@@ -1,11 +1,10 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { enhance } from '$lib/admin-enhance';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import BarChart3 from '@lucide/svelte/icons/chart-column';
 	import Images from '@lucide/svelte/icons/images';
 	import Type from '@lucide/svelte/icons/type';
-	import FormMessage from '$lib/components/admin/form-message.svelte';
 	import LandingBlockEditor from '$lib/components/admin/landing-block-editor.svelte';
 	import PageHeader from '$lib/components/admin/page-header.svelte';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
@@ -45,7 +44,6 @@
 	</PageHeader>
 </div>
 
-<FormMessage {form} />
 {#if data.error}<p class="mt-6 border border-destructive/30 bg-paper p-4 text-[14px] text-destructive" role="alert">{data.error}</p>{/if}
 
 <div class="mt-8 space-y-5">
