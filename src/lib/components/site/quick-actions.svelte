@@ -84,7 +84,7 @@
 				type="button"
 				onclick={toTop}
 				transition:fly={{ y: 8, duration: 150 }}
-				class={cn('grid size-11 cursor-pointer place-items-center border border-rule bg-paper text-ink shadow-[0_8px_24px_-12px_rgb(0_0_0/0.4)] hover:bg-salt')}
+				class={cn('grid size-12 cursor-pointer place-items-center border border-rule bg-paper text-ink shadow-[0_8px_24px_-12px_rgb(0_0_0/0.4)] hover:bg-salt')}
 				aria-label="Back to top"
 			>
 				<ArrowUp class="size-5" />
