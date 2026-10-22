@@ -8,6 +8,7 @@
 	import Type from '@lucide/svelte/icons/type';
 	import Users from '@lucide/svelte/icons/users';
 	import X from '@lucide/svelte/icons/x';
+	import AdminQuickActions from '$lib/components/admin/admin-quick-actions.svelte';
 	import BrandMarks from '$lib/components/site/brand-marks.svelte';
 	import * as Sheet from '$lib/components/ui/sheet/index.js';
 	import { fresh } from '$lib/fresh-link';
@@ -143,5 +144,6 @@
 				{@render children()}
 			</main>
 		</div>
+		<AdminQuickActions />
 	</div>
 {/if}
