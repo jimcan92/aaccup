@@ -7,6 +7,7 @@
 	import StatusBadge from '$lib/components/admin/status-badge.svelte';
 	import DriveSetup from '$lib/components/admin/drive-setup.svelte';
 	import { contrastRatio } from '$lib/theme';
+	import { fresh } from '$lib/fresh-link';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -52,7 +53,7 @@
 			<a href={`/admin/programs/${data.program.id}/landing`} class="inline-flex h-10 items-center gap-2 bg-ink px-4 text-[13px] font-medium text-paper hover:bg-ink-soft">
 				Edit program page
 			</a>
-			<a href={`/${data.program.slug}`} target="_blank" rel="noopener noreferrer" class="inline-flex h-10 items-center gap-2 border border-rule bg-paper px-4 text-[13px] font-medium hover:border-ink/30">
+			<a href={`/${data.program.slug}`} use:fresh target="_blank" rel="noopener noreferrer" class="inline-flex h-10 items-center gap-2 border border-rule bg-paper px-4 text-[13px] font-medium hover:border-ink/30">
 				Public page
 				<ArrowUpRight class="size-4" />
 			</a>
