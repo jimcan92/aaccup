@@ -3,6 +3,8 @@
 
 	/** A shortcut in the floating menu; `fresh` marks public pages opened from the admin (skips the CDN cache). */
 	export type QuickAction = { label: string; href: string; icon: Component; fresh?: boolean };
+	/** A titled group of shortcuts; empty groups are not shown. */
+	export type QuickGroup = { title: string; items: QuickAction[] };
 </script>
 
 <script lang="ts">
@@ -13,7 +15,9 @@
 	import { cn } from '$lib/utils';
 
 	// A floating button in the corner: Back to top, plus shortcuts that depend on the page.
-	let { items, class: className = '' }: { items: QuickAction[]; class?: string } = $props();
+	let { groups, class: className = '' }: { groups: QuickGroup[]; class?: string } = $props();
+
+	const shown = $derived(groups.filter((group) => group.items.length));
 
 	const id = $props.id();
 	let open = $state(false);
@@ -42,30 +46,34 @@
 
 <div bind:this={root} class="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-2 print:hidden sm:bottom-6 sm:right-6">
 	{#if open}
-		<div id={`${id}-menu`} transition:fly={{ y: 8, duration: 150 }} class="w-64 border border-rule bg-paper py-1.5 text-ink shadow-[0_12px_32px_-12px_rgb(0_0_0/0.35)]">
-			<p class="px-4 pb-1 pt-1.5 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-soft">Quick actions</p>
-			<ul>
-				{#if scrolled > 200}
-					<li>
-						<button type="button" onclick={toTop} class="flex w-full cursor-pointer items-center gap-3 px-4 py-2.5 text-left text-[14px] hover:bg-salt">
-							<ArrowUp class="size-4 shrink-0 text-ink-soft" /> Back to top
-						</button>
-					</li>
-				{/if}
-				{#each items as item (item.href + item.label)}
-					{@const Icon = item.icon}
-					<li>
-						<a
-							href={item.href}
-							onclick={() => (open = false)}
-							onpointerdown={item.fresh ? stampFresh : undefined}
-							class="flex items-center gap-3 px-4 py-2.5 text-[14px] hover:bg-salt"
-						>
-							<Icon class="size-4 shrink-0 text-ink-soft" /> {item.label}
-						</a>
-					</li>
-				{/each}
-			</ul>
+		<div
+			id={`${id}-menu`}
+			transition:fly={{ y: 8, duration: 150 }}
+			class="max-h-[min(70dvh,34rem)] w-72 overflow-y-auto border border-rule bg-paper py-1.5 text-ink shadow-[0_12px_32px_-12px_rgb(0_0_0/0.35)]"
+		>
+			{#if scrolled > 200}
+				<button type="button" onclick={toTop} class="flex w-full cursor-pointer items-center gap-3 border-b border-rule px-4 py-2.5 text-left text-[14px] hover:bg-salt">
+					<ArrowUp class="size-4 shrink-0 text-ink-soft" /> Back to top
+				</button>
+			{/if}
+			{#each shown as group, index (group.title)}
+				<p class="px-4 pb-1 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-soft {index === 0 ? 'pt-2' : 'mt-1 border-t border-rule pt-3'}">{group.title}</p>
+				<ul>
+					{#each group.items as item (item.href + item.label)}
+						{@const Icon = item.icon}
+						<li>
+							<a
+								href={item.href}
+								onclick={() => (open = false)}
+								onpointerdown={item.fresh ? stampFresh : undefined}
+								class="flex items-center gap-3 px-4 py-2 text-[14px] hover:bg-salt"
+							>
+								<Icon class="size-4 shrink-0 text-ink-soft" /> {item.label}
+							</a>
+						</li>
+					{/each}
+				</ul>
+			{/each}
 		</div>
 	{/if}
 

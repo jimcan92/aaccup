@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import BrandMarks from '$lib/components/site/brand-marks.svelte';
+	import HomeQuickActions from '$lib/components/site/home-quick-actions.svelte';
 	import Logo from '$lib/components/site/logo.svelte';
 	import ManageLink from '$lib/components/site/manage-link.svelte';
 	import SiteFooter from '$lib/components/site/site-footer.svelte';
@@ -92,3 +93,5 @@
 </main>
 
 <SiteFooter contactNote={content.contactNote} />
+
+<HomeQuickActions programs={data.programs} />
