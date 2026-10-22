@@ -3,6 +3,7 @@
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import ClipboardPaste from '@lucide/svelte/icons/clipboard-paste';
+	import FolderSync from '@lucide/svelte/icons/folder-sync';
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -174,6 +175,12 @@
 									<span class="border border-dashed border-ink/30 px-1">In preparation</span>
 								{/if}
 								{#if document.updated_label}<span>{formatDate(document.updated_label)}</span>{/if}
+								{#if document.source === 'drive'}<span class="border border-ink/20 px-1">From Drive</span>{/if}
+								{#if document.drive_missing}
+									<span class="border border-destructive/40 bg-destructive/5 px-1 font-medium text-destructive">Missing in Drive — hidden</span>
+								{:else if document.drive_public === false}
+									<span class="border border-destructive/40 bg-destructive/5 px-1 font-medium text-destructive">Not shared publicly</span>
+								{/if}
 							</p>
 						</div>
 						<div class="col-start-2 flex flex-wrap items-center gap-1.5 sm:col-start-3 sm:justify-end">
@@ -231,6 +238,37 @@
 				{#if data.canManage}<button class="h-11 bg-ink px-5 text-[14px] font-medium text-paper hover:bg-ink-soft sm:w-fit">Save section</button>{/if}
 			</fieldset>
 		</form>
+
+		<section class="border border-rule bg-paper p-5">
+			<p class="flex items-center gap-2 font-display text-[18px] font-semibold"><FolderSync class="size-4" /> Google Drive</p>
+			<p class="mt-2 text-[13px] leading-relaxed text-ink-soft">
+				{#if data.section.drive_folder_id}
+					Folder:
+					<a href={`https://drive.google.com/drive/folders/${data.section.drive_folder_id}`} target="_blank" rel="noopener noreferrer" class="font-medium text-ink underline underline-offset-2">
+						{data.section.drive_folder_name ?? 'Open folder'}
+					</a>
+					({data.section.drive_folder_source === 'manual' ? 'set by hand' : 'matched automatically'}).
+					{#if data.section.drive_synced_at}Last synced {new Date(data.section.drive_synced_at).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' })}.{/if}
+				{:else}
+					No folder yet. Set the visit’s root folder and sync, or paste this section’s folder below.
+				{/if}
+			</p>
+			{#if data.canEdit && data.driveConfigured && data.section.drive_folder_id}
+				<form method="POST" action="?/syncSection" use:enhance class="mt-3">
+					<button class="inline-flex h-10 items-center gap-2 bg-ink px-4 text-[13px] font-medium text-paper hover:bg-ink-soft"><FolderSync class="size-4" /> Sync this section</button>
+				</form>
+			{/if}
+			{#if data.canManage}
+				<form method="POST" action="?/setFolder" use:enhance={keep} class="mt-4 grid gap-2 border-t border-rule pt-4">
+					<label class="grid gap-1.5 text-[13px] font-medium">
+						Use a specific folder
+						<input name="folder" placeholder="https://drive.google.com/drive/folders/…" value={data.section.drive_folder_source === 'manual' && data.section.drive_folder_id ? `https://drive.google.com/drive/folders/${data.section.drive_folder_id}` : ''} class="{field} font-mono text-[12px]" />
+						<span class="text-[12px] font-normal text-ink-soft">Leave empty and save to go back to automatic matching.</span>
+					</label>
+					<button class="h-10 w-fit border border-ink px-4 text-[13px] font-medium hover:bg-ink hover:text-paper">Save folder</button>
+				</form>
+			{/if}
+		</section>
 
 		<section>
 			<h2 class="font-display text-[20px] font-semibold tracking-[-0.03em]">History</h2>

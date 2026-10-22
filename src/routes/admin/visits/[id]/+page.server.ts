@@ -1,6 +1,8 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { RESERVED_SECTION_SLUGS } from '$lib/data/accreditation';
 import { canManage, dbFail, integer, optional, requireStaff, SLUG, text, VISIT_SLUG } from '$lib/server/admin';
+import { driveConfigured, folderIdFrom, folderName, serviceAccountEmail } from '$lib/server/drive';
+import { summary, syncVisit } from '$lib/server/drive-sync';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
@@ -13,10 +15,10 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		.maybeSingle();
 	if (!visit) error(404, 'Visit not found');
 
-	const [{ data: areas }, { data: sources }] = await Promise.all([
+	const [{ data: areas }, { data: sources }, { data: runs }] = await Promise.all([
 		supabase
 			.from('areas')
-			.select('id, kind, number, slug, title, short_title, status, sort_order, documents(id, status, workflow)')
+			.select('id, kind, number, slug, title, short_title, status, sort_order, drive_folder_id, drive_folder_name, documents(id, status, workflow, drive_public, drive_missing)')
 			.eq('visit_id', params.id)
 			.order('sort_order')
 			.order('number'),
@@ -26,7 +28,14 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			.select('id, year, label, program:programs(code), areas!inner(kind)')
 			.neq('id', params.id)
 			.eq('areas.kind', 'common')
-			.order('year', { ascending: false })
+			.order('year', { ascending: false }),
+		supabase
+			.from('drive_sync_runs')
+			.select('started_at, trigger, added, updated, missing, not_public, errors')
+			.eq('visit_id', params.id)
+			.is('area_id', null)
+			.order('started_at', { ascending: false })
+			.limit(1)
 	]);
 
 	return {
@@ -35,8 +44,14 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			...area,
 			linked: area.documents.filter((document) => document.status === 'linked').length,
 			total: area.documents.length,
-			unpublished: area.documents.filter((document) => document.workflow !== 'published').length
+			unpublished: area.documents.filter((document) => document.workflow !== 'published').length,
+			driveIssues: area.documents.filter((document) => document.drive_public === false || document.drive_missing).length
 		})),
+		drive: {
+			configured: driveConfigured(),
+			email: serviceAccountEmail(),
+			lastRun: runs?.[0] ?? null
+		},
 		sources: (sources ?? []).map((source) => ({
 			id: source.id,
 			label: `${(source.program as unknown as { code: string } | null)?.code ?? ''} · ${source.year} ${source.label}`
@@ -123,6 +138,37 @@ export const actions: Actions = {
 		const failed = dbFail(insertError);
 		if (failed) return failed;
 		redirect(303, `/admin/sections/${section!.id}`);
+	},
+
+	setRootFolder: async ({ request, locals, params }) => {
+		const { supabase } = requireStaff(locals, ['admin', 'focal']);
+		const raw = text(await request.formData(), 'folder');
+		if (!raw) {
+			const { error: clearError } = await supabase.from('visits').update({ drive_root_folder_id: null }).eq('id', params.id);
+			return dbFail(clearError) ?? { message: 'Drive folder removed. Existing documents stay as they are.' };
+		}
+
+		const id = folderIdFrom(raw);
+		if (!id) return fail(400, { message: 'Paste a Google Drive folder link, e.g. https://drive.google.com/drive/folders/…' });
+
+		let name = '';
+		if (driveConfigured()) {
+			try {
+				name = await folderName(id);
+			} catch (err) {
+				return fail(400, { message: `Cannot open that folder: ${(err as Error).message}` });
+			}
+		}
+
+		const { error: updateError } = await supabase.from('visits').update({ drive_root_folder_id: id }).eq('id', params.id);
+		return dbFail(updateError) ?? { message: `Drive folder ${name ? `“${name}” ` : ''}saved. Run Sync now to match its subfolders.` };
+	},
+
+	syncDrive: async ({ locals, params }) => {
+		const { staff } = requireStaff(locals, ['admin', 'focal']);
+		if (!driveConfigured()) return fail(400, { message: 'Google Drive is not configured on this deployment (GOOGLE_SERVICE_ACCOUNT_JSON).' });
+		const totals = await syncVisit(params.id, 'manual', staff.id);
+		return { message: summary(totals) };
 	},
 
 	copyCommon: async ({ request, locals, params }) => {

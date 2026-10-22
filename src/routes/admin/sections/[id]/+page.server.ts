@@ -13,6 +13,8 @@ import {
 	SLUG,
 	text
 } from '$lib/server/admin';
+import { driveConfigured, folderIdFrom, folderName } from '$lib/server/drive';
+import { summary, syncArea } from '$lib/server/drive-sync';
 import type { StaffProfile } from '$lib/server/sso';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -83,7 +85,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
 	const { data: documents } = await supabase
 		.from('documents')
-		.select('id, title, kind, format, drive_url, status, updated_label, note, sort_order, workflow, updated_at')
+		.select('id, title, kind, format, drive_url, status, updated_label, note, sort_order, workflow, updated_at, source, drive_public, drive_missing')
 		.eq('area_id', params.id)
 		.order('sort_order')
 		.order('created_at');
@@ -110,6 +112,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 				'Someone'
 		})),
 		canEdit: canEditArea(staff, section),
+		driveConfigured: driveConfigured(),
 		canManage: canManage(staff),
 		kinds: KINDS,
 		formats: FORMATS
@@ -162,6 +165,44 @@ export const actions: Actions = {
 		const failed = dbFail(deleteError);
 		if (failed) return failed;
 		redirect(303, `/admin/visits/${area?.visit_id ?? ''}`);
+	},
+
+	setFolder: async ({ request, locals, params }) => {
+		const { supabase } = requireStaff(locals, ['admin', 'focal']);
+		const raw = text(await request.formData(), 'folder');
+
+		// Empty = go back to automatic matching from the visit's root folder.
+		if (!raw) {
+			const { error: resetError } = await supabase
+				.from('areas')
+				.update({ drive_folder_id: null, drive_folder_name: null, drive_folder_source: 'auto' })
+				.eq('id', params.id);
+			return dbFail(resetError) ?? { message: 'Back to automatic matching. The next visit sync picks the folder.' };
+		}
+
+		const id = folderIdFrom(raw);
+		if (!id) return fail(400, { message: 'Paste a Google Drive folder link.' });
+
+		let name: string | null = null;
+		if (driveConfigured()) {
+			try {
+				name = await folderName(id);
+			} catch (err) {
+				return fail(400, { message: `Cannot open that folder: ${(err as Error).message}` });
+			}
+		}
+
+		const { error: updateError } = await supabase
+			.from('areas')
+			.update({ drive_folder_id: id, drive_folder_name: name, drive_folder_source: 'manual' })
+			.eq('id', params.id);
+		return dbFail(updateError) ?? { message: `Folder ${name ? `“${name}” ` : ''}set for this section. Sync to pull its files.` };
+	},
+
+	syncSection: async ({ locals, params }) => {
+		const { staff } = await editableArea(locals, params.id);
+		if (!driveConfigured()) return fail(400, { message: 'Google Drive is not configured on this deployment.' });
+		return { message: summary(await syncArea(params.id, staff.id)) };
 	},
 
 	addDocument: async ({ request, locals, params }) => {
