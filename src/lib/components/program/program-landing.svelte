@@ -6,6 +6,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import DocumentRow from '$lib/components/site/document-row.svelte';
+	import PhotoCarousel from './photo-carousel.svelte';
 	import { dossierPath, sectionsOf } from '$lib/data/accreditation';
 	import { isLinked } from '$lib/drive-url';
 	import type { Program, Visit } from '$lib/data/types';
@@ -109,6 +110,8 @@
 				</div>
 			</div>
 		</section>
+	{:else if block.kind === 'gallery' && block.content.layout === 'carousel' && block.content.items?.length}
+		<PhotoCarousel items={block.content.items} title={block.content.title} onopen={(index) => (viewer = { items: block.content.items, index })} />
 	{:else if block.kind === 'gallery' && block.content.items?.length}
 		<section class="border-b border-rule bg-paper">
 			<div class="mx-auto max-w-[1280px] px-5 py-12 sm:px-8">

@@ -55,7 +55,11 @@ function cleanContent(kind: Kind, raw: string): object | string {
 		.filter((item) => item.src);
 	if (clean.some((item) => !isHttpUrl(item.src))) return 'Each photo needs an https:// link or an uploaded image.';
 	// Alt text describes the photo for screen readers; fall back to the caption.
-	return { title, items: clean.slice(0, 60).map((item) => ({ ...item, alt: item.alt || item.caption || 'Photo' })) };
+	return {
+		title,
+		layout: value.layout === 'carousel' ? 'carousel' : 'grid',
+		items: clean.slice(0, 60).map((item) => ({ ...item, alt: item.alt || item.caption || 'Photo' }))
+	};
 }
 
 /** Save the posted draft (when the form carried one). Returns a failure, or null when saved. */
@@ -106,18 +110,21 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 export const actions: Actions = {
 	add: async ({ request, locals, params }) => {
 		const { supabase } = await editor(locals, params.id);
-		const kind = text(await request.formData(), 'kind') as Kind;
+		// "carousel" is a photo gallery shown as a slider.
+		const requested = text(await request.formData(), 'kind');
+		const carousel = requested === 'carousel';
+		const kind = (carousel ? 'gallery' : requested) as Kind;
 		if (!KINDS.includes(kind)) return fail(400, { message: 'Choose a block type.' });
 
 		const list = await siblings(supabase, params.id);
 		const { error: insertError } = await supabase.from('program_blocks').insert({
 			program_id: params.id,
 			kind,
-			draft: EMPTY[kind],
+			draft: carousel ? { title: '', layout: 'carousel', items: [] } : EMPTY[kind],
 			sort_order: (list.at(-1)?.sort_order ?? -1) + 1,
 			status: 'draft'
 		});
-		return dbFail(insertError) ?? { message: 'Block added. Fill it in, then save.' };
+		return dbFail(insertError) ?? { message: `${carousel ? 'Photo carousel' : 'Block'} added. Fill it in, then save.` };
 	},
 
 	save: async ({ request, locals, params }) => {

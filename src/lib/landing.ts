@@ -2,11 +2,18 @@
 
 export type GalleryItem = { src: string; alt: string; caption?: string };
 export type StatItem = { value: string; label: string };
+/** How a photo gallery is shown: a grid of photos, or a slider one photo at a time. */
+export type GalleryLayout = 'grid' | 'carousel';
 
 export type LandingBlock =
-	| { id: string; kind: 'gallery'; content: { title?: string; items: GalleryItem[] } }
+	| { id: string; kind: 'gallery'; content: { title?: string; items: GalleryItem[]; layout?: GalleryLayout } }
 	| { id: string; kind: 'stats'; content: { title?: string; items: StatItem[] } }
 	| { id: string; kind: 'text'; content: { title?: string; body?: string } };
+
+/** Label for a block in the admin; a gallery shown as a slider is a "Photo carousel". */
+export function blockLabel(kind: LandingBlock['kind'], layout?: string): string {
+	return kind === 'gallery' && layout === 'carousel' ? 'Photo carousel' : blockLabels[kind];
+}
 
 export const blockLabels: Record<LandingBlock['kind'], string> = {
 	gallery: 'Photo gallery',

@@ -3,21 +3,23 @@
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import BarChart3 from '@lucide/svelte/icons/chart-column';
+	import GalleryHorizontal from '@lucide/svelte/icons/gallery-horizontal';
 	import Images from '@lucide/svelte/icons/images';
 	import Type from '@lucide/svelte/icons/type';
 	import LandingBlockEditor from '$lib/components/admin/landing-block-editor.svelte';
 	import PageHeader from '$lib/components/admin/page-header.svelte';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import { blockLabels } from '$lib/landing';
+	import { blockLabel } from '$lib/landing';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
 	let removing = $state<{ id: string; label: string } | null>(null);
 
 	const add = [
-		{ kind: 'gallery', icon: Images, hint: 'Photos with captions; the first one is the banner' },
-		{ kind: 'stats', icon: BarChart3, hint: 'Short figures: passing rate, graduates, years' },
-		{ kind: 'text', icon: Type, hint: 'A heading and paragraphs: about, history, objectives' }
+		{ kind: 'carousel', label: 'Photo carousel', icon: GalleryHorizontal, hint: 'A slideshow of photos with captions, one at a time' },
+		{ kind: 'gallery', label: 'Photo gallery', icon: Images, hint: 'A grid of photos; the first one is the banner' },
+		{ kind: 'stats', label: 'Highlights', icon: BarChart3, hint: 'Short figures: passing rate, graduates, years' },
+		{ kind: 'text', label: 'Text section', icon: Type, hint: 'A heading and paragraphs: about, history, objectives' }
 	] as const;
 </script>
 
@@ -55,7 +57,7 @@
 			last={index === data.blocks.length - 1}
 			canEdit={data.canEdit}
 			canManage={data.canManage}
-			onremove={() => (removing = { id: block.id, label: blockLabels[block.kind as keyof typeof blockLabels] })}
+			onremove={() => (removing = { id: block.id, label: blockLabel(block.kind as 'gallery', (block.draft as { layout?: string })?.layout) })}
 		/>
 	{:else}
 		<p class="border border-dashed border-ink/30 bg-paper p-6 text-[14px] text-ink-soft">
@@ -67,13 +69,13 @@
 {#if data.canEdit}
 	<section class="mt-8" aria-labelledby="add-heading">
 		<h2 id="add-heading" class="font-display text-[18px] font-semibold tracking-[-0.02em]">Add a block</h2>
-		<div class="mt-3 grid gap-3 sm:grid-cols-3">
+		<div class="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
 			{#each add as option (option.kind)}
 				{@const Icon = option.icon}
 				<form method="POST" action="?/add" use:enhance>
 					<input type="hidden" name="kind" value={option.kind} />
 					<button class="flex h-full w-full flex-col items-start gap-1 border border-rule bg-paper p-4 text-left transition-colors hover:border-ink/30">
-						<span class="flex items-center gap-2 text-[14px] font-medium"><Icon class="size-4" /> {blockLabels[option.kind]}</span>
+						<span class="flex items-center gap-2 text-[14px] font-medium"><Icon class="size-4" /> {option.label}</span>
 						<span class="text-[12px] text-ink-soft">{option.hint}</span>
 					</button>
 				</form>
