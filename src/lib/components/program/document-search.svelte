@@ -6,6 +6,7 @@
 	import { Input } from '$lib/components/ui/input/index.js';
 	import * as Select from '$lib/components/ui/select/index.js';
 	import { documentIndex, documentKinds } from '$lib/data/accreditation';
+	import { isLinked } from '$lib/drive-url';
 	import { kindLabel, pad2 } from '$lib/format';
 	import type { IndexedDocument, Program, Visit } from '$lib/data/types';
 
@@ -81,7 +82,7 @@
 		});
 	});
 
-	const linkedResults = $derived(results.filter((document) => document.status === 'linked').length);
+	const linkedResults = $derived(results.filter(isLinked).length);
 
 	$effect(() => {
 		if (!ready) return;

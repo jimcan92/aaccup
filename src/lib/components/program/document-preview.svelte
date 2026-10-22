@@ -9,6 +9,7 @@
 	import { sectionLabel } from '$lib/data/accreditation';
 	import type { Visit } from '$lib/data/types';
 	import { kindLabel } from '$lib/format';
+	import { isLinked } from '$lib/drive-url';
 	import { closePreview, currentPreviewId, previewUrl, switchPreview, wideScreen } from '$lib/preview';
 
 	let { visit, style }: { visit: Visit; style: string } = $props();
@@ -20,7 +21,7 @@
 	const found = $derived.by(() => {
 		if (!id) return null;
 		for (const section of visit.sections) {
-			const siblings = section.documents.filter((document) => document.status === 'linked' && document.driveUrl);
+			const siblings = section.documents.filter(isLinked);
 			const index = siblings.findIndex((document) => document.id === id);
 			if (index !== -1) return { section, document: siblings[index], previous: siblings[index - 1], next: siblings[index + 1], index, count: siblings.length };
 		}

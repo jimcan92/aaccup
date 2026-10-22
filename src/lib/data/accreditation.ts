@@ -1,3 +1,5 @@
+// Relative with .ts so scripts/generate-seed.ts can run this module directly in Node.
+import { isLinked } from '../drive-url.ts';
 import type {
 	DocumentFormat,
 	DocumentKind,
@@ -446,7 +448,7 @@ export function visitDocuments(visit: Visit): EvidenceDocument[] {
 }
 
 export function countLinked(documents: EvidenceDocument[]): number {
-	return documents.filter((document) => document.status === 'linked').length;
+	return documents.filter(isLinked).length;
 }
 
 export function sectionLabel(section: Section): string {

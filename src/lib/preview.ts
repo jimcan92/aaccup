@@ -2,6 +2,8 @@ import { pushState, replaceState } from '$app/navigation';
 import { page } from '$app/state';
 import { MediaQuery } from 'svelte/reactivity';
 
+export { previewUrl } from '$lib/drive-url';
+
 /** Wide screens expand the preview inside the list; narrow screens use a full-screen panel. */
 export const wideScreen = new MediaQuery('min-width: 1024px', false);
 
@@ -10,33 +12,6 @@ export const wideScreen = new MediaQuery('min-width: 1024px', false);
  * be shared, and in SvelteKit's shallow-routing state so the browser's Back button closes it
  * without reloading the page.
  */
-
-/** Google Drive / Docs URL → an embeddable preview URL, or null when it cannot be embedded. */
-export function previewUrl(url: string | undefined): string | null {
-	if (!url) return null;
-	try {
-		const parsed = new URL(url);
-		const host = parsed.hostname;
-
-		if (host === 'drive.google.com') {
-			const folder = parsed.pathname.match(/\/folders\/([\w-]{10,})/)?.[1];
-			if (folder) return `https://drive.google.com/embeddedfolderview?id=${folder}#list`;
-
-			const file =
-				parsed.pathname.match(/\/file\/d\/([\w-]{10,})/)?.[1] ??
-				((parsed.pathname === '/open' || parsed.pathname === '/uc') ? parsed.searchParams.get('id') : null);
-			if (file) return `https://drive.google.com/file/d/${file}/preview`;
-		}
-
-		if (host === 'docs.google.com') {
-			const match = parsed.pathname.match(/^\/(document|spreadsheets|presentation)\/d\/([\w-]{10,})/);
-			if (match) return `https://docs.google.com/${match[1]}/d/${match[2]}/preview`;
-		}
-	} catch {
-		// Not a URL: fall through.
-	}
-	return null;
-}
 
 /** The previewed document id: from shallow state after a click, or from ?doc= on a shared link. */
 export function currentPreviewId(): string | null {

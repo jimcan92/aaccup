@@ -12,6 +12,7 @@
 	import StatusBadge from '$lib/components/admin/status-badge.svelte';
 	import DocumentFormat from '$lib/components/site/document-format.svelte';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
+	import { previewUrl } from '$lib/drive-url';
 	import { formatDate, kindLabel } from '$lib/format';
 	import type { PageProps } from './$types';
 
@@ -171,6 +172,9 @@
 									<a href={document.drive_url} target="_blank" rel="noopener noreferrer" class="inline-flex max-w-[16rem] items-center gap-1 truncate underline underline-offset-2 hover:text-ink">
 										Open link <ArrowUpRight class="size-3" />
 									</a>
+									{#if !previewUrl(document.drive_url)}
+										<span class="border border-destructive/40 bg-destructive/5 px-1 font-medium text-destructive">Not a Drive link — shows as In preparation</span>
+									{/if}
 								{:else}
 									<span class="border border-dashed border-ink/30 px-1">In preparation</span>
 								{/if}

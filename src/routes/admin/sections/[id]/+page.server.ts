@@ -13,10 +13,13 @@ import {
 	SLUG,
 	text
 } from '$lib/server/admin';
+import { previewUrl } from '$lib/drive-url';
 import { driveConfigured, folderIdFrom, folderName } from '$lib/server/drive';
 import { summary, syncArea } from '$lib/server/drive-sync';
 import type { StaffProfile } from '$lib/server/sso';
 import type { Actions, PageServerLoad } from './$types';
+
+const NOT_DRIVE = ' That link is not a Google Drive file or folder, so it shows as “In preparation” until a Drive link replaces it.';
 
 const KINDS = ['recommendation', 'compliance', 'narrative', 'supporting', 'checklist', 'presentation', 'institutional', 'form'];
 const FORMATS = ['pdf', 'docx', 'xlsx', 'pptx', 'folder', 'link'];
@@ -48,8 +51,8 @@ function readDocument(form: FormData) {
 		drive_url: driveUrl,
 		kind: KINDS.includes(kind) ? kind : 'supporting',
 		format: FORMATS.includes(format) ? format : 'link',
-		// A document with a link is linked; without one it shows "In preparation".
-		status: driveUrl ? 'linked' : 'pending',
+		// Only a Google Drive or Docs link counts as linked; anything else shows "In preparation".
+		status: previewUrl(driveUrl ?? undefined) ? 'linked' : 'pending',
 		note: optional(form, 'note'),
 		updated_label: optional(form, 'updated_label'),
 		sort_order: integer(form, 'sort_order')
@@ -214,7 +217,11 @@ export const actions: Actions = {
 		const { error: insertError } = await supabase
 			.from('documents')
 			.insert({ ...values, area_id: params.id, sort_order: await nextSort(supabase, params.id), workflow: 'draft' });
-		return dbFail(insertError) ?? { message: `Added “${values.title}” as a draft.` };
+		return (
+			dbFail(insertError) ?? {
+				message: `Added “${values.title}” as a draft.${values.drive_url && values.status === 'pending' ? NOT_DRIVE : ''}`
+			}
+		);
 	},
 
 	bulkAdd: async ({ request, locals, params }) => {
@@ -234,7 +241,7 @@ export const actions: Actions = {
 				drive_url: row.url,
 				format: row.format,
 				kind,
-				status: 'linked',
+				status: previewUrl(row.url) ? 'linked' : 'pending',
 				sort_order: start + index,
 				workflow: publish ? 'published' : 'draft'
 			}))
@@ -260,9 +267,9 @@ export const actions: Actions = {
 		return (
 			dbFail(updateError) ?? {
 				message:
-					staff.role === 'area_chair'
+					(staff.role === 'area_chair'
 						? `Saved “${values.title}”. It is a draft again until a focal person publishes it.`
-						: `Saved “${values.title}”.`
+						: `Saved “${values.title}”.`) + (values.drive_url && values.status === 'pending' ? NOT_DRIVE : '')
 			}
 		);
 	},
