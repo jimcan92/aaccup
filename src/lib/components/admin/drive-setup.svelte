@@ -195,10 +195,16 @@
 			<pre class="mt-2 overflow-x-auto border border-rule bg-salt p-3 font-mono text-[12px] leading-relaxed text-ink">{tree}</pre>
 			<ul class="mt-3 space-y-1.5 text-[12px] leading-relaxed text-ink-soft">
 				<li>• A folder with <strong class="font-medium text-ink">“Common”</strong> in its name holds the common documents.</li>
-				<li>• <strong class="font-medium text-ink">“Area 1” … “Area 10”</strong> (also “AREA-03”) go to the previous-visit areas. They can sit inside a “Previous visit” folder.</li>
-				<li>• Other folders match a section when the name contains its title, e.g. “02 INSTRUCTION” or “Consortia and Linkages”.</li>
-				<li>• Numbers in front only keep Drive in order; capitals and dashes do not matter.</li>
-				<li>• Every file inside becomes a draft document. Share files as “Anyone with the link — Viewer”.</li>
+				<li>• <strong class="font-medium text-ink">“Area 1” … “Area 10”</strong> go to the previous-visit areas. Roman numerals work too (“Area IV”, “Area IX”).</li>
+				<li>• Other folders match a section when the name contains its title, e.g. “02 INSTRUCTION” or “Area 4 – Linkages and Consortia”.</li>
+				<li>
+					• Folders may be grouped one level down. A group named with <strong class="font-medium text-ink">“Previous”, “Findings”, or “Compliance”</strong> holds
+					the previous-visit areas; one named with <strong class="font-medium text-ink">“Level III” or “Current”</strong> holds the current sections, where
+					“Area 1 – Instruction” is matched by its title.
+				</li>
+				<li>• Numbers in front only keep Drive in order; capitals and dashes do not matter. Folders that match nothing are skipped.</li>
+				<li>• Inside a section folder, each file or indicator subfolder (e.g. “INS-04 OBE syllabi…”) becomes one draft document.</li>
+				<li>• Share files as “Anyone with the link — Viewer”.</li>
 			</ul>
 		</aside>
 	</div>
