@@ -9,12 +9,13 @@
 	import { sectionLabel } from '$lib/data/accreditation';
 	import type { Visit } from '$lib/data/types';
 	import { kindLabel } from '$lib/format';
-	import { closePreview, currentPreviewId, previewUrl, switchPreview } from '$lib/preview';
+	import { closePreview, currentPreviewId, previewUrl, switchPreview, wideScreen } from '$lib/preview';
 
 	let { visit, style }: { visit: Visit; style: string } = $props();
 
 	// ?doc= is read only in the browser, so the cached server HTML is the same for everyone.
-	const id = $derived(browser ? currentPreviewId() : null);
+	// On wide screens the row expands in place instead (see document-row.svelte).
+	const id = $derived(browser && !wideScreen.current ? currentPreviewId() : null);
 
 	const found = $derived.by(() => {
 		if (!id) return null;
