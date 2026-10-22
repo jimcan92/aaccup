@@ -11,7 +11,7 @@
 	import ArrowUp from '@lucide/svelte/icons/arrow-up';
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
 	import X from '@lucide/svelte/icons/x';
-	import { fade, fly } from 'svelte/transition';
+	import { fly } from 'svelte/transition';
 	import { cn } from '$lib/utils';
 
 	// A floating button in the corner: Back to top, plus shortcuts that depend on the page.
@@ -77,13 +77,14 @@
 		</div>
 	{/if}
 
-	<div class="flex items-center gap-2">
+	<!-- Back to top sits above the menu button, centred on it. -->
+	<div class="flex flex-col items-center gap-2">
 		{#if scrolled > 600 && !open}
 			<button
 				type="button"
 				onclick={toTop}
-				transition:fade={{ duration: 150 }}
-				class={cn('grid size-11 cursor-pointer place-items-center border border-rule bg-paper text-ink shadow-[0_8px_24px_-12px_rgb(0_0_0/0.4)] hover:bg-salt')}
+				transition:fly={{ y: 8, duration: 150 }}
+				class={cn('grid size-12 cursor-pointer place-items-center border border-rule bg-paper text-ink shadow-[0_8px_24px_-12px_rgb(0_0_0/0.4)] hover:bg-salt')}
 				aria-label="Back to top"
 			>
 				<ArrowUp class="size-5" />

@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import FolderOpen from '@lucide/svelte/icons/folder-open';
+	import House from '@lucide/svelte/icons/house';
 	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 	import LogOut from '@lucide/svelte/icons/log-out';
 	import Menu from '@lucide/svelte/icons/menu';
@@ -9,6 +10,7 @@
 	import Users from '@lucide/svelte/icons/users';
 	import X from '@lucide/svelte/icons/x';
 	import AdminQuickActions from '$lib/components/admin/admin-quick-actions.svelte';
+	import { adminUi } from '$lib/admin-ui.svelte';
 	import BrandMarks from '$lib/components/site/brand-marks.svelte';
 	import * as Sheet from '$lib/components/ui/sheet/index.js';
 	import { fresh } from '$lib/fresh-link';
@@ -23,10 +25,19 @@
 		[
 			{ href: '/admin', label: 'Overview', icon: LayoutDashboard },
 			{ href: '/admin/programs', label: 'Programs', icon: FolderOpen },
+			{ href: '/admin/home', label: 'Home page', icon: House },
 			{ href: '/admin/content', label: 'Site content', icon: Type },
 			data.staff?.role === 'admin' ? { href: '/admin/people', label: 'People', icon: Users } : null
 		].filter((item) => item !== null)
 	);
+
+	// Public links from the admin skip the CDN cache (see fresh-link.ts).
+	function stampFresh(event: Event) {
+		const link = event.currentTarget as HTMLAnchorElement;
+		const url = new URL(link.href, location.href);
+		url.searchParams.set('fresh', String(Date.now()));
+		link.href = url.pathname + url.search + url.hash;
+	}
 
 	function active(href: string) {
 		return href === '/admin' ? page.url.pathname === '/admin' : page.url.pathname.startsWith(href);
@@ -58,6 +69,48 @@
 			</li>
 		{/each}
 	</ul>
+{/snippet}
+
+<!-- Desktop rail: icons only; the label shows on hover and is read by screen readers. -->
+{#snippet railList()}
+	<ul class="flex flex-col items-center gap-1">
+		{#each nav as item (item.href)}
+			{@const Icon = item.icon}
+			{@const current = active(item.href)}
+			<li>
+				<a
+					href={item.href}
+					class="group relative grid size-11 place-items-center transition-colors {current
+						? 'bg-paper/12 text-paper shadow-[inset_2px_0_0_var(--color-signal)]'
+						: 'text-paper/65 hover:bg-paper/8 hover:text-paper'}"
+					aria-current={current ? 'page' : undefined}
+				>
+					<Icon class="size-[18px]" />
+					<span class="sr-only">{item.label}</span>
+					<span class="pointer-events-none absolute left-full top-1/2 z-40 ml-3 -translate-y-1/2 whitespace-nowrap bg-ink px-2.5 py-1.5 text-[12px] font-medium text-paper opacity-0 shadow-lg ring-1 ring-paper/15 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" aria-hidden="true">{item.label}</span>
+				</a>
+			</li>
+		{/each}
+	</ul>
+{/snippet}
+
+{#snippet railUser()}
+	{#if data.staff}
+		{@const name = data.staff.full_name || data.staff.email}
+		<div class="flex flex-col items-center gap-1">
+			<span class="grid size-10 place-items-center bg-paper/10 font-display text-[13px] font-semibold" title={`${name} · ${roleInfo[data.staff.role]?.label ?? data.staff.role}`}>
+				{initials(name)}<span class="sr-only">{name}, {roleInfo[data.staff.role]?.label ?? data.staff.role}</span>
+			</span>
+			{#each [{ href: '/', label: 'View public site', icon: ArrowUpRight, isFresh: true }, { href: data.logoutUrl, label: 'Sign out of CTU Accounts', icon: LogOut, isFresh: false }] as link (link.label)}
+				{@const Icon = link.icon}
+				<a href={link.href} onpointerdown={link.isFresh ? stampFresh : undefined} class="group relative grid size-10 place-items-center text-paper/65 hover:bg-paper/8 hover:text-paper">
+					<Icon class="size-4" />
+					<span class="sr-only">{link.label}</span>
+					<span class="pointer-events-none absolute left-full top-1/2 z-40 ml-3 -translate-y-1/2 whitespace-nowrap bg-ink px-2.5 py-1.5 text-[12px] font-medium text-paper opacity-0 shadow-lg ring-1 ring-paper/15 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" aria-hidden="true">{link.label}</span>
+				</a>
+			{/each}
+		</div>
+	{/if}
 {/snippet}
 
 {#snippet userCard()}
@@ -101,11 +154,20 @@
 	{@render children()}
 {:else}
 	<div class="min-h-dvh bg-salt text-ink">
-		<aside class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col bg-ink text-paper lg:flex" style="--ring: #c9973a">
-			<div class="px-5 py-6">{@render brand()}</div>
-			<nav class="flex-1 overflow-y-auto px-2 py-2" aria-label="Admin">{@render navList()}</nav>
-			<div class="border-t border-paper/10 p-5">{@render userCard()}</div>
-		</aside>
+		<!-- Full sidebar; while a block editor shows its side preview, an icon rail instead. -->
+		{#if adminUi.compact}
+			<aside class="fixed inset-y-0 left-0 z-30 hidden w-16 flex-col items-center bg-ink text-paper lg:flex" style="--ring: #c9973a">
+				<a href="/admin" class="py-5" title="AACCUP Desk"><BrandMarks size={30} /><span class="sr-only">AACCUP Desk</span></a>
+				<nav class="flex-1 py-2" aria-label="Admin">{@render railList()}</nav>
+				<div class="w-full border-t border-paper/10 py-4">{@render railUser()}</div>
+			</aside>
+		{:else}
+			<aside class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col bg-ink text-paper lg:flex" style="--ring: #c9973a">
+				<div class="px-5 py-6">{@render brand()}</div>
+				<nav class="flex-1 overflow-y-auto px-2 py-2" aria-label="Admin">{@render navList()}</nav>
+				<div class="border-t border-paper/10 p-5">{@render userCard()}</div>
+			</aside>
+		{/if}
 
 		<header
 			class="sticky top-0 z-20 flex h-16 items-center justify-between gap-3 bg-ink px-5 text-paper lg:hidden"
@@ -139,8 +201,9 @@
 			</Sheet.Root>
 		</header>
 
-		<div class="lg:pl-64">
-			<main id="main" class="mx-auto max-w-[1120px] px-5 py-8 sm:px-8 lg:py-12">
+		<div class={adminUi.compact ? 'lg:pl-16' : 'lg:pl-64'}>
+			<!-- Editor pages with a preview use the full width (their load returns wide: true). -->
+			<main id="main" class="mx-auto px-5 py-8 sm:px-8 lg:py-12 {page.data.wide ? 'max-w-none' : 'max-w-[1120px]'}">
 				{@render children()}
 			</main>
 		</div>

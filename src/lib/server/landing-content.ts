@@ -91,6 +91,41 @@ export const cleaners: Record<string, (value: Raw, title: string) => object | st
 		return { title, body: str(value.body, 1000), buttons };
 	},
 
+	org(value, title) {
+		const items = list(value.items)
+			.map((item) => ({
+				name: str(item.name, 120),
+				role: str(item.role, 120),
+				unit: str(item.unit, 160),
+				photo: str(item.photo, 500),
+				level: [1, 2, 3].includes(Number(item.level)) ? Number(item.level) : 2
+			}))
+			.filter((item) => item.name || item.role || item.photo);
+		if (items.some((item) => !item.name || !item.role)) return 'Each box needs a name and a position.';
+		if (items.some((item) => badImage(item.photo))) return 'Each photo needs an https:// link or an uploaded image.';
+		return { title, items: items.slice(0, 40) };
+	},
+
+	events(value, title) {
+		const date = /^\d{4}-\d{2}-\d{2}$/;
+		const items = list(value.items)
+			.map((item) => ({
+				date: str(item.date, 10),
+				end: str(item.end, 10),
+				time: str(item.time, 60),
+				title: str(item.title, 200),
+				place: str(item.place, 160),
+				body: str(item.body, 2000),
+				href: str(item.href, 500)
+			}))
+			.filter((item) => item.title || item.body || item.place);
+		if (items.some((item) => !item.title || !date.test(item.date))) return 'Each event needs a title and a date.';
+		if (items.some((item) => item.end && (!date.test(item.end) || item.end < item.date))) return 'An end date must come after the start date.';
+		if (items.some((item) => item.href && !isLink(item.href))) return 'Event links must start with https:// or /.';
+		// Kept in date order, so the page and the editor agree.
+		return { title, items: items.sort((a, b) => a.date.localeCompare(b.date)).slice(0, 60) };
+	},
+
 	news(value, title) {
 		const items = list(value.items)
 			.map((item) => ({ date: str(item.date, 10), title: str(item.title, 200), body: str(item.body, 2000), href: str(item.href, 500) }))

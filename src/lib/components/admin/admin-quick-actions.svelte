@@ -69,6 +69,7 @@
 			title: 'Admin',
 			items: [
 				{ label: 'All programs', href: '/admin/programs', icon: LayoutGrid },
+				{ label: 'Edit home page', href: '/admin/home', icon: PencilLine },
 				{ label: 'Admin overview', href: '/admin', icon: LayoutDashboard },
 				{ label: 'Public site', href: '/', icon: Globe, fresh: true }
 			].filter((item) => item.href !== path)

@@ -14,6 +14,10 @@ export type FaqItem = { question: string; answer: string };
 export type LinkButton = { label: string; href: string };
 /** An announcement; date is YYYY-MM-DD. */
 export type NewsItem = { date: string; title: string; body?: string; href?: string };
+/** A box on the organization chart; level 1 is the top row. */
+export type OrgItem = { name: string; role: string; unit?: string; photo?: string; level: 1 | 2 | 3 };
+/** A campus event; date and end are YYYY-MM-DD, time is free text ("8:00 AM – 5:00 PM"). */
+export type EventItem = { date: string; end?: string; time?: string; title: string; place?: string; body?: string; href?: string };
 
 export type PeopleContent = { title?: string; items: PersonItem[] };
 export type VmgoContent = { title?: string; vision?: string; mission?: string; goals: string[]; objectives: string[] };
@@ -25,6 +29,8 @@ export type FaqContent = { title?: string; items: FaqItem[] };
 export type VideoContent = { title?: string; url?: string; caption?: string };
 export type CtaContent = { title?: string; body?: string; buttons: LinkButton[] };
 export type NewsContent = { title?: string; items: NewsItem[] };
+export type OrgContent = { title?: string; items: OrgItem[] };
+export type EventsContent = { title?: string; items: EventItem[] };
 
 export type LandingBlock =
 	| { id: string; kind: 'gallery'; content: { title?: string; items: GalleryItem[]; layout?: GalleryLayout } }
@@ -39,7 +45,9 @@ export type LandingBlock =
 	| { id: string; kind: 'faq'; content: FaqContent }
 	| { id: string; kind: 'video'; content: VideoContent }
 	| { id: string; kind: 'cta'; content: CtaContent }
-	| { id: string; kind: 'news'; content: NewsContent };
+	| { id: string; kind: 'news'; content: NewsContent }
+	| { id: string; kind: 'org'; content: OrgContent }
+	| { id: string; kind: 'events'; content: EventsContent };
 
 export type BlockKind = LandingBlock['kind'];
 
@@ -61,7 +69,9 @@ export const blockLabels: Record<BlockKind, string> = {
 	faq: 'FAQ',
 	video: 'Video',
 	cta: 'Call to action',
-	news: 'Announcements'
+	news: 'Announcements',
+	org: 'Organization',
+	events: 'Campus events'
 };
 
 /** Whether a published block has anything to show; empty blocks are skipped on the public page. */
@@ -176,6 +186,26 @@ export const sampleContent: Record<BlockKind, object> = {
 		buttons: [
 			{ label: 'Open the documents', href: '' },
 			{ label: 'Visit our Facebook page', href: '' }
+		]
+	},
+	org: {
+		title: 'Organization',
+		items: [
+			{ name: 'Dr. Firstname Lastname', role: 'Campus Director', level: 1 },
+			{ name: 'Firstname Lastname', role: 'Director of Instruction', level: 2 },
+			{ name: 'Firstname Lastname', role: 'Director of Research', level: 2 },
+			{ name: 'Firstname Lastname', role: 'Director of Extension', level: 2 },
+			{ name: 'Firstname Lastname', role: 'Administrative Officer', level: 2 },
+			{ name: 'Firstname Lastname', role: 'AACCUP Focal Person', level: 3 },
+			{ name: 'Firstname Lastname', role: 'Registrar', level: 3 },
+			{ name: 'Firstname Lastname', role: 'Guidance Counselor', level: 3 }
+		]
+	},
+	events: {
+		title: 'Campus events',
+		items: [
+			{ date: '2026-12-01', time: '8:00 AM', title: 'Replace with an upcoming event', place: 'Campus gym', body: 'Replace with one or two sentences.' },
+			{ date: '2026-11-15', end: '2026-11-16', title: 'Replace with a two-day event', place: 'AVR', body: 'Replace with one or two sentences.' }
 		]
 	},
 	news: {

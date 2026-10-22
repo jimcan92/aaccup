@@ -11,6 +11,8 @@
 	import { imageSrc } from '$lib/image-url';
 	import { blockLabel, type BlockKind, type GalleryItem, type StatItem, type TimelineItem } from '$lib/landing';
 	import CtaEditor from './blocks/cta-editor.svelte';
+	import EventsEditor from './blocks/events-editor.svelte';
+	import OrgEditor from './blocks/org-editor.svelte';
 	import FaqEditor from './blocks/faq-editor.svelte';
 	import MediaEditor from './blocks/media-editor.svelte';
 	import NewsEditor from './blocks/news-editor.svelte';
@@ -35,8 +37,19 @@
 		last,
 		canEdit,
 		canManage,
-		onremove
-	}: { block: Block; programId: string; first: boolean; last: boolean; canEdit: boolean; canManage: boolean; onremove: () => void } = $props();
+		onremove,
+		onchange
+	}: {
+		block: Block;
+		programId: string;
+		first: boolean;
+		last: boolean;
+		canEdit: boolean;
+		canManage: boolean;
+		onremove: () => void;
+		/** The editor's current content (JSON), saved or not, for the live preview. */
+		onchange?: (content: string) => void;
+	} = $props();
 
 	// Each editor keeps its own copy; the page re-mounts it after a save so it starts from the stored draft.
 	// svelte-ignore state_referenced_locally
@@ -54,7 +67,7 @@
 	let uploading = $state<number | null>(null);
 
 	// The newer kinds each have their own editor working on a copy of the whole draft; lists start empty when missing.
-	const ownEditor = ['people', 'vmgo', 'media', 'partners', 'testimonials', 'faq', 'video', 'cta', 'news'];
+	const ownEditor = ['people', 'vmgo', 'media', 'partners', 'testimonials', 'faq', 'video', 'cta', 'news', 'org', 'events'];
 	const lists: Record<string, string[]> = { vmgo: ['goals', 'objectives'], cta: ['buttons'] };
 	// svelte-ignore state_referenced_locally
 	let extra = $state<any>(
@@ -78,6 +91,8 @@
 		)
 	);
 	const live = $derived(block.published !== null);
+	$effect(() => onchange?.(content));
+
 	const changed = $derived(live && JSON.stringify(block.published) !== JSON.stringify(block.draft));
 
 	function move<T>(list: T[], index: number, delta: number): T[] {
@@ -172,6 +187,10 @@
 				<CtaEditor bind:value={extra} />
 			{:else if block.kind === 'news'}
 				<NewsEditor bind:value={extra} />
+			{:else if block.kind === 'org'}
+				<OrgEditor bind:value={extra} {programId} />
+			{:else if block.kind === 'events'}
+				<EventsEditor bind:value={extra} />
 			{:else if block.kind === 'text'}
 				<label class="grid gap-1.5 text-[13px] font-medium">
 					Text
