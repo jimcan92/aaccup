@@ -48,8 +48,8 @@
 
 <div class="lg:sticky lg:top-24 lg:self-start">
 	<div class="flex items-center justify-between border border-b-0 border-rule bg-paper px-4 py-2.5">
-		<p class="font-mono text-[9px] text-ink-soft">Live preview</p>
-		<span class="font-mono text-[8px] uppercase tracking-[0.08em] text-ink-soft">Draft</span>
+		<p class="font-mono text-[12px] text-ink-soft">Live preview</p>
+		<span class="font-mono text-[13px] uppercase tracking-[0.08em] text-ink-soft">Draft</span>
 	</div>
 
 	<div class="overflow-hidden border border-rule bg-paper">
@@ -66,18 +66,18 @@
 					/>
 					<div class="absolute inset-0 bg-gradient-to-t from-ink via-ink/30 to-transparent"></div>
 					<div class="absolute inset-x-0 bottom-0 p-4">
-						<p class="font-mono text-[8px] text-paper/55">{slides[0].meta}</p>
+						<p class="font-mono text-[13px] text-paper/55">{slides[0].meta}</p>
 						<p class="mt-1 font-display text-[18px] font-semibold leading-tight tracking-[-0.03em] text-paper">
 							{slides[0].caption}
 						</p>
 					</div>
 				</div>
 				<div class="p-4">
-					<p class="font-mono text-[9px] text-ink-soft">{slides.length} slides · first slide shown</p>
+					<p class="font-mono text-[12px] text-ink-soft">{slides.length} slides · first slide shown</p>
 					<div class="mt-3 grid grid-cols-3 gap-2">
 						{#each slides.slice(0, 3) as slide (slide.src)}
 							<div class="border border-rule bg-salt p-2">
-								<p class="line-clamp-2 text-[9px] leading-snug text-ink-soft">{slide.caption}</p>
+								<p class="line-clamp-2 text-[12px] leading-snug text-ink-soft">{slide.caption}</p>
 							</div>
 						{/each}
 					</div>
@@ -85,7 +85,7 @@
 			{:else}
 				<div class="p-6">
 					<p class="font-display text-[18px] font-semibold tracking-[-0.03em]">No valid slides yet.</p>
-					<p class="mt-2 text-[11px] leading-relaxed text-ink-soft">
+					<p class="mt-2 text-[13px] leading-relaxed text-ink-soft">
 						Add a JSON array with at least one slide that has <code class="font-mono">src</code>,
 						<code class="font-mono">alt</code>, <code class="font-mono">caption</code>, and
 						<code class="font-mono">meta</code>.
@@ -103,7 +103,7 @@
 					</svg>
 				</div>
 				<div class="relative">
-					<p class="font-mono text-[8px] text-paper/45">AACCUP Level III visit · 2026</p>
+					<p class="font-mono text-[13px] text-paper/45">AACCUP Level III visit · 2026</p>
 					{#if blockKey === 'home.hero.title'}
 						<p class="mt-5 max-w-md font-display text-[clamp(1.8rem,3.5vw,2.8rem)] font-semibold leading-[0.92] tracking-[-0.05em]">
 							{value || 'Two volumes. One campus.'}
@@ -117,9 +117,9 @@
 			</div>
 		{:else if isVmgo}
 			<div class="p-6">
-				<p class="font-mono text-[8px] text-ink-soft">{label}</p>
+				<p class="font-mono text-[13px] text-ink-soft">{label}</p>
 				{#if blockKey === 'vmgo.source'}
-					<a href={value} target="_blank" rel="noopener noreferrer" class="mt-3 inline-flex items-center gap-1.5 border-b border-ink pb-1 text-[11px] font-medium text-ink">
+					<a href={value} target="_blank" rel="noopener noreferrer" class="mt-3 inline-flex items-center gap-1.5 border-b border-ink pb-1 text-[13px] font-medium text-ink">
 						{value || 'https://www.ctu.edu.ph/moalboal/about/vmgo/'}
 						<ArrowUpRight class="size-3.5" />
 					</a>
@@ -133,21 +133,21 @@
 			</div>
 		{:else if isSite}
 			<div class="p-6">
-				<p class="font-mono text-[8px] text-ink-soft">{label}</p>
+				<p class="font-mono text-[13px] text-ink-soft">{label}</p>
 				<p class="mt-3 text-[13px] leading-relaxed text-ink">{value || 'Value'}</p>
 				{#if blockKey === 'site.address'}
-					<p class="mt-4 border-t border-rule pt-3 text-[10px] text-ink-soft">Campus contact card · Moalboal, Cebu</p>
+					<p class="mt-4 border-t border-rule pt-3 text-[13px] text-ink-soft">Campus contact card · Moalboal, Cebu</p>
 				{/if}
 			</div>
 		{:else}
 			<div class="p-6">
-				<p class="font-mono text-[8px] text-ink-soft">{label} · {type}</p>
-				<pre class="mt-3 max-h-60 overflow-auto whitespace-pre-wrap break-words font-mono text-[10px] leading-relaxed text-ink-soft">{value || 'Empty value'}</pre>
+				<p class="font-mono text-[13px] text-ink-soft">{label} · {type}</p>
+				<pre class="mt-3 max-h-60 overflow-auto whitespace-pre-wrap break-words font-mono text-[13px] leading-relaxed text-ink-soft">{value || 'Empty value'}</pre>
 			</div>
 		{/if}
 	</div>
 
-	<p class="mt-2 text-[9px] leading-relaxed text-ink-soft">
+	<p class="mt-2 text-[12px] leading-relaxed text-ink-soft">
 		Live preview of the draft value. The published version stays live until you press Publish.
 	</p>
 </div>

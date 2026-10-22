@@ -1,4 +1,5 @@
 import { redirect } from '@sveltejs/kit';
+import { ACTIVE_CONTENT_KEYS } from '$lib/data/site';
 import type { PageServerLoad } from './$types';
 
 export const prerender = false;
@@ -11,6 +12,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const { data: blocks, error } = await locals.supabase
 		.from('content_blocks')
 		.select('id, key, label, group_name, type, status, draft_value, published_value, updated_at')
+		// Only blocks the public site still reads; the rest (carousel, VMGO, hero) stay in the database.
+		.in('key', [...ACTIVE_CONTENT_KEYS])
 		.order('group_name', { ascending: true })
 		.order('sort_order', { ascending: true });
 

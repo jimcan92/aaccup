@@ -1,33 +1,56 @@
-import { redirect } from '@sveltejs/kit';
+import { ACTIVE_CONTENT_KEYS } from '$lib/data/site';
 import type { PageServerLoad } from './$types';
 
 export const prerender = false;
 
-export const load: PageServerLoad = async ({ locals, parent }) => {
-	const { profile } = await parent();
+export const load: PageServerLoad = async ({ locals }) => {
+	const { data: blocks } = locals.supabase
+		? await locals.supabase
+				.from('content_blocks')
+				.select('id, key, label, status, updated_at')
+				.in('key', [...ACTIVE_CONTENT_KEYS])
+				.order('updated_at', { ascending: false })
+		: { data: [] };
 
-	if (!locals.supabase) {
-		redirect(303, '/admin/login');
-	}
+	let query = locals.supabase
+		? locals.supabase
+				.from('programs')
+				.select('id, slug, code, name, sort_order, theme_program, theme_ink, theme_soft, theme_contrast, visits(year, label, status, areas(kind, documents(status, workflow)))')
+				.order('sort_order')
+		: null;
+	if (query && locals.staff?.role === 'area_chair' && locals.staff.program_id) query = query.eq('id', locals.staff.program_id);
+	const { data: rows } = query ? await query : { data: [] };
 
-	const [blocks, areas, documents, recent] = await Promise.all([
-		locals.supabase.from('content_blocks').select('*', { count: 'exact', head: true }),
-		locals.supabase.from('areas').select('*', { count: 'exact', head: true }),
-		locals.supabase.from('documents').select('*', { count: 'exact', head: true }),
-		locals.supabase
-			.from('content_blocks')
-			.select('key, label, group_name, status, updated_at')
-			.order('updated_at', { ascending: false })
-			.limit(6)
-	]);
+	const programSummaries = (rows ?? []).map((program) => {
+		const visit = program.visits.find((item) => item.status === 'active');
+		const areas = visit?.areas ?? [];
+		const groups = (['common', 'current', 'previous'] as const).map((kind) => {
+			const documents = areas.filter((area) => area.kind === kind).flatMap((area) => area.documents);
+			return { kind, linked: documents.filter((d) => d.status === 'linked').length, total: documents.length };
+		});
+		const documents = areas.flatMap((area) => area.documents);
+
+		return {
+			id: program.id,
+			slug: program.slug,
+			code: program.code,
+			name: program.name,
+			theme: {
+				program: program.theme_program ?? '#335052',
+				ink: program.theme_ink ?? '#082a2c',
+				soft: program.theme_soft ?? '#e3e9e1',
+				contrast: program.theme_contrast ?? '#ffffff'
+			},
+			visit: visit ? `${visit.year} · ${visit.label}` : 'No active visit',
+			linked: documents.filter((d) => d.status === 'linked').length,
+			total: documents.length,
+			waiting: documents.filter((d) => d.workflow === 'in_review').length,
+			groups
+		};
+	});
 
 	return {
-		profile,
-		counts: {
-			blocks: blocks.count ?? 0,
-			areas: areas.count ?? 0,
-			documents: documents.count ?? 0
-		},
-		recent: recent.data ?? []
+		blocks: blocks ?? [],
+		programs: programSummaries
 	};
 };

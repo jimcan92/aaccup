@@ -101,14 +101,14 @@
 <div>
 	<div class="flex items-center justify-between border-b border-rule pb-2">
 		<div>
-			<p class="font-mono text-[9px] text-ink-soft">Carousel slides</p>
-			<p class="mt-1 text-[10px] text-ink-soft">Upload images and edit captions. Changes save as a draft automatically.</p>
+			<p class="font-mono text-[12px] text-ink-soft">Carousel slides</p>
+			<p class="mt-1 text-[13px] text-ink-soft">Upload images and edit captions. Changes save as a draft automatically.</p>
 		</div>
 		<button
 			type="button"
 			onclick={addSlide}
 			disabled={disabled}
-			class="inline-flex h-8 items-center gap-1.5 border border-ink/20 px-3 text-[10px] font-medium text-ink transition-colors hover:bg-ink hover:text-paper disabled:opacity-40"
+			class="inline-flex h-8 items-center gap-1.5 border border-ink/20 px-3 text-[13px] font-medium text-ink transition-colors hover:bg-ink hover:text-paper disabled:opacity-40"
 		>
 			<ImagePlus class="size-3.5" />
 			Add slide
@@ -116,13 +116,13 @@
 	</div>
 
 	{#if error}
-		<div class="mt-3 border border-destructive/30 bg-destructive/5 p-3 text-[10px] text-destructive">{error}</div>
+		<div class="mt-3 border border-destructive/30 bg-destructive/5 p-3 text-[13px] text-destructive">{error}</div>
 	{/if}
 
 	{#if slides.length === 0}
 		<div class="mt-4 border border-dashed border-ink/25 bg-salt p-8 text-center">
 			<p class="font-display text-lg font-semibold tracking-[-0.03em]">No slides yet.</p>
-			<p class="mt-1 text-[11px] text-ink-soft">Add a slide, then upload its image.</p>
+			<p class="mt-1 text-[13px] text-ink-soft">Add a slide, then upload its image.</p>
 		</div>
 	{/if}
 
@@ -142,13 +142,13 @@
 									}}
 								/>
 							{:else}
-								<div class="grid h-full place-items-center px-3 text-center font-mono text-[9px] text-paper/40">
+								<div class="grid h-full place-items-center px-3 text-center font-mono text-[12px] text-paper/40">
 									No image
 								</div>
 							{/if}
 						</div>
 
-						<label class="mt-2 flex h-8 cursor-pointer items-center justify-center gap-1.5 border border-ink/20 text-[9px] font-medium text-ink hover:bg-salt">
+						<label class="mt-2 flex h-8 cursor-pointer items-center justify-center gap-1.5 border border-ink/20 text-[12px] font-medium text-ink hover:bg-salt">
 							<ImagePlus class="size-3" />
 							{uploading === index ? 'Uploading…' : 'Upload image'}
 							<input
@@ -166,35 +166,35 @@
 
 					<div class="space-y-2">
 						<div>
-							<label class="mb-1 block font-mono text-[8px] text-ink-soft" for={`caption-${index}`}>Caption</label>
+							<label class="mb-1 block font-mono text-[13px] text-ink-soft" for={`caption-${index}`}>Caption</label>
 							<Input
 								id={`caption-${index}`}
 								value={slide.caption}
 								disabled={disabled}
 								oninput={(event) => update(index, 'caption', event.currentTarget.value)}
-								class="h-8 rounded-none border-rule bg-salt text-[11px]"
+								class="h-8 rounded-none border-rule bg-salt text-[13px]"
 								placeholder="Charting the path to 2030"
 							/>
 						</div>
 						<div>
-							<label class="mb-1 block font-mono text-[8px] text-ink-soft" for={`meta-${index}`}>Meta</label>
+							<label class="mb-1 block font-mono text-[13px] text-ink-soft" for={`meta-${index}`}>Meta</label>
 							<Input
 								id={`meta-${index}`}
 								value={slide.meta}
 								disabled={disabled}
 								oninput={(event) => update(index, 'meta', event.currentTarget.value)}
-								class="h-8 rounded-none border-rule bg-salt text-[11px]"
+								class="h-8 rounded-none border-rule bg-salt text-[13px]"
 								placeholder="University strategic planning · April 2026"
 							/>
 						</div>
 						<div>
-							<label class="mb-1 block font-mono text-[8px] text-ink-soft" for={`alt-${index}`}>Alt text</label>
+							<label class="mb-1 block font-mono text-[13px] text-ink-soft" for={`alt-${index}`}>Alt text</label>
 							<Input
 								id={`alt-${index}`}
 								value={slide.alt}
 								disabled={disabled}
 								oninput={(event) => update(index, 'alt', event.currentTarget.value)}
-								class="h-8 rounded-none border-rule bg-salt text-[11px]"
+								class="h-8 rounded-none border-rule bg-salt text-[13px]"
 								placeholder="Describe the image for screen readers"
 							/>
 						</div>

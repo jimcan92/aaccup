@@ -1,5 +1,3 @@
-export type ProgramSlug = 'bsie' | 'bsfi';
-
 export type DocumentKind =
 	| 'recommendation'
 	| 'compliance'
@@ -25,47 +23,64 @@ export interface EvidenceDocument {
 	note?: string;
 }
 
-export interface Area {
-	number: number;
+/**
+ * common   — Certification, BOR, COPC, checklist, additional documents
+ * current  — sections under review in this visit (Instruction, Extension, …)
+ * previous — the previous survey's 10 areas and program-wide records
+ */
+export type SectionKind = 'common' | 'current' | 'previous';
+
+export interface Section {
 	slug: string;
+	kind: SectionKind;
+	/** Display number inside its kind (area number for previous, order for current). */
+	number?: number;
 	title: string;
 	shortTitle: string;
 	description: string;
+	/** What the evaluator will look for. */
+	focus?: string;
 	documents: EvidenceDocument[];
 }
 
-export interface CurrentVisitArea extends Area {
-	focus: string;
+export type VisitStatus = 'active' | 'archived';
+
+export interface Visit {
+	slug: string;
+	year: number;
+	/** e.g. "Level III" */
+	level: string;
+	/** e.g. "Level III visit" — never "accredited" unless official. */
+	label: string;
+	status: VisitStatus;
+	/** Label for the survey the previous-visit areas came from, e.g. "2024 survey". */
+	previousLabel?: string;
+	sections: Section[];
+}
+
+export interface ProgramTheme {
+	/** Main program color: header, hero, buttons. */
+	program: string;
+	/** Dark variant for text on light surfaces. */
+	ink: string;
+	/** Light tint for surfaces. */
+	soft: string;
+	/** Text color placed on top of `program`. */
+	contrast: string;
 }
 
 export interface Program {
-	slug: ProgramSlug;
+	slug: string;
 	code: string;
 	name: string;
 	degree: string;
-	visitLevel: string;
-	level: string;
-	statusNote: string;
-	surveyYear: number;
-	surveyWindow: string;
-	previousVisitLabel: string;
-	accent: string;
-	accentSoft: string;
-	accentInk: string;
 	summary: string;
-	summaryTitle: string;
-	currentVisitAreas: CurrentVisitArea[];
-	areas: Area[];
-	programDocuments: EvidenceDocument[];
+	theme: ProgramTheme;
+	sortOrder: number;
+	visits: Visit[];
 }
 
 export interface IndexedDocument extends EvidenceDocument {
-	programSlug: ProgramSlug;
-	programCode: string;
-	programName: string;
-	areaNumber?: number;
-	areaTitle?: string;
-	areaShortTitle?: string;
-	scope: 'current' | 'previous' | 'program' | 'records';
+	section: Section;
 	sectionLabel: string;
 }

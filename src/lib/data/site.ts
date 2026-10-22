@@ -2,9 +2,10 @@ export const site = {
 	name: 'CTU Moalboal',
 	campus: 'Cebu Technological University — Moalboal Campus',
 	shortCampus: 'CTU Moalboal',
-	title: 'AACCUP 2026 · CTU Moalboal',
+	title: 'AACCUP Accreditation · CTU Moalboal',
+	portalUrl: 'https://ctu-moalboal.online',
 	description:
-		'The BSIE and BSFI dossiers for the AACCUP Level III visit at Cebu Technological University — Moalboal Campus. Current visit areas, previous-visit recommendations, and shared records, linked to Google Drive.',
+		'AACCUP accreditation dossiers for the programs of Cebu Technological University — Moalboal Campus. Each program has its own common documents, current visit areas, and previous-visit record, linked to Google Drive.',
 	surveyYear: 2026,
 	level: 'Level III visit',
 	statusNote: 'Applying for Level III accreditation',
@@ -13,9 +14,8 @@ export const site = {
 	email: 'cdmoalboal@ctu.edu.ph',
 	website: 'https://www.ctu.edu.ph/moalboal/',
 	preparedBy: 'Campus MIS Team',
-	tagline: 'Two volumes. One campus.',
 	intro:
-		'Choose the BSIE or BSFI dossier. Each volume carries its own current visit, its previous 10-area recommendations, and its record of evidence.',
+		'Choose a program. Each program has its own dossier: its common documents, the current visit, and the previous visit’s 10 areas.',
 	driveNote:
 		'Evidence opens in Google Drive. This site holds the index, not the files, so the record stays in one place.',
 	contactNote:
@@ -52,9 +52,5 @@ export const campusUpdates = [
 	}
 ] as const;
 
-export const homeNav = [
-	{ href: '/#visit', label: 'The visit' },
-	{ href: '/#vmgo', label: 'VMGO' },
-	{ href: '/#records', label: 'Records' },
-	{ href: '/#campus', label: 'Campus' }
-] as const;
+/** Content block keys the public site still reads. The rest stay in the database, unused. */
+export const ACTIVE_CONTENT_KEYS = ['site.title', 'site.description', 'site.contact_note'] as const;

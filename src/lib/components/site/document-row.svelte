@@ -7,14 +7,10 @@
 
 	let {
 		document,
-		accent = '#082A2C',
-		soft = '#E3E9E1',
 		context,
 		class: className = ''
 	}: {
 		document: EvidenceDocument;
-		accent?: string;
-		soft?: string;
 		context?: string;
 		class?: string;
 	} = $props();
@@ -40,18 +36,18 @@
 					{document.title}
 				</h3>
 				{#if !linked}
-					<span class="border border-dashed border-ink/25 px-1.5 py-0.5 font-mono text-[9px] text-ink-soft">
+					<span class="border border-dashed border-ink/30 px-1.5 py-0.5 font-mono text-[11px] text-ink-soft">
 						In preparation
 					</span>
 				{/if}
 			</div>
 
 			{#if context}
-				<p class="mt-1 text-[10px] font-medium text-ink-soft">{context}</p>
+				<p class="mt-1 text-[12px] font-medium text-ink-soft">{context}</p>
 			{/if}
 
 			{#if document.note}
-				<p class="mt-1.5 max-w-xl text-[12px] leading-relaxed text-ink-soft">
+				<p class="mt-1.5 max-w-xl text-[13px] leading-relaxed text-ink-soft">
 					{document.note}
 				</p>
 			{/if}
@@ -61,17 +57,14 @@
 			class="col-start-2 flex items-center justify-between gap-4 sm:col-start-3 sm:flex-col sm:items-end sm:justify-start"
 		>
 			{#if date}
-				<span class="font-mono text-[10px] text-ink-soft/60">{date}</span>
+				<span class="font-mono text-[11px] text-ink-soft">{date}</span>
 			{/if}
-			<span
-				class="inline-flex items-center gap-1 text-[10px] font-medium"
-				style:color={linked ? accent : undefined}
-			>
-				{linked ? actionLabel : 'In preparation'}
-				{#if linked}
-					<ArrowUpRight class="size-3.5" />
-				{/if}
-			</span>
+			{#if linked}
+				<span class="inline-flex items-center gap-1 text-[12px] font-medium text-program">
+					{actionLabel}
+					<ArrowUpRight class="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+				</span>
+			{/if}
 		</div>
 	</div>
 {/snippet}
@@ -82,19 +75,15 @@
 		target="_blank"
 		rel="noopener noreferrer"
 		class={cn(
-			'block border-b border-rule px-2 py-4 transition-colors hover:bg-[var(--row-soft)] sm:px-3',
+			'group block border-b border-rule px-2 py-4 transition-colors hover:bg-program-soft sm:px-3',
 			className
 		)}
-		style:--row-soft={soft}
 		aria-label={`${document.title} — opens in a new tab`}
 	>
 		{@render body()}
 	</a>
 {:else}
-	<div
-		class={cn('block border-b border-rule px-2 py-4 sm:px-3', className)}
-		style:--row-soft={soft}
-	>
+	<div class={cn('block border-b border-rule px-2 py-4 sm:px-3', className)}>
 		{@render body()}
 	</div>
 {/if}

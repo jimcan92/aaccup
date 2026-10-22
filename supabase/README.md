@@ -41,28 +41,30 @@ It creates:
 
 It also creates the `public-images` storage bucket and all RLS policies.
 
-## 2. Auth settings
+## 2. Sign-in: CTU Accounts SSO
 
-In **Authentication → URL Configuration**:
+Staff do **not** sign in with Supabase Auth. The admin uses the shared CTU Accounts session
+(`accounts.ctu-moalboal.online`), the same one as the other campus systems:
 
-- **Site URL:** your production origin, for example `https://aaccup.vercel.app`
-- **Redirect URLs:** add:
-  - `https://aaccup.vercel.app/**`
-  - `http://localhost:5173/**`
+1. The browser sends the `ctu.session_token` cookie, which is scoped to `.ctu-moalboal.online`.
+2. The server forwards only that cookie to Accounts' `/api/auth/get-session`.
+3. The SSO email must exactly match a row in `public.profiles`. Nobody is added automatically.
+4. The server signs a 10-minute Supabase JWT for that profile (`sub` = profile id,
+   `app_metadata.role` / `program_id`), so every RLS policy and workflow RPC applies unchanged.
 
-In **Authentication → Providers → Email**:
+This only works on a `*.ctu-moalboal.online` host. On `localhost`, set `AACCUP_DEV_SSO_EMAIL`
+in `.env`; it is ignored in production builds.
 
-- Enable **Email**.
-- Enable **Email + Password**.
-- Enable **Magic Link** if you want the fallback.
-- For a small campus team, disable “Confirm email” only if the accounts are created by an admin; otherwise keep it on.
+In **Authentication → Providers → Email**, turn off sign-ups and magic links. Auth users exist only
+as identity anchors that an admin creates from **Admin → People**.
 
-## 3. Create the first admin
+## 3. Add the first admin
 
-1. **Authentication → Users → Add user**.
-2. Create the focal/admin account with an email and password.
-3. Copy the user’s UUID.
-4. Run this in SQL Editor, replacing the UUID and name:
+Each person needs an `auth.users` row (the identity anchor) and a profile with a role. After the
+first admin exists, everyone else is added from **Admin → People**.
+
+For the very first admin, in **Authentication → Users → Add user**, create a user with their CTU
+email (no password needed, tick *Auto confirm*), copy the UUID, then run:
 
 ```sql
 update public.profiles
@@ -75,43 +77,7 @@ set raw_app_meta_data =
 where id = '00000000-0000-0000-0000-000000000000';
 ```
 
-The `app_metadata` role is what RLS reads. The `profiles.role` is for the admin UI.
-
-> After changing `app_metadata`, the user must sign out and sign in again so the new JWT carries the role.
-
-### Focal person
-
-```sql
-update public.profiles set role = 'focal' where id = '<uuid>';
-update auth.users
-set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role":"focal"}'::jsonb
-where id = '<uuid>';
-```
-
-### Area chair
-
-Replace `<program-uuid>` with the BSIE or BSFI program ID:
-
-```sql
-update public.profiles
-set role = 'area_chair', program_id = '<program-uuid>'
-where id = '<uuid>';
-
-update auth.users
-set raw_app_meta_data =
-  coalesce(raw_app_meta_data, '{}'::jsonb)
-  || jsonb_build_object('role', 'area_chair', 'program_id', '<program-uuid>')
-where id = '<uuid>';
-```
-
-### Reviewer
-
-```sql
-update public.profiles set role = 'reviewer' where id = '<uuid>';
-update auth.users
-set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role":"reviewer"}'::jsonb
-where id = '<uuid>';
-```
+Roles take effect on the next request. There is no Supabase session to sign out of.
 
 ## 4. Environment variables
 
@@ -121,8 +87,14 @@ Copy `.env.example` to `.env` locally, and add the same values in **Vercel → S
 PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 PUBLIC_SUPABASE_ANON_KEY=...
 SUPABASE_SERVICE_ROLE_KEY=...
-PUBLIC_SITE_URL=https://aaccup.vercel.app
+PUBLIC_SITE_URL=https://aaccup.ctu-moalboal.online
+SUPABASE_JWT_SECRET=...        # Project Settings → JWT Keys → Legacy JWT secret
+ACCOUNTS_URL=https://accounts.ctu-moalboal.online
+PUBLIC_PORTAL_URL=https://ctu-moalboal.online
 ```
+
+`SUPABASE_JWT_SECRET` signs staff tokens. Like the service-role key it is server-only and must
+never be prefixed with `PUBLIC_`.
 
 `SUPABASE_SERVICE_ROLE_KEY` is server-only. Never prefix it with `PUBLIC_`, never import it into a client component, and never paste it in chat.
 

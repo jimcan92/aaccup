@@ -1,68 +1,20 @@
-import { fail, redirect } from '@sveltejs/kit';
-import type { Actions, PageServerLoad } from './$types';
+import { env as privateEnv } from '$env/dynamic/private';
+import { env as publicEnv } from '$env/dynamic/public';
+import { ssoLoginUrl } from '$lib/server/sso';
+import type { PageServerLoad } from './$types';
 
-export const prerender = false;
+export const load: PageServerLoad = async ({ locals, url }) => {
+	const next = url.searchParams.get('next') || '/admin';
+	const origin = (publicEnv.PUBLIC_SITE_URL || url.origin).replace(/\/$/, '');
+	// Only same-site paths survive the round trip through Accounts.
+	const returnTo = `${origin}${next.startsWith('/') && !next.startsWith('//') ? next : '/admin'}`;
 
-export const load: PageServerLoad = async ({ url }) => {
 	return {
-		next: url.searchParams.get('next') || '/admin',
-		error: url.searchParams.get('error')
+		loginUrl: ssoLoginUrl(returnTo),
+		// Signed in to CTU Accounts, but not on the AACCUP list.
+		notListed: locals.ssoUser ? { email: locals.ssoUser.email, name: locals.ssoUser.name } : null,
+		configured: Boolean(
+			publicEnv.PUBLIC_SUPABASE_URL && privateEnv.SUPABASE_SERVICE_ROLE_KEY && privateEnv.SUPABASE_JWT_SECRET
+		)
 	};
-};
-
-export const actions: Actions = {
-	password: async ({ request, locals, url }) => {
-		if (!locals.supabase) {
-			return fail(500, { message: 'Supabase is not configured on this deployment.' });
-		}
-
-		const form = await request.formData();
-		const email = String(form.get('email') ?? '').trim();
-		const password = String(form.get('password') ?? '');
-
-		if (!email || !password) {
-			return fail(400, { email, message: 'Email and password are required.' });
-		}
-
-		const { error } = await locals.supabase.auth.signInWithPassword({ email, password });
-
-		if (error) {
-			return fail(400, { email, message: error.message });
-		}
-
-		redirect(303, url.searchParams.get('next') || '/admin');
-	},
-
-	magic: async ({ request, locals, url }) => {
-		if (!locals.supabase) {
-			return fail(500, { message: 'Supabase is not configured on this deployment.' });
-		}
-
-		const form = await request.formData();
-		const email = String(form.get('email') ?? '').trim();
-
-		if (!email) {
-			return fail(400, { email, message: 'Enter your email first.' });
-		}
-
-		const next = url.searchParams.get('next') || '/admin';
-		const redirectTo = `${url.origin}/auth/callback?next=${encodeURIComponent(next)}`;
-
-		const { error } = await locals.supabase.auth.signInWithOtp({
-			email,
-			options: {
-				emailRedirectTo: redirectTo,
-				shouldCreateUser: false
-			}
-		});
-
-		if (error) {
-			return fail(400, { email, message: error.message });
-		}
-
-		return {
-			email,
-			success: `Magic link sent to ${email}. Check your inbox.`
-		};
-	}
 };

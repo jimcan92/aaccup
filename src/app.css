@@ -27,6 +27,12 @@
 	--input: #082a2c26;
 	--ring: #c9973a;
 	--radius: 0.25rem;
+
+	/* Program theme. Neutral campus defaults; the program layout overrides these per program. */
+	--program: #082a2c;
+	--program-ink: #082a2c;
+	--program-soft: #e3e9e1;
+	--program-contrast: #f8faf5;
 }
 
 @theme inline {
@@ -64,6 +70,12 @@
 	--color-bsfi: #1d5b3a;
 	--color-bsfi-soft: #e2ede4;
 	--color-signal: #c9973a;
+	--color-rule: #082a2c1f;
+
+	--color-program: var(--program);
+	--color-program-ink: var(--program-ink);
+	--color-program-soft: var(--program-soft);
+	--color-program-contrast: var(--program-contrast);
 
 	--radius-sm: calc(var(--radius) - 2px);
 	--radius-md: var(--radius);
@@ -96,6 +108,16 @@
 		outline: 2px solid var(--ring);
 		outline-offset: 3px;
 	}
+}
+
+/* Inside a program, the focus ring follows the program color. On a program-colored
+   surface (header, buttons) it switches to the contrast color so it stays visible. */
+.program-scope {
+	--ring: var(--program);
+}
+
+.program-scope .on-program {
+	--ring: var(--program-contrast);
 }
 
 @media (prefers-reduced-motion: reduce) {

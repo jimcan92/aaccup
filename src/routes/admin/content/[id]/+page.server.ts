@@ -27,9 +27,9 @@ async function loadBlock(locals: App.Locals, id: string) {
 
 export const load: PageServerLoad = async ({ locals, params, parent }) => {
 	const block = await loadBlock(locals, params.id);
-	const { profile } = await parent();
+	const { staff } = await parent();
 
-	return { block, profile };
+	return { block, staff };
 };
 
 export const actions: Actions = {

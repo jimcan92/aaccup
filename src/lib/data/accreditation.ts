@@ -1,11 +1,12 @@
 import type {
-	Area,
-	CurrentVisitArea,
 	DocumentFormat,
 	DocumentKind,
 	EvidenceDocument,
 	IndexedDocument,
-	Program
+	Program,
+	Section,
+	SectionKind,
+	Visit
 } from './types';
 
 const driveFile = (id: string) => `https://drive.google.com/file/d/${id}/view`;
@@ -45,7 +46,9 @@ function pending(
 	};
 }
 
-const AREA_DEFINITIONS: Omit<Area, 'documents'>[] = [
+type SectionDefinition = Omit<Section, 'documents' | 'kind'>;
+
+const AREA_DEFINITIONS: SectionDefinition[] = [
 	{
 		number: 1,
 		slug: 'area-1',
@@ -128,14 +131,15 @@ const AREA_DEFINITIONS: Omit<Area, 'documents'>[] = [
 	}
 ];
 
-function areasFrom(byArea: Record<number, EvidenceDocument[]>): Area[] {
+function previousAreasFrom(byArea: Record<number, EvidenceDocument[]>): Section[] {
 	return AREA_DEFINITIONS.map((area) => ({
 		...area,
-		documents: byArea[area.number] ?? []
+		kind: 'previous',
+		documents: byArea[area.number!] ?? []
 	}));
 }
 
-const CURRENT_VISIT_DEFINITIONS: Omit<CurrentVisitArea, 'documents'>[] = [
+const CURRENT_VISIT_DEFINITIONS: SectionDefinition[] = [
 	{
 		number: 1,
 		slug: 'faculty-development',
@@ -178,9 +182,10 @@ const CURRENT_VISIT_DEFINITIONS: Omit<CurrentVisitArea, 'documents'>[] = [
 	}
 ];
 
-function currentVisitAreasFrom(prefix: string): CurrentVisitArea[] {
+function currentSectionsFrom(prefix: string): Section[] {
 	return CURRENT_VISIT_DEFINITIONS.map((area) => ({
 		...area,
+		kind: 'current',
 		documents: [
 			pending(
 				`${prefix}-visit-${area.slug}-narrative`,
@@ -202,6 +207,63 @@ function currentVisitAreasFrom(prefix: string): CurrentVisitArea[] {
 			)
 		]
 	}));
+}
+
+/**
+ * Common documents are per program and per visit. They are duplicated on purpose:
+ * an accreditor reading one program never sees another program's records.
+ */
+function commonSection(
+	prefix: string,
+	code: string,
+	overrides: Partial<Record<'certification' | 'bor' | 'copc' | 'checklist' | 'additional', EvidenceDocument>> = {}
+): Section {
+	return {
+		slug: 'common',
+		kind: 'common',
+		title: 'Common documents',
+		shortTitle: 'Common documents',
+		description: `Certification, board resolution, COPC, the AACCUP checklist, and additional documents for ${code}.`,
+		documents: [
+			overrides.certification ??
+				pending(
+					`${prefix}-common-certification`,
+					`${code} — AACCUP certification`,
+					'institutional',
+					'Signed certification for the Level III visit. The task force will publish the current PDF here.'
+				),
+			overrides.bor ??
+				pending(`${prefix}-common-bor`, `${code} — BOR resolution`, 'institutional'),
+			overrides.copc ??
+				pending(`${prefix}-common-copc`, `${code} — Certificate of Program Compliance (COPC)`, 'institutional'),
+			overrides.checklist ??
+				pending(
+					`${prefix}-common-checklist`,
+					`${code} — AACCUP checklist`,
+					'checklist',
+					'The current checklist will be posted once the task force finalises the file.'
+				),
+			overrides.additional ??
+				pending(
+					`${prefix}-common-additional`,
+					`${code} — Additional documents`,
+					'institutional',
+					'Supplementary records, forms, and annexes for the survey visit.'
+				)
+		]
+	};
+}
+
+function programRecordsSection(documents: EvidenceDocument[]): Section {
+	return {
+		slug: 'program-records',
+		kind: 'previous',
+		title: 'Program-wide records',
+		shortTitle: 'Program-wide',
+		description:
+			'Extension, library, and linkages records from the previous visit that sit outside the 10 areas.',
+		documents
+	};
 }
 
 const bsfiAreaDocs: Record<number, EvidenceDocument[]> = {
@@ -260,7 +322,7 @@ function pendingAreaDocs(number: number): EvidenceDocument[] {
 }
 
 const bsieAreaDocs: Record<number, EvidenceDocument[]> = Object.fromEntries(
-	AREA_DEFINITIONS.map((area) => [area.number, pendingAreaDocs(area.number)])
+	AREA_DEFINITIONS.map((area) => [area.number, pendingAreaDocs(area.number!)])
 );
 
 const bsfiProgramDocs: EvidenceDocument[] = [
@@ -268,16 +330,14 @@ const bsfiProgramDocs: EvidenceDocument[] = [
 	linked('bsfi-extension-compliance', 'Extension — Compliance report', 'compliance', driveFile('1Vkxe7ZhPoJk-tRIjMTdMLYxYch96giZA')),
 	linked('bsfi-library-narrative', 'Library — Narrative profile', 'narrative', driveFile('1cE8zMch20nt804ZARvVgAm7MpFQpDkgm')),
 	linked('bsfi-linkages-narrative', 'Consortia and linkages — Narrative profile', 'narrative', driveFile('1PgSZXHxqXm4bFMYjmogKAg32FQTzzIBJ')),
-	linked('bsfi-linkages-rafi', 'RAFI value-chain service agreement', 'supporting', driveFile('19AHJbrJAkowFNJV-ZpRW6o1HpMKYl0E7')),
-	pending('bsfi-checklist', 'BSFI AACCUP checklist', 'checklist')
+	linked('bsfi-linkages-rafi', 'RAFI value-chain service agreement', 'supporting', driveFile('19AHJbrJAkowFNJV-ZpRW6o1HpMKYl0E7'))
 ];
 
 const bsieProgramDocs: EvidenceDocument[] = [
 	pending('bsie-curriculum', 'Curriculum and instruction — Supporting evidence', 'supporting'),
 	pending('bsie-extension', 'Extension — Narrative and compliance report', 'narrative'),
 	pending('bsie-faculty', 'Faculty development — Supporting evidence', 'supporting'),
-	pending('bsie-linkages', 'Linkages — MOAs and terminal reports', 'supporting'),
-	pending('bsie-checklist', 'BSIE AACCUP checklist', 'checklist')
+	pending('bsie-linkages', 'Linkages — MOAs and terminal reports', 'supporting')
 ];
 
 export const programs: Program[] = [
@@ -286,150 +346,123 @@ export const programs: Program[] = [
 		code: 'BSIE',
 		name: 'Bachelor of Science in Industrial Engineering',
 		degree: 'BS Industrial Engineering',
-		visitLevel: 'Level III',
-		level: 'Level III visit',
-		statusNote: 'Applying for Level III accreditation',
-		surveyYear: 2026,
-		surveyWindow: '2026 survey visit',
-		previousVisitLabel: '',
-		currentVisitAreas: currentVisitAreasFrom('bsie'),
-		accent: '#7A1E2B',
-		accentSoft: '#F1E2E4',
-		accentInk: '#3B0D14',
 		summary:
 			'Industrial engineering at Moalboal prepares students to design, improve, and manage integrated systems of people, materials, information, and energy. The Level III dossier documents the program’s systems, its faculty, and its evidence of continuous improvement.',
-		summaryTitle: 'The industrial engineering record.',
-		areas: areasFrom(bsieAreaDocs),
-		programDocuments: bsieProgramDocs
+		theme: { program: '#7a1e2b', ink: '#4a0f19', soft: '#f4e6e8', contrast: '#ffffff' },
+		sortOrder: 1,
+		visits: [
+			{
+				slug: '2026-level-iii',
+				year: 2026,
+				level: 'Level III',
+				label: 'Level III visit',
+				status: 'active',
+				sections: [
+					commonSection('bsie', 'BSIE'),
+					...currentSectionsFrom('bsie'),
+					...previousAreasFrom(bsieAreaDocs),
+					programRecordsSection(bsieProgramDocs)
+				]
+			}
+		]
 	},
 	{
 		slug: 'bsfi',
 		code: 'BSFI',
 		name: 'Bachelor of Science in Fisheries',
 		degree: 'BS Fisheries',
-		visitLevel: 'Level III',
-		level: 'Level III visit',
-		statusNote: 'Applying for Level III accreditation',
-		surveyYear: 2026,
-		surveyWindow: '2026 survey visit',
-		previousVisitLabel: '2024 survey',
-		currentVisitAreas: currentVisitAreasFrom('bsfi'),
-		accent: '#1D5B3A',
-		accentSoft: '#E2EDE4',
-		accentInk: '#0B2C1B',
 		summary:
 			'Fisheries is the campus’s founding discipline. The Level III dossier traces the program from its coastal field work to its research, extension, and instruction record, with the evidence organised area by area.',
-		summaryTitle: 'The fisheries record.',
-		areas: areasFrom(bsfiAreaDocs),
-		programDocuments: bsfiProgramDocs
+		theme: { program: '#1d5b3a', ink: '#0f3622', soft: '#e3eee6', contrast: '#ffffff' },
+		sortOrder: 2,
+		visits: [
+			{
+				slug: '2026-level-iii',
+				year: 2026,
+				level: 'Level III',
+				label: 'Level III visit',
+				status: 'active',
+				previousLabel: '2024 survey',
+				sections: [
+					commonSection('bsfi', 'BSFI', {
+						bor: linked(
+							'bsfi-common-bor',
+							'BSFI — BOR resolution (reference record)',
+							'institutional',
+							'https://sites.google.com/ctu.edu.ph/aacup2024/bor-resolution',
+							{ format: 'link', note: 'Board Resolution No. 24, series of 2018, from the 2024 BSFI dossier. Replace with the current visit’s resolution.' }
+						),
+						copc: linked(
+							'bsfi-common-copc',
+							'BSFI — Certificate of Program Compliance (reference record)',
+							'institutional',
+							'https://sites.google.com/ctu.edu.ph/aacup2024/copc',
+							{ format: 'link', note: 'COPC reference from the 2024 BSFI dossier.' }
+						)
+					}),
+					...currentSectionsFrom('bsfi'),
+					...previousAreasFrom(bsfiAreaDocs),
+					programRecordsSection(bsfiProgramDocs)
+				]
+			}
+		]
 	}
 ];
 
-export const institutionalDocuments: EvidenceDocument[] = [
-	pending(
-		'inst-certification',
-		'AACCUP certification',
-		'institutional',
-		'Signed certification for the Level III visit. The task force will publish the current PDF here.'
-	),
-	linked(
-		'inst-bor',
-		'Board resolution — reference record',
-		'institutional',
-		'https://sites.google.com/ctu.edu.ph/aacup2024/bor-resolution',
-		{ format: 'link', note: 'Board Resolution No. 24, series of 2018. Replace with the current visit’s resolution.' }
-	),
-	linked(
-		'inst-copc',
-		'Certificate of Program Compliance — reference record',
-		'institutional',
-		'https://sites.google.com/ctu.edu.ph/aacup2024/copc',
-		{ format: 'link', note: 'COPC reference from the 2024 BSFI dossier.' }
-	),
-	pending(
-		'inst-checklist',
-		'AACCUP checklist',
-		'institutional',
-		'The current checklist will be posted once the task force finalises the file.'
-	),
-	pending(
-		'inst-additional',
-		'Additional documents',
-		'institutional',
-		'Supplementary records, forms, and annexes for the survey visit.'
-	)
+/** Slugs a section may not use, because they are routes of their own. */
+export const RESERVED_SECTION_SLUGS = ['documents', 'visit', 'areas', 'records', 'about'];
+
+export const sectionGroups: { kind: SectionKind; label: string }[] = [
+	{ kind: 'common', label: 'Common documents' },
+	{ kind: 'current', label: 'Current visit' },
+	{ kind: 'previous', label: 'Previous visit' }
 ];
 
 export function getProgram(slug: string): Program | undefined {
 	return programs.find((program) => program.slug === slug);
 }
 
-export function getArea(program: Program, number: number): Area | undefined {
-	return program.areas.find((area) => area.number === number);
+export function activeVisit(program: Program): Visit {
+	return program.visits.find((visit) => visit.status === 'active') ?? program.visits[0];
+}
+
+export function getVisit(program: Program, slug: string): Visit | undefined {
+	return program.visits.find((visit) => visit.slug === slug);
+}
+
+/** URL prefix for a visit: the active visit lives at /[program], others at /[program]/[visit]. */
+export function visitBase(program: Program, visit: Visit): string {
+	return visit.status === 'active' && visit.slug === activeVisit(program).slug
+		? `/${program.slug}`
+		: `/${program.slug}/${visit.slug}`;
+}
+
+export function sectionsOf(visit: Visit, kind: SectionKind): Section[] {
+	return visit.sections.filter((section) => section.kind === kind);
+}
+
+export function visitDocuments(visit: Visit): EvidenceDocument[] {
+	return visit.sections.flatMap((section) => section.documents);
 }
 
 export function countLinked(documents: EvidenceDocument[]): number {
 	return documents.filter((document) => document.status === 'linked').length;
 }
 
-export function documentIndex(program: Program): IndexedDocument[] {
-	const rows: IndexedDocument[] = [];
+export function sectionLabel(section: Section): string {
+	if (section.kind === 'common') return 'Common documents';
+	if (section.kind === 'current') return `Current visit · ${section.title}`;
+	return section.number ? `Previous visit · Area ${section.number}` : `Previous visit · ${section.shortTitle}`;
+}
 
-	for (const area of program.currentVisitAreas) {
-		for (const document of area.documents) {
-			rows.push({
-				...document,
-				programSlug: program.slug,
-				programCode: program.code,
-				programName: program.name,
-				areaNumber: area.number,
-				areaTitle: area.title,
-				areaShortTitle: area.shortTitle,
-				scope: 'current',
-				sectionLabel: `Current visit · ${area.title}`
-			});
-		}
-	}
-
-	for (const area of program.areas) {
-		for (const document of area.documents) {
-			rows.push({
-				...document,
-				programSlug: program.slug,
-				programCode: program.code,
-				programName: program.name,
-				areaNumber: area.number,
-				areaTitle: area.title,
-				areaShortTitle: area.shortTitle,
-				scope: 'previous',
-				sectionLabel: `Previous visit · Area ${area.number}`
-			});
-		}
-	}
-
-	for (const document of program.programDocuments) {
-		rows.push({
+export function documentIndex(visit: Visit): IndexedDocument[] {
+	return visit.sections.flatMap((section) =>
+		section.documents.map((document) => ({
 			...document,
-			programSlug: program.slug,
-			programCode: program.code,
-			programName: program.name,
-			scope: 'program',
-			sectionLabel: 'Previous visit · Program-wide'
-		});
-	}
-
-	for (const document of institutionalDocuments) {
-		rows.push({
-			...document,
-			programSlug: program.slug,
-			programCode: program.code,
-			programName: program.name,
-			scope: 'records',
-			sectionLabel: 'Shared record'
-		});
-	}
-
-	return rows;
+			section,
+			sectionLabel: sectionLabel(section)
+		}))
+	);
 }
 
 export const documentKinds: { value: DocumentKind | 'all'; label: string }[] = [

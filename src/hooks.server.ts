@@ -1,49 +1,33 @@
-import { createServerClient } from '@supabase/ssr';
 import type { Handle } from '@sveltejs/kit';
-import { env } from '$env/dynamic/public';
+import { building } from '$app/environment';
+import { findStaffProfile, getSsoUser, supabaseAnon, supabaseAsStaff } from '$lib/server/sso';
 
 export const handle: Handle = async ({ event, resolve }) => {
-	const url = env.PUBLIC_SUPABASE_URL;
-	const key = env.PUBLIC_SUPABASE_ANON_KEY;
+	event.locals.supabase = supabaseAnon();
+	event.locals.ssoUser = null;
+	event.locals.staff = null;
 
-	event.locals.supabase =
-		url && key
-			? createServerClient(url, key, {
-					cookies: {
-						getAll: () => event.cookies.getAll(),
-						setAll: (cookiesToSet) => {
-							cookiesToSet.forEach(({ name, value, options }) => {
-								event.cookies.set(name, value, { ...options, path: '/' });
-							});
-						}
-					}
-				})
-			: null;
+	// Only the admin and the draft preview need to know who is signing in.
+	// Public pages stay anonymous and cacheable.
+	// Nothing is signed in at build time, and prerendered pages must not read search params.
+	const needsStaff =
+		!building &&
+		(event.url.pathname.startsWith('/admin') || event.url.searchParams.get('preview') === '1');
 
-	event.locals.safeGetSession = async () => {
-		if (!event.locals.supabase) {
-			return { session: null, user: null };
+	if (needsStaff) {
+		const ssoUser = await getSsoUser(event.request);
+		event.locals.ssoUser = ssoUser;
+
+		if (ssoUser) {
+			const profile = await findStaffProfile(ssoUser.email);
+			const client = profile ? await supabaseAsStaff(profile) : null;
+
+			if (profile && client) {
+				event.locals.staff = profile;
+				event.locals.supabase = client;
+			}
 		}
-
-		const {
-			data: { session }
-		} = await event.locals.supabase.auth.getSession();
-
-		if (!session) {
-			return { session: null, user: null };
-		}
-
-		const {
-			data: { user },
-			error
-		} = await event.locals.supabase.auth.getUser();
-
-		if (error) {
-			return { session: null, user: null };
-		}
-
-		return { session, user };
-	};
+	}
 
 	return resolve(event, {
 		filterSerializedResponseHeaders: (name) => name === 'content-range'

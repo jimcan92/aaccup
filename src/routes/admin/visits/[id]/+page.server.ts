@@ -1,0 +1,143 @@
+import { error, fail, redirect } from '@sveltejs/kit';
+import { RESERVED_SECTION_SLUGS } from '$lib/data/accreditation';
+import { canManage, dbFail, integer, optional, requireStaff, SLUG, text, VISIT_SLUG } from '$lib/server/admin';
+import type { Actions, PageServerLoad } from './$types';
+
+export const load: PageServerLoad = async ({ locals, params }) => {
+	const { staff, supabase } = requireStaff(locals);
+
+	const { data: visit } = await supabase
+		.from('visits')
+		.select('*, program:programs(id, code, slug, name, theme_program)')
+		.eq('id', params.id)
+		.maybeSingle();
+	if (!visit) error(404, 'Visit not found');
+
+	const [{ data: areas }, { data: sources }] = await Promise.all([
+		supabase
+			.from('areas')
+			.select('id, kind, number, slug, title, short_title, status, sort_order, documents(id, status, workflow)')
+			.eq('visit_id', params.id)
+			.order('sort_order')
+			.order('number'),
+		// Copy sources: other visits that have a common section.
+		supabase
+			.from('visits')
+			.select('id, year, label, program:programs(code), areas!inner(kind)')
+			.neq('id', params.id)
+			.eq('areas.kind', 'common')
+			.order('year', { ascending: false })
+	]);
+
+	return {
+		visit,
+		sections: (areas ?? []).map((area) => ({
+			...area,
+			linked: area.documents.filter((document) => document.status === 'linked').length,
+			total: area.documents.length,
+			unpublished: area.documents.filter((document) => document.workflow !== 'published').length
+		})),
+		sources: (sources ?? []).map((source) => ({
+			id: source.id,
+			label: `${(source.program as unknown as { code: string } | null)?.code ?? ''} · ${source.year} ${source.label}`
+		})),
+		canManage: canManage(staff)
+	};
+};
+
+export const actions: Actions = {
+	update: async ({ request, locals, params }) => {
+		const { supabase } = requireStaff(locals, ['admin', 'focal']);
+		const form = await request.formData();
+		const values = {
+			slug: text(form, 'slug').toLowerCase(),
+			year: integer(form, 'year'),
+			level: text(form, 'level'),
+			label: text(form, 'label'),
+			previous_label: optional(form, 'previous_label'),
+			workflow: text(form, 'workflow') === 'published' ? 'published' : 'draft',
+			sort_order: integer(form, 'sort_order')
+		};
+
+		if (!VISIT_SLUG.test(values.slug)) return fail(400, { message: 'The visit slug must start with the year, e.g. 2029-level-iv.' });
+		if (!values.year || !values.level || !values.label) return fail(400, { message: 'Year, level, and label are required.' });
+		if (/accredited/i.test(values.label)) {
+			return fail(400, { message: 'Use “visit” in the label (e.g. “Level III visit”), not “accredited”.' });
+		}
+
+		const { error: updateError } = await supabase.from('visits').update(values).eq('id', params.id);
+		return dbFail(updateError) ?? { message: 'Visit saved.' };
+	},
+
+	activate: async ({ locals, params }) => {
+		const { supabase } = requireStaff(locals, ['admin', 'focal']);
+		const { data: visit } = await supabase.from('visits').select('program_id').eq('id', params.id).single();
+		if (!visit) return fail(404, { message: 'Visit not found.' });
+
+		// One active visit per program: archive the current one first.
+		const { error: archiveError } = await supabase
+			.from('visits')
+			.update({ status: 'archived' })
+			.eq('program_id', visit.program_id)
+			.eq('status', 'active');
+		if (archiveError) return dbFail(archiveError);
+
+		const { error: activateError } = await supabase.from('visits').update({ status: 'active' }).eq('id', params.id);
+		return dbFail(activateError) ?? { message: 'This is now the active visit. /program shows it; the previous one moved to its own URL.' };
+	},
+
+	createSection: async ({ request, locals, params }) => {
+		const { supabase } = requireStaff(locals, ['admin', 'focal']);
+		const form = await request.formData();
+		const kind = text(form, 'kind');
+		const title = text(form, 'title');
+		const number = text(form, 'number') ? integer(form, 'number') : null;
+		const slug = (text(form, 'slug') || (kind === 'previous' && number ? `area-${number}` : title))
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, '-')
+			.replace(/^-|-$/g, '');
+
+		if (!['common', 'current', 'previous'].includes(kind)) return fail(400, { message: 'Choose a section group.' });
+		if (!title) return fail(400, { message: 'A section needs a title.' });
+		if (!SLUG.test(slug) || RESERVED_SECTION_SLUGS.includes(slug)) {
+			return fail(400, { message: `“${slug}” cannot be used as a section URL.` });
+		}
+
+		const { data: section, error: insertError } = await supabase
+			.from('areas')
+			.insert({
+				visit_id: params.id,
+				kind,
+				number,
+				slug,
+				title,
+				short_title: optional(form, 'short_title') ?? title,
+				description: optional(form, 'description'),
+				focus: optional(form, 'focus'),
+				sort_order: integer(form, 'sort_order', 100),
+				status: 'draft'
+			})
+			.select('id')
+			.single();
+
+		const failed = dbFail(insertError);
+		if (failed) return failed;
+		redirect(303, `/admin/sections/${section!.id}`);
+	},
+
+	copyCommon: async ({ request, locals, params }) => {
+		const { supabase } = requireStaff(locals, ['admin', 'focal']);
+		const from = text(await request.formData(), 'from');
+		if (!from) return fail(400, { message: 'Choose a visit to copy from.' });
+
+		const { data: copied, error: rpcError } = await supabase.rpc('copy_common_documents', {
+			p_from_visit: from,
+			p_to_visit: params.id
+		});
+		return (
+			dbFail(rpcError) ?? {
+				message: `Copied ${copied} common ${copied === 1 ? 'document' : 'documents'} as drafts. Check each title and link belongs to this program, then publish.`
+			}
+		);
+	}
+};
