@@ -7,6 +7,7 @@
 	import Type from '@lucide/svelte/icons/type';
 	import Users from '@lucide/svelte/icons/users';
 	import X from '@lucide/svelte/icons/x';
+	import BrandMarks from '$lib/components/site/brand-marks.svelte';
 	import * as Sheet from '$lib/components/ui/sheet/index.js';
 	import { initials, roleInfo } from '$lib/admin';
 	import type { LayoutProps } from './$types';
@@ -84,10 +85,7 @@
 
 {#snippet brand()}
 	<a href="/admin" class="inline-flex items-center gap-3">
-		<span class="relative grid size-9 place-items-center border border-paper/30 font-display text-[14px] font-semibold">
-			CM
-			<span class="absolute inset-x-1.5 bottom-1.5 h-px bg-paper/25"></span>
-		</span>
+		<BrandMarks size={34} />
 		<span class="leading-none">
 			<span class="block font-display text-[15px] font-semibold tracking-[-0.02em]">AACCUP Desk</span>
 			<span class="mt-1 block text-[11px] text-paper/55">CTU Moalboal task force</span>

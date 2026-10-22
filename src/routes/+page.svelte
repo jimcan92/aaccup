@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import BrandMarks from '$lib/components/site/brand-marks.svelte';
 	import Logo from '$lib/components/site/logo.svelte';
 	import SiteFooter from '$lib/components/site/site-footer.svelte';
 	import { site } from '$lib/data/site';
@@ -46,9 +47,12 @@
 <main id="main" class="flex-1 bg-salt">
 	<div class="mx-auto max-w-[1280px] px-5 pb-20 pt-12 sm:px-8 lg:pt-20">
 		<div class="flex flex-col gap-3 border-b border-ink/15 pb-6 sm:flex-row sm:items-end sm:justify-between">
-			<h1 class="font-display text-[clamp(2.4rem,7vw,4.75rem)] font-semibold leading-[0.9] tracking-[-0.055em] text-ink">
+			<div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-6">
+				<BrandMarks size={72} decorative={false} />
+				<h1 class="font-display text-[clamp(2.4rem,7vw,4.75rem)] font-semibold leading-[0.9] tracking-[-0.055em] text-ink">
 				AACCUP Accreditation
 			</h1>
+			</div>
 			<p class="font-mono text-[11px] text-ink-soft sm:pb-2">
 				{site.campus.replace('Cebu Technological University — ', 'CTU · ')} · {data.programs.length}
 				{data.programs.length === 1 ? 'program' : 'programs'}

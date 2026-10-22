@@ -3,6 +3,7 @@
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import UserX from '@lucide/svelte/icons/user-x';
+	import BrandMarks from '$lib/components/site/brand-marks.svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -16,7 +17,7 @@
 <div class="grid min-h-dvh bg-salt lg:grid-cols-[0.95fr_1.05fr]">
 	<div class="relative hidden overflow-hidden bg-ink p-10 text-paper lg:flex lg:flex-col lg:justify-between" style="--ring: #c9973a">
 		<a href="/" class="relative inline-flex items-center gap-3">
-			<span class="grid size-9 place-items-center border border-paper/30 font-display text-[14px] font-semibold">CM</span>
+			<BrandMarks size={36} />
 			<span class="leading-none">
 				<span class="block font-display text-[15px] font-semibold tracking-[-0.02em]">CTU Moalboal</span>
 				<span class="mt-1 block text-[11px] text-paper/55">AACCUP Accreditation</span>
@@ -24,6 +25,7 @@
 		</a>
 
 		<div class="relative max-w-md">
+			<BrandMarks size={88} class="mb-8" />
 			<p class="font-mono text-[12px] text-paper/55">AACCUP Desk</p>
 			<p class="mt-4 font-display text-[clamp(2.4rem,4vw,3.6rem)] font-semibold leading-[0.95] tracking-[-0.05em]">
 				Keep each program’s record current.
@@ -49,6 +51,7 @@
 				Back to the public site
 			</a>
 
+			<BrandMarks size={56} decorative={false} class="mb-6 lg:hidden" />
 			<p class="font-mono text-[12px] text-ink-soft">Task force access</p>
 			<h1 class="mt-2 font-display text-[clamp(2.1rem,5vw,2.9rem)] font-semibold leading-[0.96] tracking-[-0.05em]">
 				Sign in to the AACCUP Desk
