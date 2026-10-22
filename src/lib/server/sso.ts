@@ -111,50 +111,111 @@ export async function findStaffProfile(email: string): Promise<StaffProfile | nu
 	return data && STAFF_ROLES.includes(data.role) ? (data as StaffProfile) : null;
 }
 
-const encoder = new TextEncoder();
+/**
+ * Staff sessions are real Supabase Auth sessions, so tokens are signed by the project's own
+ * keys (currently ES256) and survive key rotation. After the SSO check, the server asks
+ * Supabase for a one-time login link for the staff email (generateLink sends no email) and
+ * redeems it immediately. The session is kept in an httpOnly cookie and refreshed when it
+ * expires or when the person's role changes.
+ */
 
-function base64url(input: ArrayBuffer | Uint8Array | string): string {
-	const bytes = typeof input === 'string' ? encoder.encode(input) : new Uint8Array(input);
-	let binary = '';
-	for (const byte of bytes) binary += String.fromCharCode(byte);
-	return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const SESSION_COOKIE = 'aaccup_staff_session';
+
+type StoredSession = { email: string; access_token: string; refresh_token: string; expires_at: number };
+
+type Cookies = {
+	get(name: string): string | undefined;
+	set(name: string, value: string, options: { path: string; httpOnly?: boolean; secure?: boolean; sameSite?: 'lax'; maxAge?: number }): void;
+	delete(name: string, options: { path: string }): void;
+};
+
+function claims(token: string): { app_metadata?: Record<string, unknown> } {
+	try {
+		return JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+	} catch {
+		return {};
+	}
 }
 
-/** HS256 JWT in the shape Supabase Auth issues, signed with the project's legacy JWT secret. */
-async function signSupabaseJwt(profile: StaffProfile, secret: string): Promise<string> {
-	const now = Math.floor(Date.now() / 1000);
-	const header = { alg: 'HS256', typ: 'JWT' };
-	const payload = {
-		iss: 'aaccup-sso',
-		aud: 'authenticated',
-		role: 'authenticated',
-		sub: profile.id,
-		email: profile.email,
-		iat: now,
-		exp: now + 10 * 60,
-		app_metadata: {
-			role: profile.role,
-			program_id: profile.program_id,
-			area_id: profile.area_id,
-			provider: 'ctu-accounts'
-		},
-		user_metadata: { full_name: profile.full_name }
-	};
-
-	const unsigned = `${base64url(JSON.stringify(header))}.${base64url(JSON.stringify(payload))}`;
-	const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-	const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(unsigned));
-	return `${unsigned}.${base64url(signature)}`;
+/** The token's role/program/area must match the profile; otherwise refresh to pick up changes. */
+function claimsMatch(token: string, profile: StaffProfile): boolean {
+	const meta = claims(token).app_metadata ?? {};
+	return (
+		meta.role === profile.role &&
+		(meta.program_id ?? null) === profile.program_id &&
+		(meta.area_id ?? null) === profile.area_id
+	);
 }
 
-/** A Supabase client that acts as this staff member under RLS. */
-export async function supabaseAsStaff(profile: StaffProfile): Promise<SupabaseClient | null> {
-	const secret = privateEnv.SUPABASE_JWT_SECRET;
-	if (!publicEnv.PUBLIC_SUPABASE_URL || !publicEnv.PUBLIC_SUPABASE_ANON_KEY || !secret) return null;
+function readSession(cookies: Cookies, email: string): StoredSession | null {
+	try {
+		const raw = cookies.get(SESSION_COOKIE);
+		const session = raw ? (JSON.parse(raw) as StoredSession) : null;
+		return session?.email === email ? session : null;
+	} catch {
+		return null;
+	}
+}
 
-	const token = await signSupabaseJwt(profile, secret);
-	return createClient(publicEnv.PUBLIC_SUPABASE_URL, publicEnv.PUBLIC_SUPABASE_ANON_KEY, {
+function saveSession(cookies: Cookies, email: string, session: { access_token: string; refresh_token: string; expires_at?: number }) {
+	cookies.set(
+		SESSION_COOKIE,
+		JSON.stringify({
+			email,
+			access_token: session.access_token,
+			refresh_token: session.refresh_token,
+			expires_at: session.expires_at ?? Math.floor(Date.now() / 1000) + 3600
+		} satisfies StoredSession),
+		{ path: '/', httpOnly: true, secure: !dev, sameSite: 'lax', maxAge: 60 * 60 * 24 * 7 }
+	);
+}
+
+export function clearStaffSession(cookies: Cookies) {
+	if (cookies.get(SESSION_COOKIE)) cookies.delete(SESSION_COOKIE, { path: '/' });
+}
+
+function clientWithToken(token: string): SupabaseClient {
+	return createClient(publicEnv.PUBLIC_SUPABASE_URL!, publicEnv.PUBLIC_SUPABASE_ANON_KEY!, {
 		auth: { persistSession: false, autoRefreshToken: false },
 		global: { headers: { Authorization: `Bearer ${token}` } }
 	});
+}
+
+/** A Supabase client that acts as this staff member under RLS, or null when it cannot sign in. */
+export async function supabaseAsStaff(profile: StaffProfile, cookies: Cookies): Promise<SupabaseClient | null> {
+	const anon = supabaseAnon();
+	const service = supabaseService();
+	if (!anon || !service) return null;
+
+	const stored = readSession(cookies, profile.email);
+	const now = Math.floor(Date.now() / 1000);
+
+	if (stored && stored.expires_at - 60 > now && claimsMatch(stored.access_token, profile)) {
+		return clientWithToken(stored.access_token);
+	}
+
+	// Expired, or the role changed: a refresh returns a token with the current app_metadata.
+	if (stored) {
+		const { data } = await anon.auth.refreshSession({ refresh_token: stored.refresh_token });
+		if (data.session && claimsMatch(data.session.access_token, profile)) {
+			saveSession(cookies, profile.email, data.session);
+			return clientWithToken(data.session.access_token);
+		}
+	}
+
+	// No usable session: issue a fresh one for the invited email.
+	const { data: link, error: linkError } = await service.auth.admin.generateLink({ type: 'magiclink', email: profile.email });
+	if (linkError || !link.properties?.hashed_token) {
+		console.error('AACCUP staff session: generateLink failed', linkError?.message);
+		return null;
+	}
+
+	const { data, error } = await anon.auth.verifyOtp({ type: 'email', token_hash: link.properties.hashed_token });
+	if (error || !data.session) {
+		console.error('AACCUP staff session: verifyOtp failed', error?.message);
+		return null;
+	}
+
+	saveSession(cookies, profile.email, data.session);
+	return clientWithToken(data.session.access_token);
 }

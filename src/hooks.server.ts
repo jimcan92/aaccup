@@ -1,6 +1,6 @@
 import type { Handle } from '@sveltejs/kit';
 import { building } from '$app/environment';
-import { findStaffProfile, getSsoUser, supabaseAnon, supabaseAsStaff } from '$lib/server/sso';
+import { clearStaffSession, findStaffProfile, getSsoUser, supabaseAnon, supabaseAsStaff } from '$lib/server/sso';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.supabase = supabaseAnon();
@@ -20,13 +20,16 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 		if (ssoUser) {
 			const profile = await findStaffProfile(ssoUser.email);
-			const client = profile ? await supabaseAsStaff(profile) : null;
+			const client = profile ? await supabaseAsStaff(profile, event.cookies) : null;
 
 			if (profile && client) {
 				event.locals.staff = profile;
 				event.locals.supabase = client;
 			}
 		}
+
+		// Signed out of CTU Accounts or removed from the list: drop the staff session too.
+		if (!event.locals.staff) clearStaffSession(event.cookies);
 	}
 
 	return resolve(event, {

@@ -49,14 +49,18 @@ Staff do **not** sign in with Supabase Auth. The admin uses the shared CTU Accou
 1. The browser sends the `ctu.session_token` cookie, which is scoped to `.ctu-moalboal.online`.
 2. The server forwards only that cookie to Accounts' `/api/auth/get-session`.
 3. The SSO email must exactly match a row in `public.profiles`. Nobody is added automatically.
-4. The server signs a 10-minute Supabase JWT for that profile (`sub` = profile id,
-   `app_metadata.role` / `program_id`), so every RLS policy and workflow RPC applies unchanged.
+4. The server gets a real Supabase session for that user: it asks Supabase Auth for a one-time
+   login link (`generateLink`, no email is sent) and redeems it right away. The token is signed by
+   the project's own keys, so it survives JWT key rotation. Role, program, and area come from
+   `app_metadata`, so every RLS policy and workflow RPC applies unchanged. The session lives in an
+   httpOnly cookie and is refreshed when it expires or the person's role changes.
 
 This only works on a `*.ctu-moalboal.online` host. On `localhost`, set `AACCUP_DEV_SSO_EMAIL`
 in `.env`; it is ignored in production builds.
 
-In **Authentication → Providers → Email**, turn off sign-ups and magic links. Auth users exist only
-as identity anchors that an admin creates from **Admin → People**.
+In **Authentication → Providers → Email**, keep the Email provider **enabled** (the server's
+one-time login links need it) but turn off **Allow new users to sign up**. Auth users are created
+only by an admin from **Admin → People**.
 
 ## 3. Add the first admin
 
@@ -88,13 +92,10 @@ PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 PUBLIC_SUPABASE_ANON_KEY=...
 SUPABASE_SERVICE_ROLE_KEY=...
 PUBLIC_SITE_URL=https://aaccup.ctu-moalboal.online
-SUPABASE_JWT_SECRET=...        # Project Settings → JWT Keys → Legacy JWT secret
 ACCOUNTS_URL=https://accounts.ctu-moalboal.online
 PUBLIC_PORTAL_URL=https://ctu-moalboal.online
 ```
 
-`SUPABASE_JWT_SECRET` signs staff tokens. Like the service-role key it is server-only and must
-never be prefixed with `PUBLIC_`.
 
 `SUPABASE_SERVICE_ROLE_KEY` is server-only. Never prefix it with `PUBLIC_`, never import it into a client component, and never paste it in chat.
 

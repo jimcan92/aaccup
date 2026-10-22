@@ -12,14 +12,12 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const configured = Boolean(
 		publicEnv.PUBLIC_SUPABASE_URL &&
 			publicEnv.PUBLIC_SUPABASE_ANON_KEY &&
-			privateEnv.SUPABASE_SERVICE_ROLE_KEY &&
-			privateEnv.SUPABASE_JWT_SECRET
+			privateEnv.SUPABASE_SERVICE_ROLE_KEY
 	);
 	const missing = [
 		['PUBLIC_SUPABASE_URL', publicEnv.PUBLIC_SUPABASE_URL],
 		['PUBLIC_SUPABASE_ANON_KEY', publicEnv.PUBLIC_SUPABASE_ANON_KEY],
-		['SUPABASE_SERVICE_ROLE_KEY', privateEnv.SUPABASE_SERVICE_ROLE_KEY],
-		['SUPABASE_JWT_SECRET', privateEnv.SUPABASE_JWT_SECRET]
+		['SUPABASE_SERVICE_ROLE_KEY', privateEnv.SUPABASE_SERVICE_ROLE_KEY]
 	]
 		.filter(([, value]) => !value)
 		.map(([name]) => name as string);
