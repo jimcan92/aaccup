@@ -98,7 +98,7 @@ export const cleaners: Record<string, (value: Raw, title: string) => object | st
 				role: str(item.role, 120),
 				unit: str(item.unit, 160),
 				photo: str(item.photo, 500),
-				level: [1, 2, 3].includes(Number(item.level)) ? Number(item.level) : 2
+				level: [1, 2, 3, 4].includes(Number(item.level)) ? Number(item.level) : 2
 			}))
 			.filter((item) => item.name || item.role || item.photo);
 		if (items.some((item) => !item.name || !item.role)) return 'Each box needs a name and a position.';

@@ -6,9 +6,9 @@
 
 	let { content, tone }: { content: OrgContent; tone: 'paper' | 'salt' } = $props();
 
-	// Rows from the top: level 1, then 2, then 3; empty levels are skipped.
+	// Rows from the top: levels 1 to 4; empty levels are skipped.
 	const rows = $derived(
-		[1, 2, 3].map((level) => content.items.filter((item) => (item.level ?? 2) === level)).filter((row) => row.length)
+		[1, 2, 3, 4].map((level) => content.items.filter((item) => (item.level ?? 2) === level)).filter((row) => row.length)
 	);
 </script>
 
@@ -31,7 +31,7 @@
 			{#if index > 0}<span class="h-8 w-px bg-program/40" aria-hidden="true"></span>{/if}
 			<!-- The top border joins the boxes of a row, like the bar of an org chart. -->
 			<ul class="flex w-full flex-wrap justify-center gap-3 {index > 0 && row.length > 1 ? 'border-t border-program/40 pt-6' : ''}">
-				{#each row as person, i (i)}{@render card(person, index === 0)}{/each}
+				{#each row as person, i (i)}{@render card(person, index < 2 && row.length === 1)}{/each}
 			</ul>
 		{/each}
 	</div>
