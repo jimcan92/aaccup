@@ -1,5 +1,6 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { canManage, dbFail, HEX, integer, optional, requireStaff, SLUG, text, VISIT_SLUG } from '$lib/server/admin';
+import { loadDriveSetup } from '$lib/server/drive-setup';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
@@ -14,8 +15,13 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		.eq('program_id', params.id)
 		.order('year', { ascending: false });
 
+	// Drive setup is shown for the active visit; other visits are set up on their own page.
+	const active = (visits ?? []).find((visit) => visit.status === 'active') ?? visits?.[0];
+	const drive = active ? await loadDriveSetup(supabase, active.id) : null;
+
 	return {
 		program,
+		drive,
 		visits: (visits ?? []).map((visit) => {
 			const documents = visit.areas.flatMap((area) => area.documents);
 			return {

@@ -5,6 +5,7 @@
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import PageHeader from '$lib/components/admin/page-header.svelte';
 	import StatusBadge from '$lib/components/admin/status-badge.svelte';
+	import DriveSetup from '$lib/components/admin/drive-setup.svelte';
 	import FormMessage from '$lib/components/admin/form-message.svelte';
 	import { contrastRatio } from '$lib/theme';
 	import type { PageProps } from './$types';
@@ -124,6 +125,12 @@
 		<p class="text-[12px] text-ink-soft">Text needs at least 4.5:1. If the text color fails on the program color, the site switches to white or ink automatically.</p>
 	</aside>
 </div>
+
+{#if data.drive?.visit}
+	<div class="mt-14">
+		<DriveSetup setup={data.drive} canManage={data.canManage} />
+	</div>
+{/if}
 
 <section class="mt-14">
 	<div class="flex items-end justify-between border-b border-ink/20 pb-2">
