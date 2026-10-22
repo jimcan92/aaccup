@@ -10,7 +10,8 @@
 	const levels = [
 		{ value: 1, label: 'Top row' },
 		{ value: 2, label: 'Second row' },
-		{ value: 3, label: 'Third row' }
+		{ value: 3, label: 'Third row' },
+		{ value: 4, label: 'Fourth row' }
 	];
 </script>
 
@@ -32,5 +33,5 @@
 		</div>
 	{/each}
 	<button type="button" onclick={() => (value.items = [...value.items, { name: '', role: '', unit: '', photo: '', level: 2 }])} class={addButton}><Plus class="size-4" /> Add person</button>
-	<p class={hint}>The top row is usually the Campus Director; the second row the directors; the third row the offices. Within a row, people show in this order.</p>
+	<p class={hint}>For example: the University President on the top row, the Campus Director on the second, the directors on the third, and the offices on the fourth. Within a row, people show in this order.</p>
 </div>

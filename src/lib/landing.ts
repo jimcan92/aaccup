@@ -14,8 +14,8 @@ export type FaqItem = { question: string; answer: string };
 export type LinkButton = { label: string; href: string };
 /** An announcement; date is YYYY-MM-DD. */
 export type NewsItem = { date: string; title: string; body?: string; href?: string };
-/** A box on the organization chart; level 1 is the top row. */
-export type OrgItem = { name: string; role: string; unit?: string; photo?: string; level: 1 | 2 | 3 };
+/** A box on the organization chart; level 1 is the top row (four rows at most). */
+export type OrgItem = { name: string; role: string; unit?: string; photo?: string; level: 1 | 2 | 3 | 4 };
 /** A campus event; date and end are YYYY-MM-DD, time is free text ("8:00 AM – 5:00 PM"). */
 export type EventItem = { date: string; end?: string; time?: string; title: string; place?: string; body?: string; href?: string };
 
