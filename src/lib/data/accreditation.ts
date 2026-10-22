@@ -432,7 +432,7 @@ export function getVisit(program: Program, slug: string): Visit | undefined {
 
 /** URL prefix for a visit: the active visit lives at /[program], others at /[program]/[visit]. */
 export function visitBase(program: Program, visit: Visit): string {
-	return visit.status === 'active' && visit === activeVisit(program)
+	return visit.status === 'active' && visit.slug === activeVisit(program).slug
 		? `/${program.slug}`
 		: `/${program.slug}/${visit.slug}`;
 }

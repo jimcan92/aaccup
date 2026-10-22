@@ -11,30 +11,42 @@ function requireAdmin(locals: App.Locals) {
 	return { staff: locals.staff, supabase: locals.supabase };
 }
 
-function readRole(form: FormData): { role: StaffRole; programId: string | null } | string {
+function readRole(form: FormData): { role: StaffRole; programId: string | null; areaId: string | null } | string {
 	const role = String(form.get('role') ?? '') as StaffRole;
 	const programId = String(form.get('program_id') ?? '') || null;
+	const areaId = String(form.get('area_id') ?? '') || null;
 
 	if (!STAFF_ROLES.includes(role)) return 'Choose a role.';
 	if (role === 'area_chair' && !programId) return 'An area chair needs a program.';
-	return { role, programId: role === 'area_chair' ? programId : null };
+	return role === 'area_chair' ? { role, programId, areaId } : { role, programId: null, areaId: null };
 }
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const { supabase } = requireAdmin(locals);
 
-	const [people, programs] = await Promise.all([
+	const [people, programs, areas] = await Promise.all([
 		supabase
 			.from('profiles')
-			.select('id, email, full_name, role, program_id, created_at')
+			.select('id, email, full_name, role, program_id, area_id, created_at')
 			.order('role')
 			.order('full_name'),
-		supabase.from('programs').select('id, code, name').order('code')
+		supabase.from('programs').select('id, code, name').order('code'),
+		// Area chairs can be limited to one section of their program's active visit.
+		supabase
+			.from('areas')
+			.select('id, program_id, kind, number, title, visits!inner(status)')
+			.eq('visits.status', 'active')
+			.order('sort_order')
 	]);
 
 	return {
 		people: people.data ?? [],
 		programs: programs.data ?? [],
+		areas: (areas.data ?? []).map(({ id, program_id, kind, number, title }) => ({
+			id,
+			program_id,
+			label: kind === 'previous' && number ? `Area ${number} · ${title}` : title
+		})),
 		error: people.error?.message ?? null
 	};
 };
@@ -61,7 +73,7 @@ export const actions: Actions = {
 			email,
 			email_confirm: true,
 			user_metadata: { full_name: fullName },
-			app_metadata: { role: parsed.role, program_id: parsed.programId, provider: 'ctu-accounts' }
+			app_metadata: { role: parsed.role, program_id: parsed.programId, area_id: parsed.areaId, provider: 'ctu-accounts' }
 		});
 		if (createError || !created.user) return fail(400, { message: createError?.message ?? 'Could not add this person.', email, fullName });
 
@@ -69,7 +81,7 @@ export const actions: Actions = {
 			p_user: created.user.id,
 			p_role: parsed.role,
 			p_program_id: parsed.programId,
-			p_area_id: null
+			p_area_id: parsed.areaId
 		});
 		if (roleError) return fail(400, { message: roleError.message, email, fullName });
 
@@ -95,7 +107,7 @@ export const actions: Actions = {
 			p_user: id,
 			p_role: parsed.role,
 			p_program_id: parsed.programId,
-			p_area_id: null
+			p_area_id: parsed.areaId
 		});
 		if (roleError) return fail(400, { message: roleError.message });
 

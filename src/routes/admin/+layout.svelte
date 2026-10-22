@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
+	import FolderOpen from '@lucide/svelte/icons/folder-open';
 	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 	import LogOut from '@lucide/svelte/icons/log-out';
 	import Menu from '@lucide/svelte/icons/menu';
@@ -18,6 +19,7 @@
 	const nav = $derived(
 		[
 			{ href: '/admin', label: 'Overview', icon: LayoutDashboard },
+			{ href: '/admin/programs', label: 'Programs', icon: FolderOpen },
 			{ href: '/admin/content', label: 'Site content', icon: Type },
 			data.staff?.role === 'admin' ? { href: '/admin/people', label: 'People', icon: Users } : null
 		].filter((item) => item !== null)
@@ -53,10 +55,6 @@
 			</li>
 		{/each}
 	</ul>
-	<p class="mt-8 px-3 font-mono text-[11px] text-paper/45">Coming next</p>
-	<p class="mt-2 px-3 text-[12px] leading-relaxed text-paper/50">
-		Programs, visits, sections, and Drive links move here when the records come out of the code.
-	</p>
 {/snippet}
 
 {#snippet userCard()}

@@ -1,19 +1,26 @@
 # Editing the AACCUP dossier
 
-## Phase 1: editable site content
+**Programs, visits, sections, and documents are now edited in the admin** (`/admin/programs`),
+not in code. The public site reads published rows from Supabase and caches each page for 60
+seconds. `src/lib/data/accreditation.ts` is only the fallback used when Supabase is unreachable,
+and the source for `scripts/generate-seed.ts`. Edits there do not reach the live site while
+Supabase is up.
 
-These are now stored in Supabase `content_blocks` and editable at `/admin/content`:
+## In the admin
 
-- VMGO — `vmgo.vision`, `vmgo.mission`, `vmgo.source`
-- Home hero — `home.hero.title`, `home.hero.intro`
-- Site copy — title, description, intro, status note, contact note, address, phone, email
-- Carousel — `home.carousel` as JSON
+- **Programs** — code, name, URL slug, summary, theme colors (with a contrast check), visibility.
+- **Visits** — year, level, public label (“Level III visit”, never “accredited”), which visit is active.
+  Past visits stay at `/[program]/[visit-slug]`.
+- **Sections** — common documents, current-visit sections, previous-visit areas 1–10.
+  “Copy common documents” copies another program’s or visit’s common rows as drafts.
+- **Documents** — title, Drive link, type, format, date, note, order. **Paste links** adds many at
+  once: one `Title | https://…` per line (spreadsheet columns work too).
+- **Workflow** — draft → submit for review → publish. Area chairs submit; focal persons and admins
+  publish. An area chair’s edit to a published document turns it back into a draft until it is
+  published again.
 
-Each block has `draft_value` and `published_value`. **Publish** copies the draft to the published value. The public home reads only published values and caches for 60 seconds.
+The rest of this file describes the static fallback data.
 
-The TypeScript files below remain the fallback for programs, areas, documents, and the default content when Supabase is unavailable.
-
----
 
 Content is in **`src/lib/data/accreditation.ts`**. Campus defaults are in **`src/lib/data/site.ts`**.
 

@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { env } from '$env/dynamic/public';
-import { activeVisit, countLinked, programs, visitDocuments } from '$lib/data/accreditation';
+import { loadProgramCards } from '$lib/server/dossier';
 import { ACTIVE_CONTENT_KEYS, site as defaultSite } from '$lib/data/site';
 import type { PageServerLoad } from './$types';
 
@@ -51,22 +51,7 @@ export const load: PageServerLoad = async ({ setHeaders, url, locals }) => {
 
 	const text = (key: (typeof ACTIVE_CONTENT_KEYS)[number], fallback: string) => blocks[key] ?? fallback;
 
-	const cards = [...programs]
-		.sort((a, b) => a.sortOrder - b.sortOrder)
-		.map((program) => {
-			const visit = activeVisit(program);
-			const documents = visitDocuments(visit);
-
-			return {
-				slug: program.slug,
-				code: program.code,
-				name: program.name,
-				theme: program.theme,
-				visit: { year: visit.year, label: visit.label },
-				linked: countLinked(documents),
-				total: documents.length
-			};
-		});
+	const cards = await loadProgramCards();
 
 	return {
 		preview,

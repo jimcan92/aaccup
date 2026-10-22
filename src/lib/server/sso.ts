@@ -132,7 +132,12 @@ async function signSupabaseJwt(profile: StaffProfile, secret: string): Promise<s
 		email: profile.email,
 		iat: now,
 		exp: now + 10 * 60,
-		app_metadata: { role: profile.role, program_id: profile.program_id, provider: 'ctu-accounts' },
+		app_metadata: {
+			role: profile.role,
+			program_id: profile.program_id,
+			area_id: profile.area_id,
+			provider: 'ctu-accounts'
+		},
 		user_metadata: { full_name: profile.full_name }
 	};
 

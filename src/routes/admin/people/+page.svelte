@@ -12,6 +12,10 @@
 
 	const roles = ['admin', 'focal', 'reviewer', 'area_chair'] as const;
 	let newRole = $state<string>('area_chair');
+	let newProgram = $state<string>('');
+	let editProgram = $state<string>('');
+	const areasFor = (programId: string) => data.areas.filter((area) => area.program_id === programId);
+	const areaTitle = (id: string | null) => data.areas.find((area) => area.id === id)?.label ?? null;
 	let editing = $state<string | null>(null);
 	let editRole = $state<string>('area_chair');
 	let removing = $state<{ id: string; label: string } | null>(null);
@@ -24,6 +28,7 @@
 	function startEdit(person: (typeof data.people)[number]) {
 		editing = person.id;
 		editRole = person.role;
+		editProgram = person.program_id ?? '';
 	}
 </script>
 
@@ -54,7 +59,7 @@
 		<UserPlus class="size-5" />
 		Add a person
 	</h2>
-	<form method="POST" action="?/add" use:enhance class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-[1.3fr_1fr_0.9fr_0.8fr_auto] xl:items-end">
+	<form method="POST" action="?/add" use:enhance class="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-[1.2fr_1fr_0.8fr_0.7fr_1fr_auto] xl:items-end">
 		<label class="grid gap-1.5 text-[13px] font-medium text-ink">
 			CTU email
 			<input name="email" type="email" required autocomplete="off" placeholder="name@ctu.edu.ph" value={form && 'email' in form ? form.email : ''} class={fieldClass} />
@@ -73,11 +78,18 @@
 		</label>
 		<label class="grid gap-1.5 text-[13px] font-medium text-ink">
 			Program
-			<select name="program_id" disabled={newRole !== 'area_chair'} required={newRole === 'area_chair'} class="{fieldClass} disabled:opacity-50">
+			<select name="program_id" bind:value={newProgram} disabled={newRole !== 'area_chair'} required={newRole === 'area_chair'} class="{fieldClass} disabled:opacity-50">
 				<option value="">{newRole === 'area_chair' ? 'Choose…' : 'All programs'}</option>
 				{#each data.programs as program (program.id)}
 					<option value={program.id}>{program.code}</option>
 				{/each}
+			</select>
+		</label>
+		<label class="grid gap-1.5 text-[13px] font-medium text-ink">
+			Section
+			<select name="area_id" disabled={newRole !== 'area_chair' || !newProgram} class="{fieldClass} disabled:opacity-50">
+				<option value="">Whole program</option>
+				{#each areasFor(newProgram) as area (area.id)}<option value={area.id}>{area.label}</option>{/each}
 			</select>
 		</label>
 		<button type="submit" class="h-11 bg-ink px-5 text-[14px] font-medium text-paper transition-colors hover:bg-ink-soft">
@@ -110,7 +122,7 @@
 					</div>
 					<div class="ml-auto flex items-center gap-2">
 						<span class="border border-ink/20 bg-paper px-2 py-0.5 text-[12px] font-medium text-ink">
-							{roleInfo[person.role]?.label ?? person.role}{programCode(person.program_id) ? ` · ${programCode(person.program_id)}` : ''}
+							{roleInfo[person.role]?.label ?? person.role}{programCode(person.program_id) ? ` · ${programCode(person.program_id)}` : ''}{areaTitle(person.area_id) ? ` · ${areaTitle(person.area_id)}` : ''}
 						</span>
 						<button
 							type="button"
@@ -141,7 +153,7 @@
 							await update();
 							editing = null;
 						}}
-						class="mt-4 grid gap-3 bg-paper p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end"
+						class="mt-4 grid gap-3 bg-paper p-4 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end"
 					>
 						<input type="hidden" name="id" value={person.id} />
 						<label class="grid gap-1.5 text-[13px] font-medium">
@@ -154,11 +166,18 @@
 						</label>
 						<label class="grid gap-1.5 text-[13px] font-medium">
 							Program
-							<select name="program_id" disabled={editRole !== 'area_chair'} required={editRole === 'area_chair'} value={person.program_id ?? ''} class="{fieldClass} disabled:opacity-50">
+							<select name="program_id" bind:value={editProgram} disabled={editRole !== 'area_chair'} required={editRole === 'area_chair'} class="{fieldClass} disabled:opacity-50">
 								<option value="">{editRole === 'area_chair' ? 'Choose…' : 'All programs'}</option>
 								{#each data.programs as program (program.id)}
 									<option value={program.id}>{program.code}</option>
 								{/each}
+							</select>
+						</label>
+						<label class="grid gap-1.5 text-[13px] font-medium">
+							Section
+							<select name="area_id" disabled={editRole !== 'area_chair' || !editProgram} class="{fieldClass} disabled:opacity-50">
+								<option value="">Whole program</option>
+								{#each areasFor(editProgram) as area (area.id)}<option value={area.id} selected={area.id === person.area_id}>{area.label}</option>{/each}
 							</select>
 						</label>
 						<button type="submit" class="h-11 bg-ink px-5 text-[14px] font-medium text-paper hover:bg-ink-soft">Save</button>

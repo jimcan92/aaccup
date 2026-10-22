@@ -43,7 +43,7 @@
 	</div>
 
 	<ul class="mt-4 grid gap-4 md:grid-cols-2">
-		{#each data.programs as program (program.slug)}
+		{#each data.programs as program (program.id)}
 			{@const pct = program.total ? Math.round((program.linked / program.total) * 100) : 0}
 			<li class="program-scope border border-rule bg-paper" style={themeStyle(program.theme)}>
 				<div class="flex items-start justify-between gap-4 border-t-4 border-program p-5">
@@ -70,18 +70,22 @@
 						</div>
 					{/each}
 				</dl>
-				<div class="border-t border-rule px-5 py-3">
-					<a href={`/${program.slug}`} class="inline-flex items-center gap-1.5 text-[13px] font-medium text-program-ink hover:underline">
-						Open the public dossier
+				<div class="flex flex-wrap items-center justify-between gap-3 border-t border-rule px-5 py-3">
+					<a href={`/admin/programs/${program.id}`} class="inline-flex items-center gap-1.5 text-[13px] font-medium text-program-ink hover:underline">
+						Manage {program.code}
+						<ArrowRight class="size-3.5" />
+					</a>
+					{#if program.waiting}
+						<span class="text-[12px] font-medium text-ink">{program.waiting} waiting for review</span>
+					{/if}
+					<a href={`/${program.slug}`} class="inline-flex items-center gap-1.5 text-[13px] text-ink-soft hover:underline">
+						Public page
 						<ArrowUpRight class="size-3.5" />
 					</a>
 				</div>
 			</li>
 		{/each}
 	</ul>
-	<p class="mt-3 text-[12px] text-ink-soft">
-		Program, visit, and document records are still read from the site code. Editing them here comes with the next phase.
-	</p>
 </section>
 
 <section class="mt-12 grid gap-8 lg:grid-cols-[1.4fr_1fr]">
