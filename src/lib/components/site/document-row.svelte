@@ -1,5 +1,7 @@
 <script lang="ts">
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
+	import Eye from '@lucide/svelte/icons/eye';
+	import { openPreview, previewUrl } from '$lib/preview';
 	import type { EvidenceDocument } from '$lib/data/types';
 	import { formatDate } from '$lib/format';
 	import { cn } from '$lib/utils';
@@ -17,13 +19,24 @@
 
 	const linked = $derived(document.status === 'linked' && Boolean(document.driveUrl));
 	const date = $derived(formatDate(document.updated));
+	// Drive and Docs files open in the in-page preview; other links open in a new tab.
+	const canPreview = $derived(linked && previewUrl(document.driveUrl) !== null);
 	const actionLabel = $derived(
-		document.format === 'link'
-			? 'Open record'
-			: document.format === 'folder'
-				? 'Open folder'
+		canPreview
+			? document.format === 'folder'
+				? 'View folder'
+				: 'Preview'
+			: document.format === 'link'
+				? 'Open record'
 				: 'Open in Drive'
 	);
+
+	function onclick(event: MouseEvent) {
+		// Ctrl/Cmd/Shift/middle click keep the browser's own "open in new tab" behaviour.
+		if (!canPreview || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+		event.preventDefault();
+		openPreview(document.id);
+	}
 </script>
 
 {#snippet body()}
@@ -62,7 +75,11 @@
 			{#if linked}
 				<span class="inline-flex items-center gap-1 text-[12px] font-medium text-program">
 					{actionLabel}
-					<ArrowUpRight class="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+					{#if canPreview}
+						<Eye class="size-3.5" />
+					{:else}
+						<ArrowUpRight class="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+					{/if}
 				</span>
 			{/if}
 		</div>
@@ -78,7 +95,8 @@
 			'group block border-b border-rule px-2 py-4 transition-colors hover:bg-program-soft sm:px-3',
 			className
 		)}
-		aria-label={`${document.title} — opens in a new tab`}
+		{onclick}
+		aria-label={canPreview ? `Preview ${document.title}` : `${document.title} — opens in a new tab`}
 	>
 		{@render body()}
 	</a>

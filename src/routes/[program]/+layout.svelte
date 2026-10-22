@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import DocumentPreview from '$lib/components/program/document-preview.svelte';
 	import ProgramHeader from '$lib/components/program/program-header.svelte';
 	import ProgramHero from '$lib/components/program/program-hero.svelte';
 	import SectionNav from '$lib/components/program/section-nav.svelte';
@@ -30,6 +31,8 @@
 			</main>
 		</div>
 	</div>
+
+	<DocumentPreview visit={data.visit} {style} />
 
 	<SiteFooter themed contactNote={data.contactNote}>
 		<p class="font-display text-[18px] font-semibold tracking-[-0.02em]">
