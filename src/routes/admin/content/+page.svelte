@@ -21,7 +21,7 @@
 		The editable copy.
 	</h1>
 	<p class="mt-3 max-w-2xl text-[12px] leading-relaxed text-ink-soft">
-		VMGO, hero text, carousel slides, and site wordings. Click <strong class="font-medium text-ink">Edit</strong> to open the split-view editor. The carousel editor supports image upload, captions, alt text, and slide order.
+		The site title, description, and footer contact line. Click <strong class="font-medium text-ink">Edit</strong> to open the split-view editor.
 	</p>
 </div>
 

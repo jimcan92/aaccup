@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import '../app.css';
-	import SiteFooter from '$lib/components/site/site-footer.svelte';
-	import SiteHeader from '$lib/components/site/site-header.svelte';
 
 	let { children } = $props();
 	const isAdmin = $derived(page.url.pathname.startsWith('/admin'));
@@ -18,11 +16,7 @@
 		Skip to content
 	</a>
 
-	<SiteHeader />
-
-	<main id="main" class="min-h-[60vh]">
+	<div class="flex min-h-dvh flex-col">
 		{@render children()}
-	</main>
-
-	<SiteFooter />
+	</div>
 {/if}

@@ -1,24 +1,13 @@
-import { error } from '@sveltejs/kit';
-import { programs } from '$lib/data/accreditation';
+import { redirect } from '@sveltejs/kit';
+import { activeVisit, programs, sectionsOf } from '$lib/data/accreditation';
 import type { EntryGenerator, PageLoad } from './$types';
 
+// Old URL: /[program]/visit/[area] → /[program]/[area]
 export const entries: EntryGenerator = () =>
 	programs.flatMap((program) =>
-		program.currentVisitAreas.map((area) => ({ program: program.slug, area: area.slug }))
+		sectionsOf(activeVisit(program), 'current').map((section) => ({ program: program.slug, area: section.slug }))
 	);
 
-export const load: PageLoad = ({ params, parent }) => {
-	return parent().then(({ program }) => {
-		const index = program.currentVisitAreas.findIndex((area) => area.slug === params.area);
-
-		if (index === -1) {
-			error(404, 'Current visit area not found');
-		}
-
-		return {
-			area: program.currentVisitAreas[index],
-			previous: program.currentVisitAreas[index - 1] ?? null,
-			next: program.currentVisitAreas[index + 1] ?? null
-		};
-	});
+export const load: PageLoad = ({ params }) => {
+	redirect(308, `/${params.program}/${params.area}`);
 };

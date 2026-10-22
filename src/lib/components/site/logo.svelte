@@ -2,29 +2,30 @@
 	import { cn } from '$lib/utils';
 
 	let {
-		tone = 'light',
+		href = '/',
+		label = 'AACCUP Accreditation',
+		compact = false,
 		class: className = ''
 	}: {
-		tone?: 'light' | 'dark';
+		href?: string;
+		label?: string;
+		/** Hide the wordmark below the sm breakpoint. */
+		compact?: boolean;
 		class?: string;
 	} = $props();
 </script>
 
 <a
-	href="/"
-	class={cn(
-		'group inline-flex items-center gap-3 transition-opacity hover:opacity-80',
-		tone === 'dark' ? 'text-paper' : 'text-ink',
-		className
-	)}
-	aria-label="CTU Moalboal AACCUP — home"
+	{href}
+	class={cn('group inline-flex min-w-0 items-center gap-3 text-current transition-opacity hover:opacity-80', className)}
+	aria-label={`CTU Moalboal ${label} — all programs`}
 >
-	<span class="relative grid size-9 shrink-0 place-items-center border border-current/25">
+	<span class="relative grid size-9 shrink-0 place-items-center border border-current/30">
 		<span class="font-display text-[15px] font-semibold leading-none tracking-[-0.04em]">CM</span>
-		<span class="absolute inset-x-1.5 bottom-1.5 h-px bg-current/20"></span>
+		<span class="absolute inset-x-1.5 bottom-1.5 h-px bg-current/25"></span>
 	</span>
-	<span class="leading-none">
-		<span class="block font-display text-[14px] font-semibold tracking-[-0.02em]">CTU Moalboal</span>
-		<span class="mt-1 block text-[10px] tracking-[0.02em] text-current/55">AACCUP 2026</span>
+	<span class={cn('min-w-0 leading-none', compact && 'hidden sm:block')}>
+		<span class="block truncate font-display text-[14px] font-semibold tracking-[-0.02em]">CTU Moalboal</span>
+		<span class="mt-1 block truncate text-[11px] tracking-[0.02em] opacity-70">{label}</span>
 	</span>
 </a>
