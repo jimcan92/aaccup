@@ -86,11 +86,11 @@
 								<span
 									class={cn(
 										'font-mono text-[10px] tabular-nums',
-										linked === section.documents.length && linked > 0 ? 'text-program' : 'opacity-60'
+										linked > 0 ? 'text-program' : 'opacity-60'
 									)}
-									aria-label={`${linked} of ${section.documents.length} linked`}
+									aria-label={`${linked} linked`}
 								>
-									{linked}/{section.documents.length}
+									{linked || '–'}
 								</span>
 							</a>
 						</li>

@@ -5,38 +5,25 @@
 	import Search from '@lucide/svelte/icons/search';
 	import X from '@lucide/svelte/icons/x';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import { countLinked, dossierPath, sectionsOf, visitDocuments } from '$lib/data/accreditation';
+	import DocumentRow from '$lib/components/site/document-row.svelte';
+	import { dossierPath, sectionsOf } from '$lib/data/accreditation';
+	import { isLinked } from '$lib/drive-url';
 	import type { Program, Visit } from '$lib/data/types';
-	import { pad2 } from '$lib/format';
 	import { imageSrc, paragraphs } from '$lib/image-url';
 	import type { GalleryItem, LandingBlock } from '$lib/landing';
 
 	let { program, visit, blocks }: { program: Program; visit: Visit; blocks: LandingBlock[] } = $props();
 
 	const dossier = $derived(dossierPath(program, visit));
-	const documents = $derived(visitDocuments(visit));
-	const linked = $derived(countLinked(documents));
-	const pct = $derived(documents.length ? Math.round((linked / documents.length) * 100) : 0);
+
+	// Program credentials (COPC, BOR, certification…): shown only once they are linked in Drive.
+	const credentials = $derived(sectionsOf(visit, 'common').flatMap((section) => section.documents).filter(isLinked));
 
 	// The first photo of the first gallery is the banner behind the hero.
 	const banner = $derived.by(() => {
 		for (const block of blocks) if (block.kind === 'gallery' && block.content.items?.[0]?.src) return block.content.items[0];
 		return null;
 	});
-
-	const groups = $derived(
-		[
-			{ kind: 'common' as const, label: 'Common documents', note: 'Certification, BOR, COPC, checklist' },
-			{ kind: 'current' as const, label: `Current visit · ${visit.year}`, note: 'Areas under review now' },
-			{ kind: 'previous' as const, label: visit.previousLabel ? `Previous visit · ${visit.previousLabel}` : 'Previous visit', note: 'Recommendations and compliance' }
-		]
-			.map((group) => {
-				const sections = sectionsOf(visit, group.kind);
-				const docs = sections.flatMap((section) => section.documents);
-				return { ...group, sections, linked: countLinked(docs), total: docs.length };
-			})
-			.filter((group) => group.sections.length > 0)
-	);
 
 	// Lightbox for gallery photos.
 	let viewer = $state<{ items: GalleryItem[]; index: number } | null>(null);
@@ -68,7 +55,7 @@
 		<div class="absolute inset-0 -z-10 bg-program/80 md:hidden" aria-hidden="true"></div>
 	{/if}
 
-	<div class="mx-auto grid max-w-[1280px] gap-10 px-5 py-14 sm:px-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-end lg:py-24">
+	<div class="mx-auto max-w-[1280px] px-5 py-16 sm:px-8 lg:py-28">
 		<div class="min-w-0 max-w-3xl">
 			<p class="font-mono text-[12px] opacity-85">AACCUP · {visit.year} · {visit.label}</p>
 			<h1 id="program-title" class="mt-3 font-display text-[clamp(4rem,14vw,9rem)] font-semibold leading-[0.78] tracking-[-0.075em]">
@@ -92,49 +79,6 @@
 			</div>
 		</div>
 
-		<div class="border border-program-contrast/25 bg-program-ink/35 p-5 backdrop-blur-sm">
-			<p class="font-mono text-[12px] opacity-85">Documents linked</p>
-			<p class="mt-1 font-display text-[44px] font-semibold leading-none tracking-[-0.05em]">
-				{linked}<span class="text-[22px] opacity-75"> / {documents.length}</span>
-			</p>
-			<div class="mt-3 h-1.5 bg-program-contrast/20" role="progressbar" aria-label={`${program.code} documents linked`} aria-valuemin={0} aria-valuemax={documents.length} aria-valuenow={linked}>
-				<div class="h-full bg-program-contrast" style:width={`${pct}%`}></div>
-			</div>
-			<p class="mt-3 text-[13px] opacity-85">{visit.year} · {visit.label}</p>
-		</div>
-	</div>
-</section>
-
-<!-- Straight to the evidence -->
-<section class="border-b border-rule bg-program-soft" aria-labelledby="dossier-heading">
-	<div class="mx-auto max-w-[1280px] px-5 py-10 sm:px-8">
-		<div class="flex flex-wrap items-end justify-between gap-3">
-			<h2 id="dossier-heading" class="font-display text-[clamp(1.4rem,2.6vw,1.9rem)] font-semibold tracking-[-0.035em] text-program-ink">The accreditation documents</h2>
-			<a href={dossier} class="inline-flex items-center gap-1.5 text-[14px] font-medium text-program-ink underline-offset-4 hover:underline">
-				See everything <ArrowRight class="size-4" />
-			</a>
-		</div>
-		<ul class="mt-5 grid gap-3 md:grid-cols-3">
-			{#each groups as group (group.kind)}
-				<li class="flex flex-col border border-program/25 bg-paper p-5">
-					<p class="font-mono text-[12px] text-program-ink">{group.label}</p>
-					<p class="mt-1 text-[13px] text-ink-soft">{group.note}</p>
-					<p class="mt-3 font-display text-[28px] font-semibold leading-none tracking-[-0.04em] text-program">
-						{group.linked}<span class="text-[16px] text-ink-soft"> / {group.total} linked</span>
-					</p>
-					<ul class="mt-4 flex flex-wrap gap-1.5">
-						{#each group.sections.slice(0, 10) as section (section.slug)}
-							<li>
-								<a href={`/${program.slug}/${section.slug}`} class="inline-flex h-8 items-center gap-1.5 border border-rule px-2.5 text-[12px] font-medium text-ink transition-colors hover:border-program/50 hover:bg-program-soft">
-									{#if section.kind !== 'common' && section.number}<span class="font-mono text-[11px] text-ink-soft">{pad2(section.number)}</span>{/if}
-									{section.shortTitle}
-								</a>
-							</li>
-						{/each}
-					</ul>
-				</li>
-			{/each}
-		</ul>
 	</div>
 </section>
 
@@ -191,17 +135,18 @@
 	{/if}
 {/each}
 
-<!-- Closing call to the documents -->
-<section class="bg-salt">
-	<div class="mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-4 px-5 py-12 sm:flex-row sm:items-center sm:px-8">
-		<p class="max-w-xl font-display text-[clamp(1.3rem,2.4vw,1.8rem)] font-semibold leading-tight tracking-[-0.03em] text-ink">
-			Every file for the {visit.year} {visit.label} is in the documents index.
-		</p>
-		<a href={dossier} class="on-program inline-flex h-12 shrink-0 items-center gap-2 bg-program px-5 text-[14px] font-semibold text-program-contrast transition-opacity hover:opacity-90">
-			Open the documents <ArrowRight class="size-4" />
-		</a>
-	</div>
-</section>
+{#if credentials.length}
+	<section class="border-b border-rule bg-paper" aria-labelledby="credentials-heading">
+		<div class="mx-auto max-w-[1280px] px-5 py-12 sm:px-8">
+			<h2 id="credentials-heading" class="font-display text-[clamp(1.4rem,2.6vw,1.9rem)] font-semibold tracking-[-0.035em]">Credentials</h2>
+			<div class="mt-5 border-t border-rule">
+				{#each credentials as document (document.id)}
+					<DocumentRow {document} />
+				{/each}
+			</div>
+		</div>
+	</section>
+{/if}
 
 <Dialog.Root open={viewer !== null} onOpenChange={(open) => !open && (viewer = null)}>
 	<Dialog.Content

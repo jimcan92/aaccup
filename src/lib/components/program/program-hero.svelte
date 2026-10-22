@@ -15,31 +15,17 @@
 
 	const documents = $derived(visitDocuments(visit));
 	const linked = $derived(countLinked(documents));
-	const total = $derived(documents.length);
-	const pct = $derived(total === 0 ? 0 : Math.round((linked / total) * 100));
 
 	const breakdown = $derived(
 		sectionGroups
 			.map((group) => {
 				const docs = sectionsOf(visit, group.kind).flatMap((section) => section.documents);
-				return { label: group.label, linked: countLinked(docs), total: docs.length };
+				return { label: group.label, linked: countLinked(docs), sections: sectionsOf(visit, group.kind).length };
 			})
-			.filter((row) => row.total > 0)
+			.filter((row) => row.sections > 0)
 	);
 </script>
 
-{#snippet progress(height: string)}
-	<div
-		class={`${height} w-full bg-program/15`}
-		role="progressbar"
-		aria-label={`${program.code} documents linked`}
-		aria-valuemin={0}
-		aria-valuemax={total}
-		aria-valuenow={linked}
-	>
-		<div class="h-full bg-program" style:width={`${pct}%`}></div>
-	</div>
-{/snippet}
 
 <section class="border-b border-program/20 bg-program-soft text-ink" aria-label={`${program.code} visit summary`}>
 	{#if compact}
@@ -49,10 +35,9 @@
 				<span class="mx-1.5" aria-hidden="true">·</span>
 				<span class="font-mono text-[12px]">{visit.year} {visit.label}</span>
 			</p>
-			<div class="flex shrink-0 items-center gap-3 sm:w-64">
-				{@render progress('h-1.5')}
-				<span class="whitespace-nowrap font-mono text-[12px] text-program-ink">{linked}/{total}</span>
-			</div>
+			<p class="shrink-0 whitespace-nowrap text-[13px] text-ink-soft">
+				<span class="font-mono font-medium text-program-ink">{linked}</span> {linked === 1 ? 'document' : 'documents'} linked
+			</p>
 		</div>
 	{:else}
 		<div class="mx-auto grid max-w-[1280px] gap-8 px-5 py-10 sm:px-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-end lg:gap-14 lg:py-14">
@@ -74,14 +59,13 @@
 			<div class="border-t-2 border-program pt-4">
 				<p class="font-mono text-[12px] text-ink-soft">Documents linked</p>
 				<p class="mt-1 font-display text-[44px] font-semibold leading-none tracking-[-0.05em] text-program-ink">
-					{linked}<span class="text-[22px] text-ink-soft"> / {total}</span>
+					{linked}
 				</p>
-				<div class="mt-3">{@render progress('h-2')}</div>
 				<dl class="mt-4 space-y-1.5 text-[13px]">
 					{#each breakdown as row (row.label)}
 						<div class="flex items-baseline justify-between gap-3 border-b border-program/15 pb-1.5">
 							<dt class="text-ink-soft">{row.label}</dt>
-							<dd class="font-mono text-[12px] text-program-ink">{row.linked}/{row.total}</dd>
+							<dd class="font-mono text-[12px] text-program-ink">{row.linked}</dd>
 						</div>
 					{/each}
 				</dl>

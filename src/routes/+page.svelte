@@ -12,9 +12,6 @@
 
 	const content = $derived(data.content);
 
-	function percent(linked: number, total: number): number {
-		return total === 0 ? 0 : Math.round((linked / total) * 100);
-	}
 </script>
 
 <svelte:head>
@@ -57,17 +54,13 @@
 
 		<ul class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-label="Programs">
 			{#each data.programs as program (program.slug)}
-				{@const pct = percent(program.linked, program.total)}
 				<li style={themeStyle(program.theme)} class="program-scope">
 					<a
 						href={`/${program.slug}`}
 						class="group flex h-full flex-col border border-rule bg-paper transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-[0_14px_30px_-18px_rgb(8_42_44/0.45)]"
 					>
 						<div class="on-program relative overflow-hidden bg-program px-5 pb-5 pt-4 text-program-contrast">
-							<div class="flex items-center justify-between gap-3 font-mono text-[11px] opacity-85">
-								<span>{program.visit.year} · {program.visit.label}</span>
-								<span aria-hidden="true">{pct}%</span>
-							</div>
+							<p class="font-mono text-[11px] opacity-85">{program.visit.year} · {program.visit.label}</p>
 							<p class="mt-8 font-display text-[clamp(3.5rem,9vw,4.75rem)] font-semibold leading-[0.8] tracking-[-0.07em]">
 								{program.code}
 							</p>
@@ -81,22 +74,10 @@
 							</p>
 
 							<div class="mt-auto pt-6">
-								<div class="flex items-baseline justify-between gap-3 text-[12px] text-ink-soft">
-									<span>
-										<span class="font-mono font-medium text-program-ink">{program.linked}</span>
-										/ {program.total} documents linked
-									</span>
-								</div>
-								<div
-									class="mt-2 h-1.5 bg-program-soft"
-									role="progressbar"
-									aria-label={`${program.code} documents linked`}
-									aria-valuemin={0}
-									aria-valuemax={program.total}
-									aria-valuenow={program.linked}
-								>
-									<div class="h-full bg-program" style:width={`${pct}%`}></div>
-								</div>
+								<p class="text-[12px] text-ink-soft">
+									<span class="font-mono font-medium text-program-ink">{program.linked}</span>
+									{program.linked === 1 ? 'document' : 'documents'} linked
+								</p>
 								<span class="mt-5 inline-flex items-center gap-1.5 text-[13px] font-medium text-program-ink">
 									Open the {program.code} dossier
 									<ArrowRight class="size-4 transition-transform group-hover:translate-x-0.5" />

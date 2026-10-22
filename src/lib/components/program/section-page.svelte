@@ -84,7 +84,7 @@
 		</span>
 		<div class="min-w-0">
 			<p class="font-mono text-[12px] text-program-ink">
-				{groupName} · {linked} linked · {pending} in preparation
+				{groupName} · {linked} {linked === 1 ? 'document' : 'documents'} linked
 			</p>
 			<h1 class="mt-2 text-balance font-display text-[clamp(1.9rem,4.4vw,3.4rem)] font-semibold leading-[0.95] tracking-[-0.05em] text-ink">
 				{section.kind === 'previous' && section.number ? `Area ${section.number}: ${section.title}` : section.title}

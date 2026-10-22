@@ -47,7 +47,7 @@
 			{@render heading(
 				'Common documents',
 				`${program.code} records`,
-				`${countLinked(section.documents)} / ${section.documents.length} linked`
+				`${countLinked(section.documents)} linked`
 			)}
 			<div>
 				{#each section.documents as document (document.id)}
@@ -62,7 +62,7 @@
 			{@render heading(
 				`Current visit · ${visit.year}`,
 				`${current.length} ${current.length === 1 ? 'area' : 'areas'} under review`,
-				`${countLinked(current.flatMap((s) => s.documents))} / ${current.flatMap((s) => s.documents).length} linked`
+				`${countLinked(current.flatMap((s) => s.documents))} linked`
 			)}
 			<ul class="mt-5 grid gap-3 md:grid-cols-2">
 				{#each current as section (section.slug)}
@@ -81,7 +81,7 @@
 							<h3 class="mt-4 font-display text-[21px] font-semibold tracking-[-0.03em] text-ink">{section.title}</h3>
 							<p class="mt-1.5 text-[13px] leading-relaxed text-ink-soft">{section.description}</p>
 							<p class="mt-auto pt-4 font-mono text-[12px] text-ink-soft">
-								{linked} linked · {section.documents.length - linked} in preparation
+								{linked} {linked === 1 ? 'document' : 'documents'} linked
 							</p>
 						</a>
 					</li>
@@ -95,7 +95,7 @@
 			{@render heading(
 				visit.previousLabel ? `Previous visit · ${visit.previousLabel}` : 'Previous visit',
 				'The 10-area record',
-				`${countLinked(previous.flatMap((s) => s.documents))} / ${previous.flatMap((s) => s.documents).length} linked`
+				`${countLinked(previous.flatMap((s) => s.documents))} linked`
 			)}
 			<p class="mt-4 max-w-2xl border-l-2 border-program/40 pl-4 text-[13px] leading-relaxed text-ink-soft">
 				Recommendations and compliance reports from the previous survey. Use these to check how each
@@ -112,9 +112,9 @@
 							<span class="font-mono text-[13px] text-program-ink">{section.number ? pad2(section.number) : '··'}</span>
 							<span class="min-w-0">
 								<span class="block truncate text-[14px] font-medium text-ink">{section.title}</span>
-								<span class="block text-[12px] text-ink-soft sm:hidden">{linked}/{section.documents.length} linked</span>
+								<span class="block text-[12px] text-ink-soft sm:hidden">{linked} linked</span>
 							</span>
-							<span class="hidden font-mono text-[12px] text-ink-soft sm:block">{linked}/{section.documents.length} linked</span>
+							<span class="hidden font-mono text-[12px] text-ink-soft sm:block">{linked} linked</span>
 							<ArrowUpRight class="size-4 text-program opacity-60 transition-opacity group-hover:opacity-100" />
 						</a>
 					</li>
