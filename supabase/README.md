@@ -93,7 +93,6 @@ PUBLIC_SUPABASE_ANON_KEY=...
 SUPABASE_SERVICE_ROLE_KEY=...
 PUBLIC_SITE_URL=https://aaccup.ctu-moalboal.online
 ACCOUNTS_URL=https://accounts.ctu-moalboal.online
-PUBLIC_PORTAL_URL=https://ctu-moalboal.online
 ```
 
 

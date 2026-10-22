@@ -1,12 +1,10 @@
 <script lang="ts">
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import BrandMarks from '$lib/components/site/brand-marks.svelte';
 	import Logo from '$lib/components/site/logo.svelte';
 	import ManageLink from '$lib/components/site/manage-link.svelte';
 	import SiteFooter from '$lib/components/site/site-footer.svelte';
 	import { site } from '$lib/data/site';
-	import { portalUrl } from '$lib/portal';
 	import { themeStyle } from '$lib/theme';
 	import type { PageProps } from './$types';
 
@@ -37,13 +35,6 @@
 	<div class="mx-auto flex h-16 max-w-[1280px] items-center justify-between gap-4 px-5 sm:px-8">
 		<Logo compact />
 		<div class="flex items-center gap-2 sm:gap-4">
-			<a
-				href={portalUrl()}
-				class="inline-flex min-h-10 items-center gap-2 text-[13px] font-medium text-ink-soft transition-colors hover:text-ink"
-			>
-				<ArrowLeft class="size-4 shrink-0" />
-				<span>Back to <span class="hidden sm:inline">CTU Moalboal</span> portal</span>
-			</a>
 			<ManageLink class="h-10 bg-ink text-paper hover:bg-ink-soft sm:px-4" />
 		</div>
 	</div>
