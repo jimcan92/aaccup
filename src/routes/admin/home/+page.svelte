@@ -1,6 +1,7 @@
 <script lang="ts">
 	import LandingPageEditor from '$lib/components/admin/landing-page-editor.svelte';
 	import PageHeader from '$lib/components/admin/page-header.svelte';
+	import SiteTextsCard from '$lib/components/admin/site-texts-card.svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -13,8 +14,12 @@
 <PageHeader
 	eyebrow="Home page"
 	title="The campus front page"
-	description="Blocks shown on the home page below the program cards: the campus history, vision and mission, organization, events, and anything common to every program. Only admins and focal persons edit them; changes stay as drafts until published."
+	description="The heading and site texts, then the blocks below the program cards: the campus history, vision and mission, organization, events, and anything common to every program. Only admins and focal persons edit them; changes stay as drafts until published."
 />
+
+<div class="mt-8">
+	<SiteTextsCard texts={data.texts} canManage={data.canManage} />
+</div>
 
 <LandingPageEditor
 	label="Home"

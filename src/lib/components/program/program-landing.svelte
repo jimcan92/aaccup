@@ -3,6 +3,7 @@
 	import Search from '@lucide/svelte/icons/search';
 	import DocumentRow from '$lib/components/site/document-row.svelte';
 	import LandingBlocks from './landing-blocks.svelte';
+	import ProgramContact from './program-contact.svelte';
 	import { dossierPath, sectionsOf } from '$lib/data/accreditation';
 	import { isLinked } from '$lib/drive-url';
 	import type { Program, Visit } from '$lib/data/types';
@@ -28,7 +29,7 @@
 	// The first photo of the first gallery is the banner behind the hero.
 	const banner = $derived.by(() => {
 		for (const block of blocks) if (block.kind === 'gallery' && block.content.items?.[0]?.src) return block.content.items[0];
-		return null;
+		return program.cover ? { src: program.cover, alt: program.name } : null;
 	});
 </script>
 
@@ -53,6 +54,9 @@
 
 	<div class="mx-auto max-w-[1280px] px-5 py-16 sm:px-8 lg:py-28">
 		<div class="min-w-0 max-w-3xl">
+			{#if program.logo}
+				<img src={imageSrc(program.logo, 400)} alt={`${program.code} logo`} class="mb-6 size-20 bg-program-contrast object-contain p-2 shadow-[0_10px_30px_-12px_rgb(0_0_0/0.5)] sm:size-24" />
+			{/if}
 			<p class="font-mono text-[12px] opacity-85">AACCUP · {visit.year} · {visit.label}</p>
 			<h1 id="program-title" class="mt-3 font-display text-[clamp(4rem,14vw,9rem)] font-semibold leading-[0.78] tracking-[-0.075em]">
 				{program.code}
@@ -60,6 +64,9 @@
 			<p class="mt-4 text-balance font-display text-[clamp(1.3rem,2.8vw,2.1rem)] font-medium leading-tight tracking-[-0.03em]">
 				{program.name}
 			</p>
+			{#if program.tagline}
+				<p class="mt-2 text-pretty font-display text-[clamp(1.05rem,1.8vw,1.3rem)] font-medium italic tracking-[-0.01em] opacity-90">{program.tagline}</p>
+			{/if}
 			{#if program.summary}
 				<p class="mt-4 max-w-2xl text-pretty text-[15px] leading-relaxed opacity-90 sm:text-[16px]">{program.summary}</p>
 			{/if}
@@ -73,6 +80,7 @@
 					Search documents
 				</a>
 			</div>
+			<ProgramContact {program} variant="chips" />
 		</div>
 
 	</div>
@@ -93,3 +101,5 @@
 		</div>
 	</section>
 {/if}
+
+<ProgramContact {program} variant="section" />

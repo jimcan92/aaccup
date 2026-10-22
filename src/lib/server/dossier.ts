@@ -33,6 +33,11 @@ export type ProgramCard = {
 	visit: { year: number; label: string };
 	linked: number;
 	total: number;
+	/** Optional program logo and one-line tagline. */
+	logo?: string;
+	tagline?: string;
+	/** Background photo: the program's cover image, else the first photo of its landing gallery. */
+	cover?: string;
 };
 
 export type Dossier = { program: Program; visit: Visit; source: 'supabase' | 'static' };
@@ -49,6 +54,9 @@ type CardRow = {
 	visit_label: string;
 	linked: number;
 	total: number;
+	logo_url?: string | null;
+	tagline?: string | null;
+	cover_url?: string | null;
 };
 
 type DossierJson = {
@@ -59,6 +67,12 @@ type DossierJson = {
 		degree: string | null;
 		summary: string | null;
 		sort_order: number;
+		logo?: string | null;
+		tagline?: string | null;
+		cover?: string | null;
+		website?: string | null;
+		email?: string | null;
+		phone?: string | null;
 		theme: { program: string | null; ink: string | null; soft: string | null; contrast: string | null };
 	};
 	visit: { slug: string; year: number; level: string; label: string; previous_label: string | null; status: VisitStatus };
@@ -128,7 +142,10 @@ export async function loadProgramCards(): Promise<ProgramCard[]> {
 			theme: theme({ program: row.theme_program, ink: row.theme_ink, soft: row.theme_soft, contrast: row.theme_contrast }),
 			visit: { year: row.visit_year, label: row.visit_label },
 			linked: Number(row.linked),
-			total: Number(row.total)
+			total: Number(row.total),
+			logo: row.logo_url || undefined,
+			tagline: row.tagline || undefined,
+			cover: row.cover_url || undefined
 		}));
 	} catch {
 		return staticCards();
@@ -177,6 +194,12 @@ function fromJson(json: DossierJson): { program: Program; visit: Visit } {
 		name: json.program.name,
 		degree: json.program.degree ?? '',
 		summary: json.program.summary ?? '',
+		logo: json.program.logo || undefined,
+		tagline: json.program.tagline || undefined,
+		cover: json.program.cover || undefined,
+		website: json.program.website || undefined,
+		email: json.program.email || undefined,
+		phone: json.program.phone || undefined,
 		theme: theme(json.program.theme),
 		sortOrder: json.program.sort_order,
 		visits

@@ -6,11 +6,18 @@
 	import PageHeader from '$lib/components/admin/page-header.svelte';
 	import StatusBadge from '$lib/components/admin/status-badge.svelte';
 	import DriveSetup from '$lib/components/admin/drive-setup.svelte';
+	import ImageField from '$lib/components/admin/blocks/image-field.svelte';
 	import { contrastRatio } from '$lib/theme';
 	import { fresh } from '$lib/fresh-link';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
+
+	// The logo field uploads on its own; the form posts the resulting link.
+	// svelte-ignore state_referenced_locally
+	let logo = $state<string>(data.program.logo_url ?? '');
+	// svelte-ignore state_referenced_locally
+	let cover = $state<string>(data.program.cover_url ?? '');
 
 	// Kept in a variable: inside a Svelte attribute, `{6}` would be read as an expression.
 	const HEX_PATTERN = '#[0-9a-fA-F]{6}';
@@ -82,6 +89,30 @@
 					<option value="draft" selected={data.program.status !== 'published'}>Draft — hidden</option>
 				</select>
 			</label>
+		</fieldset>
+
+		<fieldset disabled={!data.canManage} class="grid gap-4 sm:grid-cols-2">
+			<legend class="mb-1 font-display text-[20px] font-semibold tracking-[-0.03em]">Identity and contact</legend>
+			<p class="text-[12px] text-ink-soft sm:col-span-2">Shown on the home page card and the program home page. All optional; empty fields are hidden.</p>
+			<label class="grid gap-1.5 text-[13px] font-medium sm:col-span-2">
+				Tagline
+				<input name="tagline" value={data.program.tagline ?? ''} maxlength="160" placeholder="One short line, e.g. Stewards of Cebu’s coastal waters" class={field} />
+			</label>
+			<div class="grid gap-1.5 sm:col-span-2">
+				<span class="text-[13px] font-medium">Logo</span>
+				<ImageField bind:value={logo} programId={data.program.id} label="Logo" contain />
+				<input type="hidden" name="logo_url" value={logo} />
+				<span class="text-[12px] text-ink-soft">A square image with a transparent or plain background looks best.</span>
+			</div>
+			<div class="grid gap-1.5 sm:col-span-2">
+				<span class="text-[13px] font-medium">Cover image</span>
+				<ImageField bind:value={cover} programId={data.program.id} label="Cover" />
+				<input type="hidden" name="cover_url" value={cover} />
+				<span class="text-[12px] text-ink-soft">The photo behind the program’s card on the home page. Empty: the first photo of the program page’s gallery is used.</span>
+			</div>
+			<label class="grid gap-1.5 text-[13px] font-medium sm:col-span-2">Website<input name="website_url" type="url" value={data.program.website_url ?? ''} placeholder="https://…" class="{field} font-mono text-[13px]" /></label>
+			<label class="grid gap-1.5 text-[13px] font-medium">Email<input name="email" type="email" value={data.program.email ?? ''} placeholder="bsfi.moalboal@ctu.edu.ph" class={field} /></label>
+			<label class="grid gap-1.5 text-[13px] font-medium">Contact number<input name="phone" type="tel" value={data.program.phone ?? ''} placeholder="0917 123 4567" class={field} /></label>
 		</fieldset>
 
 		<fieldset disabled={!data.canManage}>

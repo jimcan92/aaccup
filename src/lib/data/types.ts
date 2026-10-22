@@ -75,6 +75,15 @@ export interface Program {
 	name: string;
 	degree: string;
 	summary: string;
+	/** Optional logo (uploaded image or link) and a one-line tagline, shown on cards and the program hero. */
+	logo?: string;
+	tagline?: string;
+	/** Optional photo behind the home page card; also the program banner when it has no gallery. */
+	cover?: string;
+	/** Optional contact details, shown on the program home page. */
+	website?: string;
+	email?: string;
+	phone?: string;
 	theme: ProgramTheme;
 	sortOrder: number;
 	visits: Visit[];

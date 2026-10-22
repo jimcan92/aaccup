@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { env } from '$env/dynamic/public';
 import { loadProgramCards } from '$lib/server/dossier';
-import { loadSitePage } from '$lib/server/program-page';
+import { loadProgramPage, loadSitePage } from '$lib/server/program-page';
 import { ACTIVE_CONTENT_KEYS, site as defaultSite } from '$lib/data/site';
 import type { PageServerLoad } from './$types';
 
@@ -52,7 +52,17 @@ export const load: PageServerLoad = async ({ setHeaders, url, locals }) => {
 
 	const text = (key: (typeof ACTIVE_CONTENT_KEYS)[number], fallback: string) => blocks[key] ?? fallback;
 
-	const [cards, siteBlocks] = await Promise.all([loadProgramCards(), loadSitePage()]);
+	const [programCards, siteBlocks] = await Promise.all([loadProgramCards(), loadSitePage()]);
+
+	// A card without its own cover uses the first photo of the program page's gallery.
+	const cards = await Promise.all(
+		programCards.map(async (card) => {
+			if (card.cover) return card;
+			const blocks = await loadProgramPage(card.slug);
+			const gallery = blocks.find((block) => block.kind === 'gallery' && block.content.items?.[0]?.src);
+			return { ...card, cover: gallery?.kind === 'gallery' ? gallery.content.items[0].src : undefined };
+		})
+	);
 
 	return {
 		preview,
@@ -64,7 +74,10 @@ export const load: PageServerLoad = async ({ setHeaders, url, locals }) => {
 		content: {
 			title: text('site.title', defaultSite.title),
 			description: text('site.description', defaultSite.description),
-			contactNote: text('site.contact_note', defaultSite.contactNote)
+			contactNote: text('site.contact_note', defaultSite.contactNote),
+			// The large heading and the line under it at the top of the home page.
+			heading: text('home.hero.title', 'AACCUP Accreditation'),
+			intro: text('home.hero.intro', '')
 		}
 	};
 };
