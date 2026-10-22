@@ -5,6 +5,7 @@
 	import Eye from '@lucide/svelte/icons/eye';
 	import X from '@lucide/svelte/icons/x';
 	import { browser } from '$app/environment';
+	import { isLinked } from '$lib/drive-url';
 	import { closePreview, currentPreviewId, openPreview, previewUrl, wideScreen } from '$lib/preview';
 	import type { EvidenceDocument } from '$lib/data/types';
 	import { formatDate } from '$lib/format';
@@ -21,7 +22,8 @@
 		class?: string;
 	} = $props();
 
-	const linked = $derived(document.status === 'linked' && Boolean(document.driveUrl));
+	// Only Drive/Docs files count as linked; other links show as In preparation.
+	const linked = $derived(isLinked(document));
 	const date = $derived(formatDate(document.updated));
 	// Drive and Docs files open in the in-page preview; other links open in a new tab.
 	const canPreview = $derived(linked && previewUrl(document.driveUrl) !== null);
