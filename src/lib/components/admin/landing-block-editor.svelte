@@ -9,7 +9,7 @@
 	import { toast } from 'svelte-sonner';
 	import StatusBadge from '$lib/components/admin/status-badge.svelte';
 	import { imageSrc } from '$lib/image-url';
-	import { blockLabels, type GalleryItem, type StatItem } from '$lib/landing';
+	import { blockLabel, type GalleryItem, type StatItem } from '$lib/landing';
 
 	type Block = {
 		id: string;
@@ -38,10 +38,12 @@
 	let photos = $state<GalleryItem[]>(block.kind === 'gallery' ? ((block.draft.items ?? []) as GalleryItem[]).map((item) => ({ ...item })) : []);
 	// svelte-ignore state_referenced_locally
 	let stats = $state<StatItem[]>(block.kind === 'stats' ? ((block.draft.items ?? []) as StatItem[]).map((item) => ({ ...item })) : []);
+	// svelte-ignore state_referenced_locally
+	let layout = $state<'grid' | 'carousel'>((block.draft as { layout?: string }).layout === 'carousel' ? 'carousel' : 'grid');
 	let uploading = $state<number | null>(null);
 
 	const content = $derived(
-		JSON.stringify(block.kind === 'text' ? { title, body } : block.kind === 'stats' ? { title, items: stats } : { title, items: photos })
+		JSON.stringify(block.kind === 'text' ? { title, body } : block.kind === 'stats' ? { title, items: stats } : { title, layout, items: photos })
 	);
 	const live = $derived(block.published !== null);
 	const changed = $derived(live && JSON.stringify(block.published) !== JSON.stringify(block.draft));
@@ -79,7 +81,7 @@
 
 <article class="border border-rule bg-paper">
 	<header class="flex flex-wrap items-center gap-2 border-b border-rule px-4 py-3">
-		<p class="font-display text-[17px] font-semibold tracking-[-0.02em]">{blockLabels[block.kind]}</p>
+		<p class="font-display text-[17px] font-semibold tracking-[-0.02em]">{blockLabel(block.kind, layout)}</p>
 		<StatusBadge status={block.status} />
 		<span class="text-[12px] text-ink-soft">
 			{#if !live}Not on the public page yet{:else if changed}Live · has unpublished changes{:else}Live{/if}
@@ -105,6 +107,20 @@
 				{block.kind === 'text' ? 'Heading' : 'Heading (optional)'}
 				<input bind:value={title} class={field} placeholder={block.kind === 'gallery' ? 'Campus life' : block.kind === 'stats' ? 'Highlights' : 'About the program'} />
 			</label>
+
+			{#if block.kind === 'gallery'}
+				<fieldset class="grid gap-1.5">
+					<legend class="mb-1.5 text-[13px] font-medium">Show as</legend>
+					<div class="flex flex-wrap gap-2">
+						{#each [{ value: 'carousel', label: 'Carousel', hint: 'one photo at a time, slides on its own' }, { value: 'grid', label: 'Grid', hint: 'all photos at once' }] as option (option.value)}
+							<label class="flex cursor-pointer items-center gap-2 border px-3 py-2 text-[13px] {layout === option.value ? 'border-ink bg-salt' : 'border-rule'}">
+								<input type="radio" bind:group={layout} value={option.value} class="size-4" />
+								<span><span class="font-medium">{option.label}</span> <span class="text-ink-soft">· {option.hint}</span></span>
+							</label>
+						{/each}
+					</div>
+				</fieldset>
+			{/if}
 
 			{#if block.kind === 'text'}
 				<label class="grid gap-1.5 text-[13px] font-medium">
