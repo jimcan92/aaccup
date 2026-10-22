@@ -2,7 +2,7 @@
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import DocumentRow from '$lib/components/site/document-row.svelte';
-	import { activeVisit, countLinked, sectionsOf, visitBase } from '$lib/data/accreditation';
+	import { activeVisit, countLinked, dossierPath, sectionsOf } from '$lib/data/accreditation';
 	import type { Program, Visit } from '$lib/data/types';
 	import { pad2 } from '$lib/format';
 
@@ -36,7 +36,7 @@
 	{#if visit.status === 'archived'}
 		<div class="border border-program/30 bg-paper p-4 text-[13px] leading-relaxed text-ink">
 			This is an archived visit. The current {program.code} dossier is the
-			<a href={visitBase(program, active)} class="font-medium text-program underline underline-offset-4">
+			<a href={dossierPath(program, active)} class="font-medium text-program underline underline-offset-4">
 				{active.year} {active.label}
 			</a>.
 		</div>

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import VisitHome from '$lib/components/program/visit-home.svelte';
+	import ProgramLanding from '$lib/components/program/program-landing.svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 </script>
 
-<VisitHome program={data.program} visit={data.visit} base={data.base} />
+<ProgramLanding program={data.program} visit={data.visit} blocks={data.blocks} />

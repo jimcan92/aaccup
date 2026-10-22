@@ -11,11 +11,18 @@
 	let { data, children }: LayoutProps = $props();
 
 	const style = $derived(themeStyle(data.program.theme));
-	const isHome = $derived(page.route.id === '/[program]' || page.route.id === '/[program]/[visit=visit]');
+	// /[program] is the program landing page: full width, its own hero, no sidebar.
+	const isLanding = $derived(page.route.id === '/[program]');
+	const isHome = $derived(page.route.id === '/[program]/dossier' || page.route.id === '/[program]/[visit=visit]');
 </script>
 
 <div class="program-scope flex min-h-dvh flex-col" {style}>
 	<ProgramHeader program={data.program} visit={data.visit} base={data.base} {style} />
+	{#if isLanding}
+		<main id="main" class="flex-1 bg-salt">
+			{@render children()}
+		</main>
+	{:else}
 	<ProgramHero program={data.program} visit={data.visit} compact={!isHome} />
 
 	<div class="flex-1 bg-salt">
@@ -31,6 +38,7 @@
 			</main>
 		</div>
 	</div>
+	{/if}
 
 	<DocumentPreview visit={data.visit} {style} />
 

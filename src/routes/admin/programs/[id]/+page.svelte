@@ -50,6 +50,9 @@
 <div class="mt-4">
 	<PageHeader eyebrow={`Program · /${data.program.slug}`} title={`${data.program.code} — ${data.program.name}`}>
 		{#snippet actions()}
+			<a href={`/admin/programs/${data.program.id}/landing`} class="inline-flex h-10 items-center gap-2 bg-ink px-4 text-[13px] font-medium text-paper hover:bg-ink-soft">
+				Edit program page
+			</a>
 			<a href={`/${data.program.slug}`} target="_blank" rel="noopener noreferrer" class="inline-flex h-10 items-center gap-2 border border-rule bg-paper px-4 text-[13px] font-medium hover:border-ink/30">
 				Public page
 				<ArrowUpRight class="size-4" />

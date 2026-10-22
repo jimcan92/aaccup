@@ -410,7 +410,7 @@ export const programs: Program[] = [
 ];
 
 /** Slugs a section may not use, because they are routes of their own. */
-export const RESERVED_SECTION_SLUGS = ['documents', 'visit', 'areas', 'records', 'about'];
+export const RESERVED_SECTION_SLUGS = ['documents', 'visit', 'areas', 'records', 'about', 'dossier'];
 
 export const sectionGroups: { kind: SectionKind; label: string }[] = [
 	{ kind: 'common', label: 'Common documents' },
@@ -428,6 +428,14 @@ export function activeVisit(program: Program): Visit {
 
 export function getVisit(program: Program, slug: string): Visit | undefined {
 	return program.visits.find((visit) => visit.slug === slug);
+}
+
+/** Where a visit's documents index lives: the active visit's at /[program]/dossier (/[program] is
+ * the program landing page), an archived visit's at /[program]/[visit]. */
+export function dossierPath(program: Program, visit: Visit): string {
+	return visit.status === 'active' && visit.slug === activeVisit(program).slug
+		? `/${program.slug}/dossier`
+		: `/${program.slug}/${visit.slug}`;
 }
 
 /** URL prefix for a visit: the active visit lives at /[program], others at /[program]/[visit]. */
