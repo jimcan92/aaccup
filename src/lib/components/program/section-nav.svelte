@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import House from '@lucide/svelte/icons/house';
 	import LayoutGrid from '@lucide/svelte/icons/layout-grid';
 	import Search from '@lucide/svelte/icons/search';
-	import { countLinked, sectionGroups, sectionsOf } from '$lib/data/accreditation';
+	import { countLinked, dossierPath, sectionGroups, sectionsOf } from '$lib/data/accreditation';
 	import type { Program, Section, Visit } from '$lib/data/types';
 	import { pad2 } from '$lib/format';
 	import { cn } from '$lib/utils';
@@ -21,6 +22,8 @@
 	} = $props();
 
 	const path = $derived(page.url.pathname);
+	const home = $derived(`/${program.slug}`);
+	const overview = $derived(dossierPath(program, visit));
 
 	function groupLabel(kind: Section['kind']): string {
 		if (kind === 'current') return `Current visit · ${visit.year}`;
@@ -44,9 +47,14 @@
 
 <nav class="space-y-6 text-ink" aria-label={`${program.code} dossier`}>
 	<div class="space-y-0.5">
-		<a href={base} class={linkClass(path === base)} aria-current={path === base ? 'page' : undefined} onclick={onnavigate}>
+		<a href={home} class={linkClass(path === home)} aria-current={path === home ? 'page' : undefined} onclick={onnavigate}>
+			<House class="size-3.5" />
+			<span>Program home</span>
+			<span></span>
+		</a>
+		<a href={overview} class={linkClass(path === overview)} aria-current={path === overview ? 'page' : undefined} onclick={onnavigate}>
 			<LayoutGrid class="size-3.5" />
-			<span>Overview</span>
+			<span>All documents</span>
 			<span></span>
 		</a>
 		<a

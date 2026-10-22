@@ -23,8 +23,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		return json({ error: 'The image must be smaller than 5 MB.' }, { status: 400 });
 	}
 
-	const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-	const path = `carousel/${crypto.randomUUID()}.${extension}`;
+	const extension = (file.name.split('.').pop()?.toLowerCase() || 'jpg').replace(/[^a-z0-9]/g, '') || 'jpg';
+	// Optional folder, e.g. programs/<program-id>; letters, digits, dashes and slashes only.
+	const folder = String(form.get('folder') ?? 'carousel').replace(/[^a-z0-9/-]/gi, '').replace(/^\/+|\/+$/g, '') || 'carousel';
+	const path = `${folder}/${crypto.randomUUID()}.${extension}`;
 
 	const { error } = await locals.supabase.storage
 		.from('public-images')

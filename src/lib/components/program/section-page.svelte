@@ -3,7 +3,7 @@
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import DocumentRow from '$lib/components/site/document-row.svelte';
-	import { countLinked, documentKinds } from '$lib/data/accreditation';
+	import { countLinked, documentKinds, dossierPath } from '$lib/data/accreditation';
 	import type { Program, Section, Visit } from '$lib/data/types';
 	import { pad2 } from '$lib/format';
 
@@ -68,7 +68,7 @@
 
 <article>
 	<nav aria-label="Breadcrumb" class="flex flex-wrap items-center gap-1.5 text-[12px] text-ink-soft">
-		<a href={base} class="transition-colors hover:text-program-ink">{program.code} {visit.year}</a>
+		<a href={dossierPath(program, visit)} class="transition-colors hover:text-program-ink">{program.code} {visit.year}</a>
 		<ChevronRight class="size-3" />
 		<span>{groupName}</span>
 		<ChevronRight class="size-3" />
@@ -98,7 +98,7 @@
 	{#if section.kind === 'previous'}
 		<p class="mt-5 border-l-2 border-program/40 pl-4 text-[13px] leading-relaxed text-ink-soft">
 			Previous-visit record. These files answer the last survey’s recommendations; the current visit evidence is under
-			<a href={base} class="font-medium text-program-ink underline underline-offset-4">Current visit</a>.
+			<a href={dossierPath(program, visit)} class="font-medium text-program-ink underline underline-offset-4">Current visit</a>.
 		</p>
 	{/if}
 
