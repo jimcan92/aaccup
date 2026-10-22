@@ -3,7 +3,6 @@ export const site = {
 	campus: 'Cebu Technological University — Moalboal Campus',
 	shortCampus: 'CTU Moalboal',
 	title: 'AACCUP Accreditation · CTU Moalboal',
-	portalUrl: 'https://ctu-moalboal.online',
 	description:
 		'AACCUP accreditation dossiers for the programs of Cebu Technological University — Moalboal Campus. Each program has its own common documents, current visit areas, and previous-visit record, linked to Google Drive.',
 	surveyYear: 2026,

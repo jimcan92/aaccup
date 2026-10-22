@@ -111,7 +111,7 @@
 		<div class="border border-rule" style:background={colors.soft}>
 			<div class="flex items-center justify-between px-4 py-3" style:background={colors.program} style:color={colors.contrast}>
 				<span class="font-display text-[18px] font-semibold">{data.program.code}</span>
-				<span class="text-[12px]">CTU Moalboal portal ↗</span>
+				<span class="text-[12px]">Search · Manage</span>
 			</div>
 			<div class="p-4">
 				<p class="font-display text-[44px] font-semibold leading-none tracking-[-0.06em]" style:color={colors.program}>{data.program.code}</p>

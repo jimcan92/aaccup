@@ -1,5 +1,4 @@
 <script lang="ts">
-	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import Check from '@lucide/svelte/icons/check';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import PanelLeft from '@lucide/svelte/icons/panel-left';
@@ -10,7 +9,6 @@
 	import * as Sheet from '$lib/components/ui/sheet/index.js';
 	import { visitBase } from '$lib/data/accreditation';
 	import type { Program, Visit } from '$lib/data/types';
-	import { portalUrl } from '$lib/portal';
 	import SectionNav from './section-nav.svelte';
 
 	let {
@@ -104,8 +102,6 @@
 		</a>
 
 		<div class="ml-auto flex items-center gap-2">
-			<div class="hidden lg:block">{@render visitSelector()}</div>
-
 			<a
 				href={`${base}/documents`}
 				class="hidden h-9 items-center gap-2 px-3 text-[13px] font-medium transition-colors hover:bg-program-contrast/10 lg:inline-flex"
@@ -114,16 +110,9 @@
 				Search
 			</a>
 
-			<ManageLink compact class="border border-program-contrast/35 px-2 hover:bg-program-contrast/10 sm:px-3" />
+			<div class="hidden lg:block">{@render visitSelector()}</div>
 
-			<a
-				href={portalUrl()}
-				class="inline-flex h-9 items-center gap-1.5 px-2 text-[13px] font-medium transition-colors hover:bg-program-contrast/10 sm:px-3"
-			>
-				<span class="sm:hidden">Portal</span>
-				<span class="hidden sm:inline">CTU Moalboal portal</span>
-				<ArrowUpRight class="size-3.5" />
-			</a>
+			<ManageLink compact class="border border-program-contrast/35 px-2 hover:bg-program-contrast/10 sm:px-3" />
 		</div>
 	</div>
 
@@ -162,7 +151,6 @@
 			</Sheet.Root>
 
 			<div class="ml-auto flex items-center gap-1">
-				{@render visitSelector()}
 				<a
 					href={`${base}/documents`}
 					class="grid size-9 place-items-center transition-colors hover:bg-program-contrast/10"
@@ -170,6 +158,7 @@
 				>
 					<Search class="size-4" />
 				</a>
+				{@render visitSelector()}
 			</div>
 		</div>
 	</div>

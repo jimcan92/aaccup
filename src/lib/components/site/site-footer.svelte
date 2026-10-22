@@ -1,7 +1,5 @@
 <script lang="ts">
-	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import { site } from '$lib/data/site';
-	import { portalUrl } from '$lib/portal';
 	import { cn } from '$lib/utils';
 
 	let {
@@ -32,13 +30,6 @@
 		</div>
 
 		<div class="flex shrink-0 flex-col gap-2 text-[13px] md:items-end">
-			<a
-				href={portalUrl()}
-				class="inline-flex items-center gap-1.5 border-b border-current/40 pb-0.5 font-medium transition-opacity hover:opacity-80"
-			>
-				Back to CTU Moalboal portal
-				<ArrowUpRight class="size-3.5" />
-			</a>
 			<p class="text-[12px] opacity-65">© {new Date().getFullYear()} {site.campus}</p>
 		</div>
 	</div>
