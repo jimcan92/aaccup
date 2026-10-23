@@ -40,7 +40,8 @@
 </svelte:head>
 
 <!-- Hero -->
-<section class="on-program relative isolate overflow-hidden bg-program text-program-contrast" aria-labelledby="program-title">
+<!-- Fills the first screen below the sticky header (two rows on phones and tablets, one on desktop). -->
+<section class="on-program relative isolate flex min-h-[calc(100svh-7rem)] flex-col justify-center overflow-hidden bg-program text-program-contrast lg:min-h-[calc(100svh-4rem)]" aria-labelledby="program-title">
 	{#if banner}
 		<img src={imageSrc(banner.src)} alt={banner.alt} class="absolute inset-0 -z-20 h-full w-full object-cover" fetchpriority="high" />
 		<div
@@ -52,7 +53,7 @@
 		<div class="absolute inset-0 -z-10 bg-program/80 md:hidden" aria-hidden="true"></div>
 	{/if}
 
-	<div class="mx-auto max-w-[1280px] px-5 py-16 sm:px-8 lg:py-28">
+	<div class="mx-auto w-full max-w-[1280px] px-5 py-16 sm:px-8 lg:py-20">
 		<div class="min-w-0 max-w-3xl">
 			{#if program.logo}
 				<img src={imageSrc(program.logo, 400)} alt={`${program.code} logo`} class="mb-6 size-20 bg-program-contrast object-contain p-2 shadow-[0_10px_30px_-12px_rgb(0_0_0/0.5)] sm:size-24" />

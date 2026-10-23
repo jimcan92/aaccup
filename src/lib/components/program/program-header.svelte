@@ -6,6 +6,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import Logo from '$lib/components/site/logo.svelte';
 	import ManageLink from '$lib/components/site/manage-link.svelte';
+	import ThemeToggle from '$lib/components/site/theme-toggle.svelte';
 	import * as Sheet from '$lib/components/ui/sheet/index.js';
 	import { visitBase } from '$lib/data/accreditation';
 	import type { Program, Visit } from '$lib/data/types';
@@ -113,6 +114,8 @@
 			<div class="hidden lg:block">{@render visitSelector()}</div>
 
 			<ManageLink compact class="border border-program-contrast/35 px-2 hover:bg-program-contrast/10 sm:px-3" />
+			<!-- Last, so it stays put whether or not Manage shows. -->
+			<ThemeToggle class="hover:bg-program-contrast/10" />
 		</div>
 	</div>
 
