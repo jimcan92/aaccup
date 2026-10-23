@@ -1,5 +1,4 @@
-import { enhance as kitEnhance } from '$app/forms';
-import type { SubmitFunction } from '@sveltejs/kit';
+import { enhance as kitEnhance, type SubmitFunction } from '$app/forms';
 import { toast } from 'svelte-sonner';
 
 /**
@@ -10,9 +9,8 @@ import { toast } from 'svelte-sonner';
  */
 export function enhance(form: HTMLFormElement, submit?: SubmitFunction) {
 	return kitEnhance(form, async (input) => {
-		const button =
-			(input.submitter as HTMLElement | null) ??
-			form.querySelector<HTMLElement>('button[type="submit"], button:not([type])');
+		const button = input.submitter as HTMLElement | null ?? form.querySelector<HTMLElement>('button[type="submit"], button:not([type])');
+
 		button?.setAttribute('data-loading', '');
 		button?.setAttribute('aria-busy', 'true');
 

@@ -2,7 +2,7 @@
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import X from '@lucide/svelte/icons/x';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
 	import PhotoCarousel from './photo-carousel.svelte';
 	import ProgramTimeline from './program-timeline.svelte';
 	import CtaBlock from './blocks/cta-block.svelte';
@@ -16,8 +16,8 @@
 	import VmgoBlock from './blocks/vmgo-block.svelte';
 	import EventsBlock from './blocks/events-block.svelte';
 	import OrgBlock from './blocks/org-block.svelte';
-	import { imageSrc, paragraphs } from '$lib/image-url';
-	import { hasContent, type GalleryItem, type LandingBlock } from '$lib/landing';
+	import { imageSrc, paragraphs } from '#lib/image-url.js';
+	import { hasContent, type GalleryItem, type LandingBlock } from '#lib/landing.js';
 
 	// Landing blocks in the order set in the admin, for a program page or the home page.
 	// In the admin preview (editable) each block is a click target, and blocks not yet live are tagged.

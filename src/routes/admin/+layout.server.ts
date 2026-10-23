@@ -1,5 +1,5 @@
 import { redirect } from '@sveltejs/kit';
-import { ssoLogoutUrl } from '$lib/server/sso';
+import { ssoLogoutUrl } from '#lib/server/sso.js';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ locals, url }) => {

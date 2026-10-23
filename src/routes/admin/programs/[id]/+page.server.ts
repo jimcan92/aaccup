@@ -1,7 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
-import { canManage, dbFail, HEX, integer, isHttpUrl, optional, requireStaff, SLUG, text, VISIT_SLUG } from '$lib/server/admin';
-import { loadDriveSetup } from '$lib/server/drive-setup';
-import { renameProgramCode } from '$lib/server/program-code';
+import { canManage, dbFail, HEX, integer, isHttpUrl, optional, requireStaff, SLUG, text, VISIT_SLUG } from '#lib/server/admin.js';
+import { loadDriveSetup } from '#lib/server/drive-setup.js';
+import { renameProgramCode } from '#lib/server/program-code.js';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, params }) => {

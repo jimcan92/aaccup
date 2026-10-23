@@ -1,5 +1,5 @@
 import { error, fail } from '@sveltejs/kit';
-import { STAFF_ROLES, supabaseService, type StaffRole } from '$lib/server/sso';
+import { STAFF_ROLES, supabaseService, type StaffRole } from '#lib/server/sso.js';
 import type { Actions, PageServerLoad } from './$types';
 
 export const prerender = false;

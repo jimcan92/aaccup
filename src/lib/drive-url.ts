@@ -1,4 +1,4 @@
-import type { EvidenceDocument } from '$lib/data/types';
+import type { EvidenceDocument } from '#lib/data/types.js';
 
 /**
  * Documents live in Google Drive. A document counts as linked, and can be opened, only when

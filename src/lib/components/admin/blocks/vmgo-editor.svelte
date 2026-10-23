@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { VmgoContent } from '$lib/landing';
+	import type { VmgoContent } from '#lib/landing.js';
 	import { area, hint, label } from './ui';
 
 	let { value = $bindable() }: { value: VmgoContent } = $props();

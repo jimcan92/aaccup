@@ -1,5 +1,5 @@
 <script lang="ts">
-	import DocumentSearch from '$lib/components/program/document-search.svelte';
+	import DocumentSearch from '#lib/components/program/document-search.svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();

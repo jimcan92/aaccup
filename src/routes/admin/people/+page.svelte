@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { enhance } from '$lib/admin-enhance';
+	import { enhance } from '#lib/admin-enhance.js';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
-	import PageHeader from '$lib/components/admin/page-header.svelte';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import { initials, roleInfo } from '$lib/admin';
+	import PageHeader from '#lib/components/admin/page-header.svelte';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { initials, roleInfo } from '#lib/admin.js';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();

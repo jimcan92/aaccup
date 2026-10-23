@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import DocumentPreview from '$lib/components/program/document-preview.svelte';
-	import ProgramHero from '$lib/components/program/program-hero.svelte';
-	import ProgramQuickActions from '$lib/components/program/program-quick-actions.svelte';
-	import SectionNav from '$lib/components/program/section-nav.svelte';
-	import SiteFooter from '$lib/components/site/site-footer.svelte';
-	import { themeStyle } from '$lib/theme';
+	import DocumentPreview from '#lib/components/program/document-preview.svelte';
+	import ProgramHero from '#lib/components/program/program-hero.svelte';
+	import ProgramQuickActions from '#lib/components/program/program-quick-actions.svelte';
+	import SectionNav from '#lib/components/program/section-nav.svelte';
+	import SiteFooter from '#lib/components/site/site-footer.svelte';
+	import { themeStyle } from '#lib/theme.js';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();

@@ -1,14 +1,14 @@
 <script lang="ts">
-	import { enhance } from '$lib/admin-enhance';
-	import type { SubmitFunction } from '@sveltejs/kit';
+	import type { SubmitFunction } from '$app/forms';
+	import { enhance } from '#lib/admin-enhance.js';
 	import Check from '@lucide/svelte/icons/check';
 	import CircleDashed from '@lucide/svelte/icons/circle-dashed';
 	import Copy from '@lucide/svelte/icons/copy';
 	import FolderSync from '@lucide/svelte/icons/folder-sync';
 	import Hand from '@lucide/svelte/icons/hand';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
-	import { expectedFolderName, folderTree } from '$lib/drive-names';
-	import type { DriveSetup } from '$lib/server/drive-setup';
+	import { expectedFolderName, folderTree } from '#lib/drive-names.js';
+	import type { DriveSetup } from '#lib/server/drive-setup.js';
 
 	let { setup, canManage, canSync = canManage }: { setup: DriveSetup; canManage: boolean; canSync?: boolean } = $props();
 
@@ -32,7 +32,7 @@
 		try {
 			await navigator.clipboard.writeText(tree);
 			copied = true;
-			setTimeout(() => (copied = false), 2000);
+			setTimeout(() => copied = false, 2000);
 		} catch {
 			copied = false;
 		}
@@ -139,7 +139,7 @@
 								{#if canManage}
 									<button
 										type="button"
-										onclick={() => (editing = editing === section.id ? null : section.id)}
+										onclick={() => editing = editing === section.id ? null : section.id}
 										class="h-8 px-2 text-[12px] font-medium underline-offset-4 hover:underline"
 										aria-expanded={editing === section.id}
 									>

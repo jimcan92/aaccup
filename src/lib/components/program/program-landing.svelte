@@ -1,14 +1,14 @@
 <script lang="ts">
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import Search from '@lucide/svelte/icons/search';
-	import DocumentRow from '$lib/components/site/document-row.svelte';
+	import DocumentRow from '#lib/components/site/document-row.svelte';
 	import LandingBlocks from './landing-blocks.svelte';
 	import ProgramContact from './program-contact.svelte';
-	import { dossierPath, sectionsOf } from '$lib/data/accreditation';
-	import { isLinked } from '$lib/drive-url';
-	import type { Program, Visit } from '$lib/data/types';
-	import { imageSrc } from '$lib/image-url';
-	import { hasContent, type LandingBlock } from '$lib/landing';
+	import { dossierPath, sectionsOf } from '#lib/data/accreditation.js';
+	import { isLinked } from '#lib/drive-url.js';
+	import type { Program, Visit } from '#lib/data/types.js';
+	import { imageSrc } from '#lib/image-url.js';
+	import { hasContent, type LandingBlock } from '#lib/landing.js';
 
 	let {
 		program,

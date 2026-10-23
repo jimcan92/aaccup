@@ -1,6 +1,6 @@
-import { requireStaff } from '$lib/server/admin';
-import { loadBlocks } from '$lib/server/landing-blocks';
-import type { LandingBlock } from '$lib/landing';
+import { requireStaff } from '#lib/server/admin.js';
+import { loadBlocks } from '#lib/server/landing-blocks.js';
+import type { LandingBlock } from '#lib/landing.js';
 import { load as homeLoad } from '../../../+page.server';
 import type { PageServerLoad } from './$types';
 

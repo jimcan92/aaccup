@@ -1,4 +1,4 @@
-import { ACTIVE_CONTENT_KEYS } from '$lib/data/site';
+import { ACTIVE_CONTENT_KEYS } from '#lib/data/site.js';
 import type { PageServerLoad } from './$types';
 
 export const prerender = false;

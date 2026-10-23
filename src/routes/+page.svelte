@@ -1,10 +1,10 @@
 <script lang="ts">
-  import LandingBlocks from "$lib/components/program/landing-blocks.svelte";
-  import HomeQuickActions from "$lib/components/site/home-quick-actions.svelte";
-  import SiteFooter from "$lib/components/site/site-footer.svelte";
-  import { site } from "$lib/data/site";
-  import { imageSrc } from "$lib/image-url";
-  import { themeStyle } from "$lib/theme";
+  import LandingBlocks from "#lib/components/program/landing-blocks.svelte";
+  import HomeQuickActions from "#lib/components/site/home-quick-actions.svelte";
+  import SiteFooter from "#lib/components/site/site-footer.svelte";
+  import { site } from "#lib/data/site.js";
+  import { imageSrc } from "#lib/image-url.js";
+  import { themeStyle } from "#lib/theme.js";
   import ArrowDown from "@lucide/svelte/icons/arrow-down";
   import ArrowRight from "@lucide/svelte/icons/arrow-right";
   import type { PageProps } from "./$types";

@@ -3,8 +3,8 @@
 	import MoonIcon from '@lucide/svelte/icons/moon';
 	import SunIcon from '@lucide/svelte/icons/sun';
 	import { resetMode, setMode } from 'mode-watcher';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-	import { cn } from '$lib/utils';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.js';
+	import { cn } from '#lib/utils.js';
 
 	let { class: className = '' }: { class?: string } = $props();
 </script>

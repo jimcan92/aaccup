@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { imageSrc } from '$lib/image-url';
-	import type { PartnersContent } from '$lib/landing';
+	import { imageSrc } from '#lib/image-url.js';
+	import type { PartnersContent } from '#lib/landing.js';
 	import Section from './section.svelte';
 
 	let { content, tone }: { content: PartnersContent; tone: 'paper' | 'salt' } = $props();

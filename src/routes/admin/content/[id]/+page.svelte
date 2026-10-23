@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { enhance } from '$lib/admin-enhance';
+	import { enhance } from '#lib/admin-enhance.js';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
-	import CarouselEditor from '$lib/components/admin/carousel-editor.svelte';
-	import ContentPreview from '$lib/components/admin/content-preview.svelte';
-	import StatusBadge from '$lib/components/admin/status-badge.svelte';
-	import { formatDate } from '$lib/format';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
+	import CarouselEditor from '#lib/components/admin/carousel-editor.svelte';
+	import ContentPreview from '#lib/components/admin/content-preview.svelte';
+	import StatusBadge from '#lib/components/admin/status-badge.svelte';
+	import { formatDate } from '#lib/format.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();

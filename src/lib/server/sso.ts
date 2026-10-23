@@ -1,7 +1,13 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { dev } from '$app/environment';
-import { env as privateEnv } from '$env/dynamic/private';
-import { env as publicEnv } from '$env/dynamic/public';
+import { dev } from '$app/env';
+
+import {
+	ACCOUNTS_URL,
+	SUPABASE_SERVICE_ROLE_KEY,
+	AACCUP_DEV_SSO_EMAIL
+} from '$app/env/private';
+
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$app/env/public';
 
 /**
  * CTU Accounts single sign-on bridge.
@@ -28,7 +34,7 @@ export type StaffProfile = {
 };
 
 export function accountsUrl(): string {
-	return (privateEnv.ACCOUNTS_URL || 'https://accounts.ctu-moalboal.online').replace(/\/$/, '');
+	return (ACCOUNTS_URL || 'https://accounts.ctu-moalboal.online').replace(/\/$/, '');
 }
 
 export function ssoLoginUrl(returnTo: string): string {
@@ -42,11 +48,8 @@ export function ssoLogoutUrl(): string {
 /** Only CTU session cookies leave this site; Supabase or other cookies are never forwarded. */
 function ctuCookies(cookieHeader: string | null): string {
 	if (!cookieHeader) return '';
-	return cookieHeader
-		.split(';')
-		.map((part) => part.trim())
-		.filter((part) => /^(__Secure-)?ctu\./.test(part))
-		.join('; ');
+
+	return cookieHeader.split(';').map((part) => part.trim()).filter((part) => (/^(__Secure-)?ctu\./).test(part)).join('; ');
 }
 
 /**
@@ -74,7 +77,7 @@ let cacheKey: Promise<CryptoKey> | null = null;
 
 /** HMAC key derived from the service-role key, so no extra secret is needed. */
 function signingKey(): Promise<CryptoKey> | null {
-	const secret = privateEnv.SUPABASE_SERVICE_ROLE_KEY;
+	const secret = SUPABASE_SERVICE_ROLE_KEY;
 	if (!secret) return null;
 	cacheKey ??= crypto.subtle
 		.digest('SHA-256', textEncoder.encode(`aaccup-sso-cache|${secret}`))
@@ -84,9 +87,8 @@ function signingKey(): Promise<CryptoKey> | null {
 
 /** A short fingerprint of the CTU session token, so the cache follows that exact session. */
 async function sessionFingerprint(cookieHeader: string): Promise<string | null> {
-	const token = cookieHeader
-		.split('; ')
-		.find((part) => /^(__Secure-)?ctu\.session_token=/.test(part));
+	const token = cookieHeader.split('; ').find((part) => (/^(__Secure-)?ctu\.session_token=/).test(part));
+
 	if (!token) return null;
 	return toB64url(await crypto.subtle.digest('SHA-256', textEncoder.encode(token))).slice(0, 32);
 }
@@ -137,9 +139,18 @@ async function fetchSsoUser(cookie: string): Promise<SsoUser | null> {
 		});
 		if (!response.ok) return null;
 
-		const body = (await response.json()) as {
-			user?: { id?: string; email?: string; name?: string; image?: string | null; banned?: boolean };
-		} | null;
+		const body = await response.json() as 
+			{ 
+				user?: { 
+					id?: string;
+					email?: string;
+					name?: string;
+					image?: string | null;
+					banned?: boolean
+				 }
+			 } |
+			null;
+
 		const user = body?.user;
 		if (!user?.id || !user.email || user.banned) return null;
 
@@ -152,8 +163,8 @@ async function fetchSsoUser(cookie: string): Promise<SsoUser | null> {
 export async function getSsoUser(request: Request, cookies: Cookies): Promise<SsoUser | null> {
 	// Local development cannot receive the .ctu-moalboal.online cookie on localhost.
 	// `dev` is false in production builds, so this override never ships.
-	if (dev && privateEnv.AACCUP_DEV_SSO_EMAIL) {
-		const email = privateEnv.AACCUP_DEV_SSO_EMAIL.toLowerCase();
+	if (dev && AACCUP_DEV_SSO_EMAIL) {
+		const email = AACCUP_DEV_SSO_EMAIL.toLowerCase();
 		return { id: `dev:${email}`, email, name: email, image: null };
 	}
 
@@ -177,32 +188,27 @@ let serviceClient: SupabaseClient | null = null;
 
 /** Server-only client. Used for the profile lookup and user provisioning, never sent to the browser. */
 export function supabaseService(): SupabaseClient | null {
-	if (!publicEnv.PUBLIC_SUPABASE_URL || !privateEnv.SUPABASE_SERVICE_ROLE_KEY) return null;
-	serviceClient ??= createClient(publicEnv.PUBLIC_SUPABASE_URL, privateEnv.SUPABASE_SERVICE_ROLE_KEY, {
-		auth: { persistSession: false, autoRefreshToken: false }
-	});
+	if (!PUBLIC_SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return null;
+
+	serviceClient ??= createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+
 	return serviceClient;
 }
 
 export function supabaseAnon(): SupabaseClient | null {
-	if (!publicEnv.PUBLIC_SUPABASE_URL || !publicEnv.PUBLIC_SUPABASE_ANON_KEY) return null;
-	return createClient(publicEnv.PUBLIC_SUPABASE_URL, publicEnv.PUBLIC_SUPABASE_ANON_KEY, {
-		auth: { persistSession: false, autoRefreshToken: false }
-	});
+	if (!PUBLIC_SUPABASE_URL || !PUBLIC_SUPABASE_ANON_KEY) return null;
+
+	return createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
 export async function findStaffProfile(email: string): Promise<StaffProfile | null> {
 	const service = supabaseService();
 	if (!service) return null;
 
-	const { data } = await service
-		.from('profiles')
-		.select('id, email, full_name, role, program_id, area_id')
-		// Exact match on the lowercased email. Never ilike: `_` and `%` would act as wildcards.
-		.eq('email', email.toLowerCase())
-		.maybeSingle();
+	const { data } = await service.from('profiles').select('id, email, full_name, role, program_id, area_id').// Exact match on the lowercased email. Never ilike: `_` and `%` would act as wildcards.
+	eq('email', email.toLowerCase()).maybeSingle();
 
-	return data && STAFF_ROLES.includes(data.role) ? (data as StaffProfile) : null;
+	return data && STAFF_ROLES.includes(data.role) ? data as StaffProfile : null;
 }
 
 /**
@@ -234,17 +240,14 @@ function claims(token: string): { app_metadata?: Record<string, unknown> } {
 /** The token's role/program/area must match the profile; otherwise refresh to pick up changes. */
 function claimsMatch(token: string, profile: StaffProfile): boolean {
 	const meta = claims(token).app_metadata ?? {};
-	return (
-		meta.role === profile.role &&
-		(meta.program_id ?? null) === profile.program_id &&
-		(meta.area_id ?? null) === profile.area_id
-	);
+
+	return meta.role === profile.role && (meta.program_id ?? null) === profile.program_id && (meta.area_id ?? null) === profile.area_id;
 }
 
 function readSession(cookies: Cookies, email: string): StoredSession | null {
 	try {
 		const raw = cookies.get(SESSION_COOKIE);
-		const session = raw ? (JSON.parse(raw) as StoredSession) : null;
+		const session = raw ? JSON.parse(raw) as StoredSession : null;
 		return session?.email === email ? session : null;
 	} catch {
 		return null;
@@ -269,7 +272,7 @@ export function clearStaffSession(cookies: Cookies) {
 }
 
 function clientWithToken(token: string): SupabaseClient {
-	return createClient(publicEnv.PUBLIC_SUPABASE_URL!, publicEnv.PUBLIC_SUPABASE_ANON_KEY!, {
+	return createClient(PUBLIC_SUPABASE_URL!, PUBLIC_SUPABASE_ANON_KEY!, {
 		auth: { persistSession: false, autoRefreshToken: false },
 		global: { headers: { Authorization: `Bearer ${token}` } }
 	});

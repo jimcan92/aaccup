@@ -8,13 +8,13 @@
 	import Menu from '@lucide/svelte/icons/menu';
 	import Users from '@lucide/svelte/icons/users';
 	import X from '@lucide/svelte/icons/x';
-	import AdminQuickActions from '$lib/components/admin/admin-quick-actions.svelte';
-	import { adminUi } from '$lib/admin-ui.svelte';
-	import BrandMarks from '$lib/components/site/brand-marks.svelte';
-	import * as Sheet from '$lib/components/ui/sheet/index.js';
-	import { fresh } from '$lib/fresh-link';
-	import { Toaster } from '$lib/components/ui/sonner/index.js';
-	import { initials, roleInfo } from '$lib/admin';
+	import AdminQuickActions from '#lib/components/admin/admin-quick-actions.svelte';
+	import { adminUi } from '#lib/admin-ui.svelte.js';
+	import BrandMarks from '#lib/components/site/brand-marks.svelte';
+	import * as Sheet from '#lib/components/ui/sheet/index.js';
+	import { fresh } from '#lib/fresh-link.js';
+	import { Toaster } from '#lib/components/ui/sonner/index.js';
+	import { initials, roleInfo } from '#lib/admin.js';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();

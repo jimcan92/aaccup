@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
-import { env } from '$env/dynamic/public';
-import { loadProgramCards } from '$lib/server/dossier';
-import { loadProgramPage, loadSitePage } from '$lib/server/program-page';
-import { ACTIVE_CONTENT_KEYS, site as defaultSite } from '$lib/data/site';
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$app/env/public';
+import { loadProgramCards } from '#lib/server/dossier.js';
+import { loadProgramPage, loadSitePage } from '#lib/server/program-page.js';
+import { ACTIVE_CONTENT_KEYS, site as defaultSite } from '#lib/data/site.js';
 import type { PageServerLoad } from './$types';
 
 export const prerender = false;
@@ -18,7 +18,7 @@ export const load: PageServerLoad = async ({ setHeaders, url, locals }) => {
 
 	const blocks: Record<string, string> = {};
 
-	if (env.PUBLIC_SUPABASE_URL && env.PUBLIC_SUPABASE_ANON_KEY) {
+	if (PUBLIC_SUPABASE_URL && PUBLIC_SUPABASE_ANON_KEY) {
 		try {
 			if (preview && locals.supabase) {
 				// locals.supabase is the staff member's client here, so drafts are read under RLS.
@@ -33,10 +33,7 @@ export const load: PageServerLoad = async ({ setHeaders, url, locals }) => {
 					}
 				}
 			} else {
-				const supabase = createClient(env.PUBLIC_SUPABASE_URL, env.PUBLIC_SUPABASE_ANON_KEY, {
-					auth: { persistSession: false, autoRefreshToken: false }
-				});
-
+				const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
 				const { data } = await supabase.rpc('published_content');
 
 				for (const row of data ?? []) {
@@ -57,12 +54,15 @@ export const load: PageServerLoad = async ({ setHeaders, url, locals }) => {
 	// A card without its own cover uses the first photo of the program page's gallery.
 	const cards = await Promise.all(
 		programCards.map(async (card) => {
-			if (card.cover) return card;
-			const blocks = await loadProgramPage(card.slug);
-			const gallery = blocks.find((block) => block.kind === 'gallery' && block.content.items?.[0]?.src);
-			return { ...card, cover: gallery?.kind === 'gallery' ? gallery.content.items[0].src : undefined };
-		})
-	);
+		if (card.cover) return card;
+		const blocks = await loadProgramPage(card.slug);
+		const gallery = blocks.find((block) => block.kind === 'gallery' && block.content.items?.[0]?.src);
+
+		return {
+			...card,
+			cover: gallery?.kind === 'gallery' ? gallery.content.items[0].src : undefined
+		};
+	}));
 
 	return {
 		preview,

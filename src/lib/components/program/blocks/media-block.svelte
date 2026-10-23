@@ -1,8 +1,8 @@
 <script lang="ts">
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ImageIcon from '@lucide/svelte/icons/image';
-	import { imageSrc, paragraphs } from '$lib/image-url';
-	import type { MediaContent } from '$lib/landing';
+	import { imageSrc, paragraphs } from '#lib/image-url.js';
+	import type { MediaContent } from '#lib/landing.js';
 
 	let { content, tone }: { content: MediaContent; tone: 'paper' | 'salt' } = $props();
 

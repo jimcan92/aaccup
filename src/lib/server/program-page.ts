@@ -1,4 +1,4 @@
-import type { LandingBlock } from '$lib/landing';
+import type { LandingBlock } from '#lib/landing.js';
 import { supabaseAnon } from './sso';
 
 /** Published landing blocks for a program. Empty when there are none or Supabase is unreachable. */

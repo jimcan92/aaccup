@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ImagePlus from '@lucide/svelte/icons/image-plus';
 	import { toast } from 'svelte-sonner';
-	import { imageSrc } from '$lib/image-url';
+	import { imageSrc } from '#lib/image-url.js';
 	import { field, uploadImage } from './ui';
 
 	// A photo or logo: a thumbnail, a link field, and an Upload button.

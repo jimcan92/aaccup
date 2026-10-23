@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Settings2 from '@lucide/svelte/icons/settings-2';
 	import { onMount } from 'svelte';
-	import { cn } from '$lib/utils';
+	import { cn } from '#lib/utils.js';
 
 	let { class: className = '', compact = false }: { class?: string; compact?: boolean } = $props();
 

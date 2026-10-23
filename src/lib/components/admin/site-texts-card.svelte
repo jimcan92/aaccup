@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { enhance } from '$lib/admin-enhance';
-	import StatusBadge from '$lib/components/admin/status-badge.svelte';
+	import { enhance } from '#lib/admin-enhance.js';
+	import StatusBadge from '#lib/components/admin/status-badge.svelte';
 
 	type Text = { id: string; key: string; draft_value: string | null; published_value: string | null; status: string };
 

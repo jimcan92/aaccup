@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { ModeWatcher } from 'mode-watcher';
-	import SiteHeader from '$lib/components/site/site-header.svelte';
+	import SiteHeader from '#lib/components/site/site-header.svelte';
 	import '../app.css';
 
 	let { children } = $props();

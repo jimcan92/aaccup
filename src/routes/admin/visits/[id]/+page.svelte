@@ -1,14 +1,14 @@
 <script lang="ts">
-	import { enhance } from '$lib/admin-enhance';
+	import { enhance } from '#lib/admin-enhance.js';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import Copy from '@lucide/svelte/icons/copy';
-	import DriveSetup from '$lib/components/admin/drive-setup.svelte';
-	import PageHeader from '$lib/components/admin/page-header.svelte';
-	import StatusBadge from '$lib/components/admin/status-badge.svelte';
-	import { pad2 } from '$lib/format';
-	import { fresh } from '$lib/fresh-link';
+	import DriveSetup from '#lib/components/admin/drive-setup.svelte';
+	import PageHeader from '#lib/components/admin/page-header.svelte';
+	import StatusBadge from '#lib/components/admin/status-badge.svelte';
+	import { pad2 } from '#lib/format.js';
+	import { fresh } from '#lib/fresh-link.js';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();

@@ -2,13 +2,13 @@
 	import { onMount } from 'svelte';
 	import Search from '@lucide/svelte/icons/search';
 	import X from '@lucide/svelte/icons/x';
-	import DocumentRow from '$lib/components/site/document-row.svelte';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import * as Select from '$lib/components/ui/select/index.js';
-	import { documentIndex, documentKinds } from '$lib/data/accreditation';
-	import { isLinked } from '$lib/drive-url';
-	import { kindLabel, pad2 } from '$lib/format';
-	import type { IndexedDocument, Program, Visit } from '$lib/data/types';
+	import DocumentRow from '#lib/components/site/document-row.svelte';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import * as Select from '#lib/components/ui/select/index.js';
+	import { documentIndex, documentKinds } from '#lib/data/accreditation.js';
+	import { isLinked } from '#lib/drive-url.js';
+	import { kindLabel, pad2 } from '#lib/format.js';
+	import type { IndexedDocument, Program, Visit } from '#lib/data/types.js';
 
 	let { program, visit, base }: { program: Program; visit: Visit; base: string } = $props();
 

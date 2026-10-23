@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { videoEmbed, type VideoContent } from '$lib/landing';
+	import { videoEmbed, type VideoContent } from '#lib/landing.js';
 	import Section from './section.svelte';
 
 	let { content, tone }: { content: VideoContent; tone: 'paper' | 'salt' } = $props();

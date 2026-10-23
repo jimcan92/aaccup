@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
-	import { paragraphs } from '$lib/image-url';
-	import type { FaqContent } from '$lib/landing';
+	import { paragraphs } from '#lib/image-url.js';
+	import type { FaqContent } from '#lib/landing.js';
 	import Section from './section.svelte';
 
 	let { content, tone }: { content: FaqContent; tone: 'paper' | 'salt' } = $props();

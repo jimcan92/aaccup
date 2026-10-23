@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { loadProgramCards } from '$lib/server/dossier';
+import { loadProgramCards } from '#lib/server/dossier.js';
 import type { RequestHandler } from './$types';
 
 export const prerender = false;

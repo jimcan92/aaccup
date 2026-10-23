@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Plus from '@lucide/svelte/icons/plus';
-	import type { FaqContent } from '$lib/landing';
+	import type { FaqContent } from '#lib/landing.js';
 	import ItemControls from './item-controls.svelte';
 	import { addButton, area, field, move } from './ui';
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import VisitHome from '$lib/components/program/visit-home.svelte';
+	import VisitHome from '#lib/components/program/visit-home.svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();

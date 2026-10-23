@@ -1,4 +1,4 @@
-import { videoEmbed } from '$lib/landing';
+import { videoEmbed } from '#lib/landing.js';
 import { isHttpUrl } from './admin';
 
 /** Cleaners for the newer landing block kinds; each returns clean content or an error message. */

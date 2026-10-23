@@ -3,10 +3,10 @@
 	import House from '@lucide/svelte/icons/house';
 	import LayoutGrid from '@lucide/svelte/icons/layout-grid';
 	import Search from '@lucide/svelte/icons/search';
-	import { countLinked, dossierPath, sectionGroups, sectionsOf } from '$lib/data/accreditation';
-	import type { Program, Section, Visit } from '$lib/data/types';
-	import { pad2 } from '$lib/format';
-	import { cn } from '$lib/utils';
+	import { countLinked, dossierPath, sectionGroups, sectionsOf } from '#lib/data/accreditation.js';
+	import type { Program, Section, Visit } from '#lib/data/types.js';
+	import { pad2 } from '#lib/format.js';
+	import { cn } from '#lib/utils.js';
 
 	let {
 		program,

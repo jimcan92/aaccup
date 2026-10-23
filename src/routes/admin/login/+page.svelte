@@ -3,7 +3,7 @@
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import UserX from '@lucide/svelte/icons/user-x';
-	import BrandMarks from '$lib/components/site/brand-marks.svelte';
+	import BrandMarks from '#lib/components/site/brand-marks.svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();

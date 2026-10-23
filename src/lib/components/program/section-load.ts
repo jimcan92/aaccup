@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
-import type { Visit } from '$lib/data/types';
+import type { Visit } from '#lib/data/types.js';
 
 /** Find a section in a visit, with its neighbours in reading order. */
 export function sectionLoad(visit: Visit, slug: string) {

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { site } from '$lib/data/site';
-	import { cn } from '$lib/utils';
+	import { site } from '#lib/data/site.js';
+	import { cn } from '#lib/utils.js';
 
 	let {
 		contactNote = site.contactNote,

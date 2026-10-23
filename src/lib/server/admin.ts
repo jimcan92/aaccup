@@ -1,6 +1,6 @@
 import { error, fail } from '@sveltejs/kit';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { DocumentFormat } from '$lib/data/types';
+import type { DocumentFormat } from '#lib/data/types.js';
 import type { StaffProfile, StaffRole } from './sso';
 
 /** The signed-in staff member and their RLS-scoped client. Throws 403 for other roles. */

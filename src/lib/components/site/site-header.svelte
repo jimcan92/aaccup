@@ -5,14 +5,14 @@
 	import Check from '@lucide/svelte/icons/check';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import { page } from '$app/state';
-	import SectionNav from '$lib/components/program/section-nav.svelte';
-	import Logo from '$lib/components/site/logo.svelte';
-	import ManageLink from '$lib/components/site/manage-link.svelte';
-	import ThemeToggle from '$lib/components/site/theme-toggle.svelte';
-	import * as Sheet from '$lib/components/ui/sheet/index.js';
-	import { visitBase } from '$lib/data/accreditation';
-	import type { Program, Visit } from '$lib/data/types';
-	import { themeStyle } from '$lib/theme';
+	import SectionNav from '#lib/components/program/section-nav.svelte';
+	import Logo from '#lib/components/site/logo.svelte';
+	import ManageLink from '#lib/components/site/manage-link.svelte';
+	import ThemeToggle from '#lib/components/site/theme-toggle.svelte';
+	import * as Sheet from '#lib/components/ui/sheet/index.js';
+	import { visitBase } from '#lib/data/accreditation.js';
+	import type { Program, Visit } from '#lib/data/types.js';
+	import { themeStyle } from '#lib/theme.js';
 
 	/**
 	 * The one public header, in the root layout. On program pages (their data has a program, visit

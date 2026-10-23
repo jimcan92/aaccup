@@ -12,7 +12,7 @@
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
 	import X from '@lucide/svelte/icons/x';
 	import { fly } from 'svelte/transition';
-	import { cn } from '$lib/utils';
+	import { cn } from '#lib/utils.js';
 
 	// A floating button in the corner: Back to top, plus shortcuts that depend on the page.
 	let { groups, class: className = '' }: { groups: QuickGroup[]; class?: string } = $props();

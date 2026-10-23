@@ -1,5 +1,5 @@
-import { env } from '$env/dynamic/private';
-import type { DocumentFormat } from '$lib/data/types';
+import { GOOGLE_SERVICE_ACCOUNT_JSON } from '$app/env/private';
+import type { DocumentFormat } from '#lib/data/types.js';
 
 /**
  * Minimal Google Drive v3 client for a service account (read-only scope).
@@ -24,7 +24,7 @@ const SHORTCUT = 'application/vnd.google-apps.shortcut';
 const API = 'https://www.googleapis.com/drive/v3';
 
 function serviceAccount(): ServiceAccount | null {
-	const raw = env.GOOGLE_SERVICE_ACCOUNT_JSON?.trim();
+	const raw = GOOGLE_SERVICE_ACCOUNT_JSON?.trim();
 	if (!raw) return null;
 	try {
 		const json = raw.startsWith('{') ? raw : atob(raw);
@@ -62,11 +62,11 @@ async function accessToken(): Promise<string> {
 	const now = Math.floor(Date.now() / 1000);
 	const unsigned = `${b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }))}.${b64url(
 		JSON.stringify({
-			iss: account.client_email,
-			scope: 'https://www.googleapis.com/auth/drive.readonly',
-			aud: 'https://oauth2.googleapis.com/token',
-			iat: now,
-			exp: now + 3600
+		iss: account.client_email,
+		scope: 'https://www.googleapis.com/auth/drive.readonly',
+		aud: 'https://oauth2.googleapis.com/token',
+		iat: now,
+		exp: now + 3600
 		})
 	)}`;
 
@@ -83,7 +83,13 @@ async function accessToken(): Promise<string> {
 			assertion: `${unsigned}.${b64url(signature)}`
 		})
 	});
-	const body = (await response.json()) as { access_token?: string; expires_in?: number; error_description?: string };
+
+	const body = await response.json() as { 
+		access_token?: string;
+		expires_in?: number;
+		error_description?: string
+	 };
+
 	if (!response.ok || !body.access_token) throw new Error(`Google sign-in failed: ${body.error_description ?? response.status}`);
 
 	cached = { token: body.access_token, expires: Date.now() + (body.expires_in ?? 3600) * 1000 };
@@ -96,11 +102,15 @@ async function drive<T>(path: string, params: Record<string, string>): Promise<T
 
 	const response = await fetch(url, { headers: { authorization: `Bearer ${await accessToken()}` }, signal: AbortSignal.timeout(15_000) });
 	if (!response.ok) {
-		const body = (await response.json().catch(() => null)) as { error?: { message?: string } } | null;
-		const reason = response.status === 404 ? 'not found, or not shared with the service account' : body?.error?.message;
+		const body = await response.json().catch(() => null) as { error?: { message?: string } } | null;
+
+		const reason = response.status === 404
+			? 'not found, or not shared with the service account'
+			: body?.error?.message;
+
 		throw new Error(`Drive ${response.status}: ${reason ?? response.statusText}`);
 	}
-	return (await response.json()) as T;
+	return await response.json() as T;
 }
 
 type RawFile = {
@@ -141,7 +151,7 @@ export async function listFolder(folderId: string, options: { checkAccess?: bool
 			includeItemsFromAllDrives: 'true',
 			orderBy: 'folder, name_natural',
 			pageSize: '1000',
-			...(pageToken ? { pageToken } : {})
+			...pageToken ? { pageToken } : {}
 		});
 		items.push(...page.files);
 		pageToken = page.nextPageToken ?? '';
@@ -149,16 +159,19 @@ export async function listFolder(folderId: string, options: { checkAccess?: bool
 
 	return Promise.all(
 		items.map(async (file) => {
-			// A shortcut stands in for its target.
-			const mimeType = file.mimeType === SHORTCUT ? (file.shortcutDetails?.targetMimeType ?? file.mimeType) : file.mimeType;
-			return {
-				id: file.id,
-				name: file.name,
-				mimeType,
-				modifiedTime: file.modifiedTime,
-				webViewLink: file.webViewLink,
-				isPublic: options.checkAccess ? await publicAccess(file) : null
-			};
+		// A shortcut stands in for its target.
+		const mimeType = file.mimeType === SHORTCUT
+			? file.shortcutDetails?.targetMimeType ?? file.mimeType
+			: file.mimeType;
+
+		return {
+			id: file.id,
+			name: file.name,
+			mimeType,
+			modifiedTime: file.modifiedTime,
+			webViewLink: file.webViewLink,
+			isPublic: options.checkAccess ? await publicAccess(file) : null
+		};
 		})
 	);
 }
@@ -174,9 +187,9 @@ export const isFolder = (item: DriveItem) => item.mimeType === FOLDER;
 export function formatFromMime(mimeType: string): DocumentFormat {
 	if (mimeType === FOLDER) return 'folder';
 	if (mimeType === 'application/pdf') return 'pdf';
-	if (/google-apps\.document|msword|wordprocessingml/.test(mimeType)) return 'docx';
-	if (/google-apps\.spreadsheet|ms-excel|spreadsheetml/.test(mimeType)) return 'xlsx';
-	if (/google-apps\.presentation|ms-powerpoint|presentationml/.test(mimeType)) return 'pptx';
+	if ((/google-apps\.document|msword|wordprocessingml/).test(mimeType)) return 'docx';
+	if ((/google-apps\.spreadsheet|ms-excel|spreadsheetml/).test(mimeType)) return 'xlsx';
+	if ((/google-apps\.presentation|ms-powerpoint|presentationml/).test(mimeType)) return 'pptx';
 	return 'link';
 }
 
@@ -185,5 +198,5 @@ export function folderIdFrom(input: string): string | null {
 	const value = input.trim();
 	const fromUrl = value.match(/\/folders\/([A-Za-z0-9_-]{10,})/) ?? value.match(/[?&]id=([A-Za-z0-9_-]{10,})/);
 	if (fromUrl) return fromUrl[1];
-	return /^[A-Za-z0-9_-]{10,}$/.test(value) ? value : null;
+	return (/^[A-Za-z0-9_-]{10,}$/).test(value) ? value : null;
 }

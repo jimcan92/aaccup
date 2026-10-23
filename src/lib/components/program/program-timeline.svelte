@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
-	import { paragraphs } from '$lib/image-url';
-	import type { TimelineItem } from '$lib/landing';
+	import { paragraphs } from '#lib/image-url.js';
+	import type { TimelineItem } from '#lib/landing.js';
 
 	let { items, title, tone = 'paper' }: { items: TimelineItem[]; title?: string; tone?: 'paper' | 'salt' } = $props();
 

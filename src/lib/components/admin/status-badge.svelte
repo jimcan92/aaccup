@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { statusInfo } from '$lib/admin';
-	import { cn } from '$lib/utils';
+	import { statusInfo } from '#lib/admin.js';
+	import { cn } from '#lib/utils.js';
 
 	let { status }: { status: string } = $props();
 	const info = $derived(statusInfo[status] ?? { label: status, tone: 'neutral' as const });

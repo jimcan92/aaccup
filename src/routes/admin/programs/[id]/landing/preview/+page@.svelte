@@ -1,9 +1,9 @@
 <script lang="ts">
 	// Rendered without the admin chrome (@ resets to the root layout): it fills the editor's preview frame.
 	import { onMount } from 'svelte';
-	import ProgramLanding from '$lib/components/program/program-landing.svelte';
-	import { connectPreview } from '$lib/block-preview';
-	import { themeStyle } from '$lib/theme';
+	import ProgramLanding from '#lib/components/program/program-landing.svelte';
+	import { connectPreview } from '#lib/block-preview.js';
+	import { themeStyle } from '#lib/theme.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Plus from '@lucide/svelte/icons/plus';
-	import type { EventsContent } from '$lib/landing';
+	import type { EventsContent } from '#lib/landing.js';
 	import ItemControls from './item-controls.svelte';
 	import { addButton, area, field, hint, move } from './ui';
 

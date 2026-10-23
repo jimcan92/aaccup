@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ProgramLanding from '$lib/components/program/program-landing.svelte';
+	import ProgramLanding from '#lib/components/program/program-landing.svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();

@@ -2,7 +2,7 @@
 	// Rendered without the admin chrome (@ resets to the root layout): it fills the editor's preview frame.
 	import { onMount } from 'svelte';
 	import Home from '../../../+page.svelte';
-	import { connectPreview } from '$lib/block-preview';
+	import { connectPreview } from '#lib/block-preview.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();

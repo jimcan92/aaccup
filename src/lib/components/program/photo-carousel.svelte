@@ -4,8 +4,8 @@
 	import Pause from '@lucide/svelte/icons/pause';
 	import Play from '@lucide/svelte/icons/play';
 	import { MediaQuery } from 'svelte/reactivity';
-	import { imageSrc } from '$lib/image-url';
-	import type { GalleryItem } from '$lib/landing';
+	import { imageSrc } from '#lib/image-url.js';
+	import type { GalleryItem } from '#lib/landing.js';
 
 	let {
 		items,

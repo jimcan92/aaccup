@@ -2,8 +2,8 @@
 	import Globe from '@lucide/svelte/icons/globe';
 	import Mail from '@lucide/svelte/icons/mail';
 	import Phone from '@lucide/svelte/icons/phone';
-	import type { Program } from '$lib/data/types';
-	import { imageSrc } from '$lib/image-url';
+	import type { Program } from '#lib/data/types.js';
+	import { imageSrc } from '#lib/image-url.js';
 
 	// The program's email, phone and website: compact chips in the hero, or tiles in their own section.
 	let { program, variant }: { program: Program; variant: 'chips' | 'section' } = $props();

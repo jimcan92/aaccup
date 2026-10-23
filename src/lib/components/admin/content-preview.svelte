@@ -1,6 +1,6 @@
 <script lang="ts">
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
-	import { site } from '$lib/data/site';
+	import { site } from '#lib/data/site.js';
 
 	type Slide = {
 		src: string;

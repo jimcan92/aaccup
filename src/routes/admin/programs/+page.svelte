@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { enhance } from '$lib/admin-enhance';
+	import { enhance } from '#lib/admin-enhance.js';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import Plus from '@lucide/svelte/icons/plus';
-	import PageHeader from '$lib/components/admin/page-header.svelte';
-	import StatusBadge from '$lib/components/admin/status-badge.svelte';
+	import PageHeader from '#lib/components/admin/page-header.svelte';
+	import StatusBadge from '#lib/components/admin/status-badge.svelte';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
