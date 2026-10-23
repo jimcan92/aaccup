@@ -28,10 +28,10 @@
 >
 	{#snippet actions()}
 		<a
-			href="/admin/content"
+			href="/admin/home"
 			class="inline-flex h-10 items-center gap-2 bg-ink px-4 text-[13px] font-medium text-paper transition-colors hover:bg-ink-soft"
 		>
-			Edit site content
+			Edit home page
 			<ArrowRight class="size-4" />
 		</a>
 	{/snippet}
@@ -91,12 +91,12 @@
 
 <section class="mt-12 grid gap-8 lg:grid-cols-[1.4fr_1fr]">
 	<div>
-		<h2 class="font-display text-[22px] font-semibold tracking-[-0.03em]">Site content</h2>
+		<h2 class="font-display text-[22px] font-semibold tracking-[-0.03em]">Home page & site texts</h2>
 		<ul class="mt-4 border-t border-rule">
 			{#each data.blocks as block (block.id)}
 				<li>
 					<a
-						href={`/admin/content/${block.id}`}
+						href="/admin/home#site-texts"
 						class="flex items-center justify-between gap-4 border-b border-rule px-1 py-3.5 transition-colors hover:bg-paper sm:px-3"
 					>
 						<span class="min-w-0">
@@ -121,7 +121,7 @@
 				: 'Blocks submitted for review. A focal person or admin can publish them.'}
 		</p>
 		{#each waiting as block (block.id)}
-			<a href={`/admin/content/${block.id}`} class="mt-3 flex items-center justify-between gap-3 text-[13px] font-medium hover:underline">
+			<a href="/admin/home#site-texts" class="mt-3 flex items-center justify-between gap-3 text-[13px] font-medium hover:underline">
 				{block.label}
 				<ArrowRight class="size-3.5" />
 			</a>

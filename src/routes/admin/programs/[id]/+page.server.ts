@@ -1,5 +1,5 @@
 import { error, fail, redirect } from '@sveltejs/kit';
-import { canManage, dbFail, HEX, integer, optional, requireStaff, SLUG, text, VISIT_SLUG } from '$lib/server/admin';
+import { canManage, dbFail, HEX, integer, isHttpUrl, optional, requireStaff, SLUG, text, VISIT_SLUG } from '$lib/server/admin';
 import { loadDriveSetup } from '$lib/server/drive-setup';
 import { renameProgramCode } from '$lib/server/program-code';
 import type { Actions, PageServerLoad } from './$types';
@@ -52,6 +52,12 @@ export const actions: Actions = {
 			slug: text(form, 'slug').toLowerCase(),
 			degree: optional(form, 'degree'),
 			summary: optional(form, 'summary'),
+			tagline: optional(form, 'tagline')?.slice(0, 160) ?? null,
+			logo_url: optional(form, 'logo_url'),
+			cover_url: optional(form, 'cover_url'),
+			website_url: optional(form, 'website_url'),
+			email: optional(form, 'email')?.toLowerCase() ?? null,
+			phone: optional(form, 'phone')?.slice(0, 60) ?? null,
 			sort_order: integer(form, 'sort_order'),
 			status: text(form, 'status') === 'published' ? 'published' : 'draft',
 			theme_program: text(form, 'theme_program').toLowerCase(),
@@ -62,6 +68,10 @@ export const actions: Actions = {
 
 		if (!values.code || !values.name) return fail(400, { message: 'Code and name are required.' });
 		if (!SLUG.test(values.slug)) return fail(400, { message: 'The URL slug can use lowercase letters, numbers, and dashes.' });
+		if (values.logo_url && !isHttpUrl(values.logo_url)) return fail(400, { message: 'The logo needs an https:// link or an uploaded image.' });
+		if (values.cover_url && !isHttpUrl(values.cover_url)) return fail(400, { message: 'The cover needs an https:// link or an uploaded image.' });
+		if (values.website_url && !isHttpUrl(values.website_url)) return fail(400, { message: 'The website must start with https://' });
+		if (values.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) return fail(400, { message: 'Check the email address.' });
 		if (![values.theme_program, values.theme_ink, values.theme_soft, values.theme_contrast].every((color) => HEX.test(color))) {
 			return fail(400, { message: 'Colors must be six-digit hex values like #7a1e2b.' });
 		}

@@ -6,7 +6,6 @@
 	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 	import LogOut from '@lucide/svelte/icons/log-out';
 	import Menu from '@lucide/svelte/icons/menu';
-	import Type from '@lucide/svelte/icons/type';
 	import Users from '@lucide/svelte/icons/users';
 	import X from '@lucide/svelte/icons/x';
 	import AdminQuickActions from '$lib/components/admin/admin-quick-actions.svelte';
@@ -26,7 +25,6 @@
 			{ href: '/admin', label: 'Overview', icon: LayoutDashboard },
 			{ href: '/admin/programs', label: 'Programs', icon: FolderOpen },
 			{ href: '/admin/home', label: 'Home page', icon: House },
-			{ href: '/admin/content', label: 'Site content', icon: Type },
 			data.staff?.role === 'admin' ? { href: '/admin/people', label: 'People', icon: Users } : null
 		].filter((item) => item !== null)
 	);
