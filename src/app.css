@@ -277,3 +277,37 @@
 		scrollbar-width: none;
 	}
 }
+
+/* Subtle graph-paper texture behind public pages. Lines are a few percent of the ink colour,
+   so they follow light and dark mode. The admin keeps plain backgrounds. */
+:root {
+	--grid-line: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+
+html:not(.admin-light) section.bg-salt,
+.grid-texture {
+	background-image:
+		linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+		linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+	background-size: 40px 40px;
+}
+
+/* The home page's first screen: a slightly stronger grid that fades out from the top. */
+.grid-hero {
+	position: relative;
+	isolation: isolate;
+}
+
+.grid-hero::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+	background-image:
+		radial-gradient(ellipse 70% 55% at 50% 0%, color-mix(in srgb, var(--program) 10%, transparent), transparent 70%),
+		linear-gradient(to right, color-mix(in srgb, var(--ink) 9%, transparent) 1px, transparent 1px),
+		linear-gradient(to bottom, color-mix(in srgb, var(--ink) 9%, transparent) 1px, transparent 1px);
+	background-size: 100% 100%, 48px 48px, 48px 48px;
+	mask-image: radial-gradient(ellipse 85% 75% at 50% 15%, #000 35%, transparent 100%);
+}

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { ModeWatcher } from 'mode-watcher';
+	import SiteHeader from '$lib/components/site/site-header.svelte';
 	import '../app.css';
 
 	let { children } = $props();
@@ -25,6 +26,9 @@
 	>
 		Skip to content
 	</a>
+
+	<!-- One header for every public page; it shows the program on program pages. -->
+	<SiteHeader />
 
 	<div class="flex min-h-dvh flex-col">
 		{@render children()}

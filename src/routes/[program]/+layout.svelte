@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import DocumentPreview from '$lib/components/program/document-preview.svelte';
-	import ProgramHeader from '$lib/components/program/program-header.svelte';
 	import ProgramHero from '$lib/components/program/program-hero.svelte';
 	import ProgramQuickActions from '$lib/components/program/program-quick-actions.svelte';
 	import SectionNav from '$lib/components/program/section-nav.svelte';
@@ -18,7 +17,6 @@
 </script>
 
 <div class="program-scope flex min-h-dvh flex-col" {style}>
-	<ProgramHeader program={data.program} visit={data.visit} base={data.base} {style} />
 	{#if isLanding}
 		<main id="main" class="flex-1 bg-salt">
 			{@render children()}
@@ -26,7 +24,7 @@
 	{:else}
 	<ProgramHero program={data.program} visit={data.visit} compact={!isHome} />
 
-	<div class="flex-1 bg-salt">
+	<div class="grid-texture flex-1 bg-salt">
 		<div class="mx-auto grid max-w-[1280px] gap-8 px-5 pb-16 pt-6 sm:px-8 lg:grid-cols-[16.5rem_minmax(0,1fr)] lg:gap-12 lg:pt-10">
 			<aside class="hidden lg:block" aria-label={`${data.program.code} sections`}>
 				<div class="sticky top-[5.25rem] max-h-[calc(100dvh-6.5rem)] overflow-y-auto pb-6 pr-1">

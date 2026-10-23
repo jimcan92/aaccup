@@ -26,7 +26,7 @@
 </script>
 
 {#if items.length && variant === 'chips'}
-	<ul class="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[14px]" aria-label="Contact the program">
+	<ul class="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-[15px]" aria-label="Contact the program">
 		{#each items as item (item.label)}
 			{@const Icon = item.icon}
 			<li>

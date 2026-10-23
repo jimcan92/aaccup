@@ -1,10 +1,7 @@
 <script lang="ts">
   import LandingBlocks from "$lib/components/program/landing-blocks.svelte";
   import HomeQuickActions from "$lib/components/site/home-quick-actions.svelte";
-  import Logo from "$lib/components/site/logo.svelte";
-  import ManageLink from "$lib/components/site/manage-link.svelte";
   import SiteFooter from "$lib/components/site/site-footer.svelte";
-  import ThemeToggle from "$lib/components/site/theme-toggle.svelte";
   import { site } from "$lib/data/site";
   import { imageSrc } from "$lib/image-url";
   import { themeStyle } from "$lib/theme";
@@ -16,9 +13,6 @@
 
   const content = $derived(data.content);
 
-  // The header starts tall and light, and shrinks (with a slightly darker background) once the page scrolls.
-  let scrollY = $state(0);
-  const compact = $derived(scrollY > 24);
 
   // Grid columns for 1–4 programs; narrower screens get fewer (literal classes so Tailwind keeps them).
   const columns: Record<number, string> = {
@@ -46,36 +40,8 @@
   </div>
 {/if}
 
-<svelte:window bind:scrollY />
-
-<header
-  class="sticky inset-x-0 top-0 z-40 border-b transition-[background-color,box-shadow,border-color] duration-300 {compact
-    ? 'border-rule bg-[color-mix(in_srgb,var(--salt)_90%,var(--ink))]/95 shadow-[0_8px_24px_-18px_rgb(0_0_0/0.45)] backdrop-blur'
-    : 'border-transparent bg-paper/80 backdrop-blur-sm'}"
->
-  <div
-    class="mx-auto flex max-w-[1280px] items-center justify-between gap-4 px-5 transition-[height] duration-300 sm:px-8 {compact
-      ? 'h-16'
-      : 'h-24'}"
-  >
-    <!-- The logo starts larger and settles to its usual size. -->
-    <div
-      class="origin-left transition-transform duration-300 {compact
-        ? 'scale-100'
-        : 'scale-[1.25]'}"
-    >
-      <Logo compact />
-    </div>
-    <!-- The theme button stays at the far right for everyone; Manage appears to its left for staff. -->
-    <div class="flex items-center gap-2 sm:gap-3">
-      <ManageLink class="h-10 bg-ink text-paper hover:bg-ink-soft sm:px-4" />
-      <ThemeToggle class="text-ink hover:bg-ink/8" />
-    </div>
-  </div>
-</header>
-
 <!-- The first screen: heading and the program cards fill the viewport; the blocks start below it. -->
-<main id="main" class="flex min-h-[calc(100svh-6rem)] flex-col bg-salt">
+<main id="main" class="grid-hero flex min-h-[calc(100svh-7rem)] flex-col bg-salt">
   <div
     class="mx-auto flex w-full max-w-[1280px] flex-1 flex-col px-5 pb-8 pt-10 sm:px-8 lg:pt-14"
   >
