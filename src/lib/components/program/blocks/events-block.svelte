@@ -2,8 +2,8 @@
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
 	import MapPin from '@lucide/svelte/icons/map-pin';
-	import { paragraphs } from '$lib/image-url';
-	import { formatDate, type EventItem, type EventsContent } from '$lib/landing';
+	import { paragraphs } from '#lib/image-url.js';
+	import { formatDate, type EventItem, type EventsContent } from '#lib/landing.js';
 	import Section from './section.svelte';
 
 	let { content, tone }: { content: EventsContent; tone: 'paper' | 'salt' } = $props();

@@ -1,7 +1,7 @@
 import { fail } from '@sveltejs/kit';
-import { canManage, dbFail, requireStaff } from '$lib/server/admin';
-import { canEditBlocks, landingActions, loadBlocks } from '$lib/server/landing-blocks';
-import { ACTIVE_CONTENT_KEYS } from '$lib/data/site';
+import { canManage, dbFail, requireStaff } from '#lib/server/admin.js';
+import { canEditBlocks, landingActions, loadBlocks } from '#lib/server/landing-blocks.js';
+import { ACTIVE_CONTENT_KEYS } from '#lib/data/site.js';
 import type { Actions, PageServerLoad } from './$types';
 
 // The home page's blocks are the ones with no program; its header and site texts are content blocks.

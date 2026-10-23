@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
-	import { paragraphs } from '$lib/image-url';
-	import { formatDate, type NewsContent } from '$lib/landing';
+	import { paragraphs } from '#lib/image-url.js';
+	import { formatDate, type NewsContent } from '#lib/landing.js';
 	import Section from './section.svelte';
 
 	let { content, tone }: { content: NewsContent; tone: 'paper' | 'salt' } = $props();

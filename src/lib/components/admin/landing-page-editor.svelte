@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { enhance } from '$lib/admin-enhance';
+	import { enhance } from '#lib/admin-enhance.js';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import BarChart3 from '@lucide/svelte/icons/chart-column';
 	import GalleryHorizontal from '@lucide/svelte/icons/gallery-horizontal';
@@ -24,15 +24,15 @@
 	import Smartphone from '@lucide/svelte/icons/smartphone';
 	import { onMount } from 'svelte';
 	import { MediaQuery } from 'svelte/reactivity';
-	import { readMessage, type PreviewMessage } from '$lib/block-preview';
-	import { adminUi } from '$lib/admin-ui.svelte';
-	import type { LandingBlock } from '$lib/landing';
+	import { readMessage, type PreviewMessage } from '#lib/block-preview.js';
+	import { adminUi } from '#lib/admin-ui.svelte.js';
+	import type { LandingBlock } from '#lib/landing.js';
 	import X from '@lucide/svelte/icons/x';
 	import { tick } from 'svelte';
-	import LandingBlockEditor from '$lib/components/admin/landing-block-editor.svelte';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import { blockLabel } from '$lib/landing';
-	import { fresh } from '$lib/fresh-link';
+	import LandingBlockEditor from '#lib/components/admin/landing-block-editor.svelte';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { blockLabel } from '#lib/landing.js';
+	import { fresh } from '#lib/fresh-link.js';
 
 	type Block = { id: string; kind: string; draft: unknown; published: unknown; updated_at: string };
 

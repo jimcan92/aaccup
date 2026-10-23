@@ -1,9 +1,9 @@
 <script lang="ts">
-	import aaccupLarge from '$lib/images/aaccup-logo-288.webp';
-	import aaccupSmall from '$lib/images/aaccup-logo-96.webp';
-	import ctuLarge from '$lib/images/ctu-seal-288.webp';
-	import ctuSmall from '$lib/images/ctu-seal-96.webp';
-	import { cn } from '$lib/utils';
+	import aaccupLarge from '#lib/images/aaccup-logo-288.webp';
+	import aaccupSmall from '#lib/images/aaccup-logo-96.webp';
+	import ctuLarge from '#lib/images/ctu-seal-288.webp';
+	import ctuSmall from '#lib/images/ctu-seal-96.webp';
+	import { cn } from '#lib/utils.js';
 
 	let {
 		size = 36,

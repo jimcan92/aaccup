@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { enhance } from '$lib/admin-enhance';
+	import { enhance } from '#lib/admin-enhance.js';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import ClipboardPaste from '@lucide/svelte/icons/clipboard-paste';
@@ -7,13 +7,13 @@
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import PageHeader from '$lib/components/admin/page-header.svelte';
-	import StatusBadge from '$lib/components/admin/status-badge.svelte';
-	import DocumentFormat from '$lib/components/site/document-format.svelte';
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import { previewUrl } from '$lib/drive-url';
-	import { formatDate, kindLabel } from '$lib/format';
-	import { fresh } from '$lib/fresh-link';
+	import PageHeader from '#lib/components/admin/page-header.svelte';
+	import StatusBadge from '#lib/components/admin/status-badge.svelte';
+	import DocumentFormat from '#lib/components/site/document-format.svelte';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { previewUrl } from '#lib/drive-url.js';
+	import { formatDate, kindLabel } from '#lib/format.js';
+	import { fresh } from '#lib/fresh-link.js';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();

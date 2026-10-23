@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Plus from '@lucide/svelte/icons/plus';
-	import type { PartnersContent } from '$lib/landing';
+	import type { PartnersContent } from '#lib/landing.js';
 	import ImageField from './image-field.svelte';
 	import ItemControls from './item-controls.svelte';
 	import { addButton, field, hint, move } from './ui';

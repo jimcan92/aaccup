@@ -4,12 +4,12 @@
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import Eye from '@lucide/svelte/icons/eye';
 	import X from '@lucide/svelte/icons/x';
-	import { browser } from '$app/environment';
-	import { isLinked } from '$lib/drive-url';
-	import { closePreview, currentPreviewId, openPreview, previewUrl, wideScreen } from '$lib/preview';
-	import type { EvidenceDocument } from '$lib/data/types';
-	import { formatDate } from '$lib/format';
-	import { cn } from '$lib/utils';
+	import { browser } from '$app/env';
+	import { isLinked } from '#lib/drive-url.js';
+	import { closePreview, currentPreviewId, openPreview, previewUrl, wideScreen } from '#lib/preview.js';
+	import type { EvidenceDocument } from '#lib/data/types.js';
+	import { formatDate } from '#lib/format.js';
+	import { cn } from '#lib/utils.js';
 	import DocumentFormat from './document-format.svelte';
 
 	let {
@@ -115,12 +115,8 @@
 			href={document.driveUrl}
 			target="_blank"
 			rel="noopener noreferrer"
-			class={cn(
-				'group block border-b border-rule px-2 py-4 transition-colors hover:bg-program-soft sm:px-3',
-				expanded && 'border-program/30 bg-program-soft',
-				className
-			)}
-			{onclick}
+			class={cn('group block border-b border-rule px-2 py-4 transition-colors hover:bg-program-soft sm:px-3', expanded && 'border-program/30 bg-program-soft', className)}
+			onclick={onclick}
 			aria-expanded={canPreview && wideScreen.current ? expanded : undefined}
 			aria-label={canPreview ? `${expanded ? 'Hide preview of' : 'Preview'} ${document.title}` : `${document.title} — opens in a new tab`}
 		>
@@ -156,7 +152,7 @@
 						src={embed}
 						title={`Preview: ${document.title}`}
 						class="relative h-full w-full border-0"
-						onload={() => (loading = false)}
+						onload={() => loading = false}
 						allow="autoplay; fullscreen"
 						referrerpolicy="no-referrer"
 					></iframe>

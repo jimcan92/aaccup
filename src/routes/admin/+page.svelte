@@ -1,12 +1,12 @@
 <script lang="ts">
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
-	import PageHeader from '$lib/components/admin/page-header.svelte';
-	import StatusBadge from '$lib/components/admin/status-badge.svelte';
-	import { roleInfo } from '$lib/admin';
-	import { formatDate } from '$lib/format';
-	import { themeStyle } from '$lib/theme';
-	import { fresh } from '$lib/fresh-link';
+	import PageHeader from '#lib/components/admin/page-header.svelte';
+	import StatusBadge from '#lib/components/admin/status-badge.svelte';
+	import { roleInfo } from '#lib/admin.js';
+	import { formatDate } from '#lib/format.js';
+	import { themeStyle } from '#lib/theme.js';
+	import { fresh } from '#lib/fresh-link.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();

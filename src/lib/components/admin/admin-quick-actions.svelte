@@ -8,7 +8,7 @@
 	import PencilLine from '@lucide/svelte/icons/pencil-line';
 	import Settings2 from '@lucide/svelte/icons/settings-2';
 	import { page } from '$app/state';
-	import QuickActions, { type QuickGroup } from '$lib/components/site/quick-actions.svelte';
+	import QuickActions, { type QuickGroup } from '#lib/components/site/quick-actions.svelte';
 
 	type ProgramRef = { id: string; code: string; slug: string };
 	type VisitRef = { slug: string; status: string; program?: ProgramRef | null };

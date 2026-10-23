@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import LandingPageEditor from '$lib/components/admin/landing-page-editor.svelte';
-	import PageHeader from '$lib/components/admin/page-header.svelte';
+	import LandingPageEditor from '#lib/components/admin/landing-page-editor.svelte';
+	import PageHeader from '#lib/components/admin/page-header.svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();

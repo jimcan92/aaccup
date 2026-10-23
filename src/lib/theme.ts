@@ -1,4 +1,4 @@
-import type { ProgramTheme } from '$lib/data/types';
+import type { ProgramTheme } from '#lib/data/types.js';
 
 function luminance(hex: string): number {
 	const value = hex.replace('#', '');

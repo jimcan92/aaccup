@@ -1,8 +1,8 @@
 import { error } from '@sveltejs/kit';
-import { requireStaff } from '$lib/server/admin';
-import { loadDossier } from '$lib/server/dossier';
-import { loadBlocks } from '$lib/server/landing-blocks';
-import type { LandingBlock } from '$lib/landing';
+import { requireStaff } from '#lib/server/admin.js';
+import { loadDossier } from '#lib/server/dossier.js';
+import { loadBlocks } from '#lib/server/landing-blocks.js';
+import type { LandingBlock } from '#lib/landing.js';
 import type { PageServerLoad } from './$types';
 
 // This page skips the admin layout (+page@), so it must opt out of prerendering itself.

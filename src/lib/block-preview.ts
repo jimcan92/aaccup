@@ -1,4 +1,4 @@
-import type { LandingBlock } from '$lib/landing';
+import type { LandingBlock } from '#lib/landing.js';
 
 /**
  * Messages between a block editor page and its preview frame (same origin).

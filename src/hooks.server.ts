@@ -1,6 +1,13 @@
-import type { Handle } from '@sveltejs/kit';
-import { building } from '$app/environment';
-import { clearStaffSession, findStaffProfile, getSsoUser, supabaseAnon, supabaseAsStaff } from '$lib/server/sso';
+import type { Handle } from '@sveltejs/kit/hooks';
+import { building } from '$app/env';
+
+import {
+	clearStaffSession,
+	findStaffProfile,
+	getSsoUser,
+	supabaseAnon,
+	supabaseAsStaff
+} from '#lib/server/sso.js';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.supabase = supabaseAnon();

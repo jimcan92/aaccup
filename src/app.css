@@ -33,6 +33,80 @@
 	--program-ink: #082a2c;
 	--program-soft: #e3e9e1;
 	--program-contrast: #f8faf5;
+
+	/* Site palette: ink (text, strong surfaces), salt (page), paper (cards), rule (lines). */
+	--ink: #082a2c;
+	--ink-soft: #335052;
+	--salt: #edf1ea;
+	--paper: #f8faf5;
+	--rule: #082a2c1f;
+}
+
+/* Dark: the same roles, inverted. Set by the theme switcher (mode-watcher puts .dark on <html>). */
+.dark {
+	--background: #0e1919;
+	--foreground: #e7eee5;
+	--card: #142222;
+	--card-foreground: #e7eee5;
+	--popover: #142222;
+	--popover-foreground: #e7eee5;
+	--primary: #e7eee5;
+	--primary-foreground: #0e1919;
+	--secondary: #1c2c2c;
+	--secondary-foreground: #e7eee5;
+	--muted: #1c2c2c;
+	--muted-foreground: #9db1ac;
+	--accent: #1c2c2c;
+	--accent-foreground: #e7eee5;
+	--border: #e7eee51f;
+	--input: #e7eee526;
+
+	--program: #2f6763;
+	--program-ink: #cfe1dc;
+	--program-soft: #17292a;
+	--program-contrast: #f2f6f0;
+
+	--ink: #e7eee5;
+	--ink-soft: #a6bab5;
+	--salt: #0e1919;
+	--paper: #142222;
+	--rule: #e7eee51f;
+}
+
+/* Each program sets its tints inline (light colours); in dark mode they become dark tints of the program colour. */
+.dark .program-scope {
+	--program-soft: color-mix(in srgb, var(--program) 22%, #0e1919) !important;
+	--program-ink: color-mix(in srgb, var(--program) 30%, #eef3ec) !important;
+}
+
+/* The admin was designed light only: it keeps the light palette whatever the site theme. */
+.admin-light {
+	--background: #edf1ea;
+	--foreground: #082a2c;
+	--card: #f8faf5;
+	--card-foreground: #082a2c;
+	--popover: #f8faf5;
+	--popover-foreground: #082a2c;
+	--primary: #082a2c;
+	--primary-foreground: #f8faf5;
+	--secondary: #dfe7dd;
+	--secondary-foreground: #082a2c;
+	--muted: #e3e9e1;
+	--muted-foreground: #4f6868;
+	--accent: #dfe7dd;
+	--accent-foreground: #082a2c;
+	--border: #082a2c1f;
+	--input: #082a2c26;
+	--program: #082a2c;
+	--program-ink: #082a2c;
+	--program-soft: #e3e9e1;
+	--program-contrast: #f8faf5;
+	--ink: #082a2c;
+	--ink-soft: #335052;
+	--salt: #edf1ea;
+	--paper: #f8faf5;
+	--rule: #082a2c1f;
+	color-scheme: light;
 }
 
 @theme inline {
@@ -60,17 +134,17 @@
 	--color-input: var(--input);
 	--color-ring: var(--ring);
 
-	--color-ink: #082a2c;
-	--color-ink-soft: #335052;
-	--color-salt: #edf1ea;
-	--color-paper: #f8faf5;
+	--color-ink: var(--ink);
+	--color-ink-soft: var(--ink-soft);
+	--color-salt: var(--salt);
+	--color-paper: var(--paper);
 	--color-foam: #b9d4c6;
 	--color-bsie: #7a1e2b;
 	--color-bsie-soft: #f1e2e4;
 	--color-bsfi: #1d5b3a;
 	--color-bsfi-soft: #e2ede4;
 	--color-signal: #c9973a;
-	--color-rule: #082a2c1f;
+	--color-rule: var(--rule);
 
 	--color-program: var(--program);
 	--color-program-ink: var(--program-ink);
@@ -202,4 +276,38 @@
 		-ms-overflow-style: none;
 		scrollbar-width: none;
 	}
+}
+
+/* Subtle graph-paper texture behind public pages. Lines are a few percent of the ink colour,
+   so they follow light and dark mode. The admin keeps plain backgrounds. */
+:root {
+	--grid-line: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+
+html:not(.admin-light) section.bg-salt,
+.grid-texture {
+	background-image:
+		linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+		linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+	background-size: 40px 40px;
+}
+
+/* The home page's first screen: a slightly stronger grid that fades out from the top. */
+.grid-hero {
+	position: relative;
+	isolation: isolate;
+}
+
+.grid-hero::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+	background-image:
+		radial-gradient(ellipse 70% 55% at 50% 0%, color-mix(in srgb, var(--program) 10%, transparent), transparent 70%),
+		linear-gradient(to right, color-mix(in srgb, var(--ink) 9%, transparent) 1px, transparent 1px),
+		linear-gradient(to bottom, color-mix(in srgb, var(--ink) 9%, transparent) 1px, transparent 1px);
+	background-size: 100% 100%, 48px 48px, 48px 48px;
+	mask-image: radial-gradient(ellipse 85% 75% at 50% 15%, #000 35%, transparent 100%);
 }

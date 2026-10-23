@@ -1,9 +1,9 @@
 import { error, fail, redirect } from '@sveltejs/kit';
-import { RESERVED_SECTION_SLUGS } from '$lib/data/accreditation';
-import { canManage, dbFail, integer, optional, requireStaff, SLUG, text, VISIT_SLUG } from '$lib/server/admin';
-import { driveConfigured, folderIdFrom, folderName } from '$lib/server/drive';
-import { loadDriveSetup } from '$lib/server/drive-setup';
-import { summary, syncVisit } from '$lib/server/drive-sync';
+import { RESERVED_SECTION_SLUGS } from '#lib/data/accreditation.js';
+import { canManage, dbFail, integer, optional, requireStaff, SLUG, text, VISIT_SLUG } from '#lib/server/admin.js';
+import { driveConfigured, folderIdFrom, folderName } from '#lib/server/drive.js';
+import { loadDriveSetup } from '#lib/server/drive-setup.js';
+import { summary, syncVisit } from '#lib/server/drive-sync.js';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, params }) => {

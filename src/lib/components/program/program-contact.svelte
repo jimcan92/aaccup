@@ -2,8 +2,8 @@
 	import Globe from '@lucide/svelte/icons/globe';
 	import Mail from '@lucide/svelte/icons/mail';
 	import Phone from '@lucide/svelte/icons/phone';
-	import type { Program } from '$lib/data/types';
-	import { imageSrc } from '$lib/image-url';
+	import type { Program } from '#lib/data/types.js';
+	import { imageSrc } from '#lib/image-url.js';
 
 	// The program's email, phone and website: compact chips in the hero, or tiles in their own section.
 	let { program, variant }: { program: Program; variant: 'chips' | 'section' } = $props();
@@ -26,7 +26,7 @@
 </script>
 
 {#if items.length && variant === 'chips'}
-	<ul class="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[14px]" aria-label="Contact the program">
+	<ul class="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-[15px]" aria-label="Contact the program">
 		{#each items as item (item.label)}
 			{@const Icon = item.icon}
 			<li>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Plus from '@lucide/svelte/icons/plus';
 	import X from '@lucide/svelte/icons/x';
-	import type { CtaContent } from '$lib/landing';
+	import type { CtaContent } from '#lib/landing.js';
 	import { addButton, area, field, hint, label, small } from './ui';
 
 	let { value = $bindable() }: { value: CtaContent } = $props();

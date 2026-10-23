@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { countLinked, sectionGroups, sectionsOf, visitDocuments } from '$lib/data/accreditation';
-	import type { Program, Visit } from '$lib/data/types';
+	import { countLinked, sectionGroups, sectionsOf, visitDocuments } from '#lib/data/accreditation.js';
+	import type { Program, Visit } from '#lib/data/types.js';
 
 	let {
 		program,

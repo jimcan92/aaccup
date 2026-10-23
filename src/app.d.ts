@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { SsoUser, StaffProfile } from '$lib/server/sso';
+import type { SsoUser, StaffProfile } from '#lib/server/sso.js';
 
 declare global {
 	namespace App {

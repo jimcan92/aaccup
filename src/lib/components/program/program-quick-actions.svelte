@@ -9,10 +9,10 @@
 	import Settings2 from '@lucide/svelte/icons/settings-2';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import QuickActions, { type QuickGroup } from '$lib/components/site/quick-actions.svelte';
-	import { dossierPath } from '$lib/data/accreditation';
-	import type { Program, Visit } from '$lib/data/types';
-	import { menuPrograms, staffInfo, type MenuProgram } from '$lib/menu-data';
+	import QuickActions, { type QuickGroup } from '#lib/components/site/quick-actions.svelte';
+	import { dossierPath } from '#lib/data/accreditation.js';
+	import type { Program, Visit } from '#lib/data/types.js';
+	import { menuPrograms, staffInfo, type MenuProgram } from '#lib/menu-data.js';
 
 	let { program, visit, base }: { program: Program; visit: Visit; base: string } = $props();
 

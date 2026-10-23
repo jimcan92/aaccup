@@ -4,13 +4,13 @@
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import X from '@lucide/svelte/icons/x';
-	import { browser } from '$app/environment';
-	import * as Sheet from '$lib/components/ui/sheet/index.js';
-	import { sectionLabel } from '$lib/data/accreditation';
-	import type { Visit } from '$lib/data/types';
-	import { kindLabel } from '$lib/format';
-	import { isLinked } from '$lib/drive-url';
-	import { closePreview, currentPreviewId, previewUrl, switchPreview, wideScreen } from '$lib/preview';
+	import { browser } from '$app/env';
+	import * as Sheet from '#lib/components/ui/sheet/index.js';
+	import { sectionLabel } from '#lib/data/accreditation.js';
+	import type { Visit } from '#lib/data/types.js';
+	import { kindLabel } from '#lib/format.js';
+	import { isLinked } from '#lib/drive-url.js';
+	import { closePreview, currentPreviewId, previewUrl, switchPreview, wideScreen } from '#lib/preview.js';
 
 	let { visit, style }: { visit: Visit; style: string } = $props();
 
@@ -46,14 +46,14 @@
 	}
 </script>
 
-<svelte:window onkeydown={onKeydown} />
+<svelte:window onkeydown={onKeydown}></svelte:window>
 
 <Sheet.Root open={found !== null} onOpenChange={(open) => !open && closePreview()}>
 	<Sheet.Content
 		side="right"
 		showCloseButton={false}
 		class="program-scope w-full! max-w-none! gap-0 border-l border-rule bg-salt p-0 md:w-[min(64rem,78vw)]!"
-		{style}
+		style={style}
 	>
 		{#if found}
 			<header class="on-program flex items-center gap-2 bg-program px-3 py-2.5 text-program-contrast sm:px-4">
@@ -111,7 +111,7 @@
 							src={embed}
 							title={`Preview: ${found.document.title}`}
 							class="relative h-full w-full border-0"
-							onload={() => (loading = false)}
+							onload={() => loading = false}
 							allow="autoplay; fullscreen"
 							referrerpolicy="no-referrer"
 						></iframe>

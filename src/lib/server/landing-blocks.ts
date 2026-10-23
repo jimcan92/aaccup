@@ -1,9 +1,9 @@
 import { error, fail, type Actions } from '@sveltejs/kit';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { canManage, dbFail, isHttpUrl, requireStaff, text } from '$lib/server/admin';
-import { cleaners } from '$lib/server/landing-content';
-import type { StaffProfile } from '$lib/server/sso';
-import { blockLabels, sampleContent, type BlockKind } from '$lib/landing';
+import { canManage, dbFail, isHttpUrl, requireStaff, text } from '#lib/server/admin.js';
+import { cleaners } from '#lib/server/landing-content.js';
+import type { StaffProfile } from '#lib/server/sso.js';
+import { blockLabels, sampleContent, type BlockKind } from '#lib/landing.js';
 
 /**
  * Landing blocks for a program page, or for the home page when the program is null.

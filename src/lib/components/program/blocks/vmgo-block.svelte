@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { VmgoContent } from '$lib/landing';
+	import type { VmgoContent } from '#lib/landing.js';
 	import Section from './section.svelte';
 
 	let { content, tone }: { content: VmgoContent; tone: 'paper' | 'salt' } = $props();

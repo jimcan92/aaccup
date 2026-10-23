@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { formatLabel } from '$lib/format';
-	import { cn } from '$lib/utils';
+	import { formatLabel } from '#lib/format.js';
+	import { cn } from '#lib/utils.js';
 
 	let {
 		format,

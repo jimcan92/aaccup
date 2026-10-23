@@ -3,8 +3,8 @@
 	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 	import Search from '@lucide/svelte/icons/search';
 	import { onMount } from 'svelte';
-	import QuickActions, { type QuickGroup } from '$lib/components/site/quick-actions.svelte';
-	import { staffInfo, type MenuProgram } from '$lib/menu-data';
+	import QuickActions, { type QuickGroup } from '#lib/components/site/quick-actions.svelte';
+	import { staffInfo, type MenuProgram } from '#lib/menu-data.js';
 
 	// The home page already has the program list, so nothing is fetched for it.
 	let { programs }: { programs: MenuProgram[] } = $props();

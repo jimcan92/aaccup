@@ -1,8 +1,8 @@
-import { pushState, replaceState } from '$app/navigation';
+import { goto } from '$app/navigation';
 import { page } from '$app/state';
 import { MediaQuery } from 'svelte/reactivity';
 
-export { previewUrl } from '$lib/drive-url';
+export { previewUrl } from '#lib/drive-url.js';
 
 /** Wide screens expand the preview inside the list; narrow screens use a full-screen panel. */
 export const wideScreen = new MediaQuery('min-width: 1024px', false);
@@ -28,17 +28,19 @@ function urlWith(id: string | null): URL {
 export function openPreview(id: string) {
 	// One history entry per preview session: opening another document while one is open
 	// replaces it, so Close or Back always returns to the page without a preview.
-	if (currentPreviewId()) switchPreview(id);
-	else pushState(urlWith(id), { doc: id });
+	if (currentPreviewId()) switchPreview(id); else goto(urlWith(id), { shallow: true, state: { doc: id } });
 }
 
 /** Moving between documents replaces the entry, so one Back still closes the preview. */
 export function switchPreview(id: string) {
-	replaceState(urlWith(id), { doc: id, opened: page.state.opened ?? !!page.state.doc });
+	goto(urlWith(id), {
+		shallow: true,
+		replace: true,
+		state: { doc: id, opened: page.state.opened ?? !!page.state.doc }
+	});
 }
 
 export function closePreview() {
 	// Opened by a click on this page: step back. Opened from a shared link: just drop ?doc.
-	if (page.state.doc && page.state.opened !== false) history.back();
-	else replaceState(urlWith(null), {});
+	if (page.state.doc && page.state.opened !== false) history.back(); else goto(urlWith(null), { shallow: true, replace: true });
 }

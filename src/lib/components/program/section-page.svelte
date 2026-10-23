@@ -2,10 +2,10 @@
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
-	import DocumentRow from '$lib/components/site/document-row.svelte';
-	import { countLinked, documentKinds, dossierPath } from '$lib/data/accreditation';
-	import type { Program, Section, Visit } from '$lib/data/types';
-	import { pad2 } from '$lib/format';
+	import DocumentRow from '#lib/components/site/document-row.svelte';
+	import { countLinked, documentKinds, dossierPath } from '#lib/data/accreditation.js';
+	import type { Program, Section, Visit } from '#lib/data/types.js';
+	import { pad2 } from '#lib/format.js';
 
 	let {
 		program,

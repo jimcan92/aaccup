@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { enhance } from '$lib/admin-enhance';
+	import { enhance } from '#lib/admin-enhance.js';
 	import ArrowDown from '@lucide/svelte/icons/arrow-down';
 	import ArrowUp from '@lucide/svelte/icons/arrow-up';
 	import ImagePlus from '@lucide/svelte/icons/image-plus';
@@ -7,9 +7,9 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import X from '@lucide/svelte/icons/x';
 	import { toast } from 'svelte-sonner';
-	import StatusBadge from '$lib/components/admin/status-badge.svelte';
-	import { imageSrc } from '$lib/image-url';
-	import { blockLabel, type BlockKind, type GalleryItem, type StatItem, type TimelineItem } from '$lib/landing';
+	import StatusBadge from '#lib/components/admin/status-badge.svelte';
+	import { imageSrc } from '#lib/image-url.js';
+	import { blockLabel, type BlockKind, type GalleryItem, type StatItem, type TimelineItem } from '#lib/landing.js';
 	import CtaEditor from './blocks/cta-editor.svelte';
 	import EventsEditor from './blocks/events-editor.svelte';
 	import OrgEditor from './blocks/org-editor.svelte';

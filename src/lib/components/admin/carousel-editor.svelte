@@ -3,7 +3,7 @@
 	import ArrowUp from '@lucide/svelte/icons/arrow-up';
 	import ImagePlus from '@lucide/svelte/icons/image-plus';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import { Input } from '$lib/components/ui/input/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
 
 	type Slide = {
 		src: string;

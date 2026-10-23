@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { MediaContent } from '$lib/landing';
+	import type { MediaContent } from '#lib/landing.js';
 	import ImageField from './image-field.svelte';
 	import { area, field, hint, label } from './ui';
 

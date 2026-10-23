@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { imageSrc } from '$lib/image-url';
-	import type { TestimonialsContent } from '$lib/landing';
+	import { imageSrc } from '#lib/image-url.js';
+	import type { TestimonialsContent } from '#lib/landing.js';
 	import Initials from './initials.svelte';
 	import Section from './section.svelte';
 

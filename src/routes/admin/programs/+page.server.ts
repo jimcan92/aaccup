@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import { fail } from '@sveltejs/kit';
-import { canManage, dbFail, requireStaff, SLUG, text } from '$lib/server/admin';
+import { canManage, dbFail, requireStaff, SLUG, text } from '#lib/server/admin.js';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {

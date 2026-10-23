@@ -1,10 +1,10 @@
 <script lang="ts">
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
-	import DocumentRow from '$lib/components/site/document-row.svelte';
-	import { activeVisit, countLinked, dossierPath, sectionsOf } from '$lib/data/accreditation';
-	import type { Program, Visit } from '$lib/data/types';
-	import { pad2 } from '$lib/format';
+	import DocumentRow from '#lib/components/site/document-row.svelte';
+	import { activeVisit, countLinked, dossierPath, sectionsOf } from '#lib/data/accreditation.js';
+	import type { Program, Visit } from '#lib/data/types.js';
+	import { pad2 } from '#lib/format.js';
 
 	let { program, visit, base }: { program: Program; visit: Visit; base: string } = $props();
 

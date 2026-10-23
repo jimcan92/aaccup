@@ -1,6 +1,6 @@
 <script lang="ts">
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import type { CtaContent } from '$lib/landing';
+	import type { CtaContent } from '#lib/landing.js';
 
 	// A band in the program colour; it stands apart from the white and grey blocks on purpose.
 	let { content }: { content: CtaContent } = $props();

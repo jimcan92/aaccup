@@ -5,7 +5,7 @@ import {
 	getVisit,
 	programs as staticPrograms,
 	visitDocuments
-} from '$lib/data/accreditation';
+} from '#lib/data/accreditation.js';
 import type {
 	DocumentFormat,
 	DocumentKind,
@@ -15,7 +15,7 @@ import type {
 	SectionKind,
 	Visit,
 	VisitStatus
-} from '$lib/data/types';
+} from '#lib/data/types.js';
 import { supabaseAnon } from './sso';
 
 /**

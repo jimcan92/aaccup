@@ -1,6 +1,6 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { RESERVED_SECTION_SLUGS } from '$lib/data/accreditation';
+import { RESERVED_SECTION_SLUGS } from '#lib/data/accreditation.js';
 import {
 	canManage,
 	dbFail,
@@ -12,11 +12,11 @@ import {
 	requireStaff,
 	SLUG,
 	text
-} from '$lib/server/admin';
-import { previewUrl } from '$lib/drive-url';
-import { driveConfigured, folderIdFrom, folderName } from '$lib/server/drive';
-import { summary, syncArea } from '$lib/server/drive-sync';
-import type { StaffProfile } from '$lib/server/sso';
+} from '#lib/server/admin.js';
+import { previewUrl } from '#lib/drive-url.js';
+import { driveConfigured, folderIdFrom, folderName } from '#lib/server/drive.js';
+import { summary, syncArea } from '#lib/server/drive-sync.js';
+import type { StaffProfile } from '#lib/server/sso.js';
 import type { Actions, PageServerLoad } from './$types';
 
 const NOT_DRIVE = ' That link is not a Google Drive file or folder, so it shows as “In preparation” until a Drive link replaces it.';

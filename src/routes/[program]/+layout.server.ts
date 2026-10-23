@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
-import { visitBase } from '$lib/data/accreditation';
-import { site } from '$lib/data/site';
-import { loadDossier } from '$lib/server/dossier';
+import { visitBase } from '#lib/data/accreditation.js';
+import { site } from '#lib/data/site.js';
+import { loadDossier } from '#lib/server/dossier.js';
 import type { LayoutServerLoad } from './$types';
 
 // Rendered on request and cached at the edge, so a publish shows within about a minute.
