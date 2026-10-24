@@ -1,13 +1,20 @@
 <script lang="ts">
-	import type { VmgoContent } from '#lib/landing.js';
+	import type { StatementSize, VmgoContent } from '#lib/landing.js';
 	import Section from './section.svelte';
 
 	let { content, tone }: { content: VmgoContent; tone: 'paper' | 'salt' } = $props();
 
+	// md keeps long statements readable; lg and xl suit a short statement like the vision.
+	const sizeClass: Record<StatementSize, string> = {
+		md: 'text-[clamp(1.15rem,2vw,1.45rem)] leading-snug',
+		lg: 'text-[clamp(1.4rem,2.8vw,2rem)] leading-tight',
+		xl: 'text-[clamp(1.75rem,3.6vw,2.75rem)] leading-[1.1]'
+	};
+
 	const statements = $derived(
 		[
-			{ label: 'Vision', text: content.vision },
-			{ label: 'Mission', text: content.mission }
+			{ label: 'Vision', text: content.vision, size: content.visionSize ?? 'md' },
+			{ label: 'Mission', text: content.mission, size: content.missionSize ?? 'md' }
 		].filter((statement) => statement.text)
 	);
 	const lists = $derived(
@@ -24,7 +31,7 @@
 			{#each statements as statement (statement.label)}
 				<div class="border-t-4 border-program bg-paper p-6 shadow-[0_0_0_1px_var(--color-rule)] sm:p-8">
 					<h3 class="font-mono text-[12px] uppercase tracking-[0.12em] text-program">{statement.label}</h3>
-					<p class="mt-3 text-pretty font-display text-[clamp(1.15rem,2vw,1.45rem)] font-medium leading-snug tracking-[-0.02em] text-ink">{statement.text}</p>
+					<p class="mt-3 text-pretty font-display {sizeClass[statement.size]} font-medium tracking-[-0.02em] text-ink">{statement.text}</p>
 				</div>
 			{/each}
 		</div>

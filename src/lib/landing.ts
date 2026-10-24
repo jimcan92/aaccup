@@ -20,7 +20,18 @@ export type OrgItem = { name: string; role: string; unit?: string; photo?: strin
 export type EventItem = { date: string; end?: string; time?: string; title: string; place?: string; body?: string; href?: string };
 
 export type PeopleContent = { title?: string; items: PersonItem[] };
-export type VmgoContent = { title?: string; vision?: string; mission?: string; goals: string[]; objectives: string[] };
+/** Text size of a vision or mission statement; md is the default. */
+export type StatementSize = 'md' | 'lg' | 'xl';
+export const statementSizes: StatementSize[] = ['md', 'lg', 'xl'];
+export type VmgoContent = {
+	title?: string;
+	vision?: string;
+	mission?: string;
+	visionSize?: StatementSize;
+	missionSize?: StatementSize;
+	goals: string[];
+	objectives: string[];
+};
 /** A photo beside a heading and text; side is where the photo sits on wide screens. */
 export type MediaContent = { title?: string; body?: string; src?: string; alt?: string; side?: 'left' | 'right'; button?: LinkButton };
 export type PartnersContent = { title?: string; items: PartnerItem[] };
