@@ -65,6 +65,9 @@
 
 		<div class="min-w-0">
 			<div class="flex flex-wrap items-center gap-2">
+				{#if document.code}
+					<span class="border border-program/35 px-1.5 py-0.5 font-mono text-[11px] text-program-ink">{document.code}</span>
+				{/if}
 				<h3 class="font-display text-[15px] font-semibold leading-snug tracking-[-0.015em] text-ink">
 					{document.title}
 				</h3>

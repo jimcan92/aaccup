@@ -27,7 +27,7 @@
 </script>
 
 
-<section class="border-b border-program/20 bg-program-soft text-ink" aria-label={`${program.code} visit summary`}>
+<section class="border-b border-program/20 bg-program-soft text-ink print:hidden" aria-label={`${program.code} visit summary`}>
 	{#if compact}
 		<div class="mx-auto flex max-w-[1280px] flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8">
 			<p class="min-w-0 text-[13px] text-ink-soft">

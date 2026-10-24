@@ -110,10 +110,10 @@
 	(moving the page changed the scroll position and made the header jump back and forth).
 	Program pages add a second row on phones and tablets, where the header stays compact.
 -->
-<div class={current ? 'h-28' : 'h-16 lg:h-28'} aria-hidden="true"></div>
+<div class="{current ? 'h-28' : 'h-16 lg:h-28'} print:hidden" aria-hidden="true"></div>
 <header
 	{style}
-	class="fixed inset-x-0 top-0 z-40 border-b transition-[background-color,box-shadow,border-color] duration-500 ease-out {current
+	class="fixed inset-x-0 top-0 z-40 border-b print:hidden transition-[background-color,box-shadow,border-color] duration-500 ease-out {current
 		? `program-scope on-program text-program-contrast ${compact
 				? 'border-black/15 bg-[color-mix(in_srgb,var(--program)_86%,black)] shadow-[0_10px_28px_-18px_rgb(0_0_0/0.6)]'
 				: 'border-transparent bg-program/92 backdrop-blur-sm'}`

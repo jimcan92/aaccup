@@ -11,6 +11,7 @@ import type {
 	DocumentFormat,
 	DocumentKind,
 	DocumentStatus,
+	ComplianceStatus,
 	Program,
 	Section,
 	SectionKind,
@@ -86,6 +87,8 @@ type DossierJson = {
 		short_title: string | null;
 		description: string | null;
 		focus: string | null;
+		chair?: string | null;
+		updated_at?: string | null;
 		documents: {
 			id: string;
 			title: string;
@@ -95,6 +98,15 @@ type DossierJson = {
 			drive_url: string | null;
 			updated: string | null;
 			note: string | null;
+			code?: string | null;
+		}[];
+		recommendations?: {
+			id: string;
+			number: number;
+			recommendation: string;
+			action_taken: string | null;
+			status: ComplianceStatus;
+			evidence_url: string | null;
 		}[];
 	}[];
 };
@@ -164,6 +176,8 @@ function fromJson(json: DossierJson): { program: Program; visit: Visit } {
 		shortTitle: follow(section.short_title || section.title),
 		description: follow(section.description ?? ''),
 		focus: section.focus ? follow(section.focus) : undefined,
+		chair: section.chair || undefined,
+		updatedAt: section.updated_at || undefined,
 		documents: section.documents.map((document) => ({
 			id: document.id,
 			title: follow(document.title),
@@ -172,7 +186,16 @@ function fromJson(json: DossierJson): { program: Program; visit: Visit } {
 			status: document.status,
 			driveUrl: document.drive_url ?? undefined,
 			updated: document.updated ?? undefined,
-			note: document.note ? follow(document.note) : undefined
+			note: document.note ? follow(document.note) : undefined,
+			code: document.code || undefined
+		})),
+		recommendations: (section.recommendations ?? []).map((item) => ({
+			id: item.id,
+			number: item.number,
+			recommendation: follow(item.recommendation),
+			actionTaken: item.action_taken ? follow(item.action_taken) : undefined,
+			status: item.status,
+			evidenceUrl: item.evidence_url || undefined
 		}))
 	}));
 

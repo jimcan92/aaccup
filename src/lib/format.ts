@@ -13,6 +13,14 @@ export function formatDate(iso?: string): string {
 	}).format(date);
 }
 
+/** The calendar day (YYYY-MM-DD) of a timestamp in Philippine time, for formatDate. */
+export function manilaDay(timestamp?: string): string | undefined {
+	if (!timestamp) return undefined;
+	const date = new Date(timestamp);
+	if (Number.isNaN(date.getTime())) return undefined;
+	return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(date);
+}
+
 export function kindLabel(kind: string): string {
 	const labels: Record<string, string> = {
 		recommendation: 'Recommendations',

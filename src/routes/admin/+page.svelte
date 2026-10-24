@@ -89,6 +89,37 @@
 	</ul>
 </section>
 
+<section class="mt-12" aria-labelledby="links-heading">
+	<div class="flex flex-wrap items-end justify-between gap-3">
+		<h2 id="links-heading" class="font-display text-[22px] font-semibold tracking-[-0.03em]">Links to fix</h2>
+		<p class="font-mono text-[12px] text-ink-soft">
+			{data.linkIssues.length ? `${data.linkIssues.length} an evaluator cannot open` : 'Every link opens'}
+		</p>
+	</div>
+	{#if data.linkIssues.length}
+		<ul class="mt-4 border-t border-rule">
+			{#each data.linkIssues.slice(0, 40) as issue (issue.id)}
+				<li>
+					<a href={`/admin/sections/${issue.areaId}`} class="grid gap-1 border-b border-rule px-1 py-3 transition-colors hover:bg-paper sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4 sm:px-3">
+						<span class="min-w-0">
+							<span class="block truncate text-[14px] font-medium text-ink">{issue.title}</span>
+							<span class="block text-[12px] text-ink-soft">{issue.section}</span>
+						</span>
+						<span class="w-fit border border-destructive/40 bg-destructive/5 px-1.5 py-0.5 text-[12px] font-medium text-destructive">{issue.problem}</span>
+					</a>
+				</li>
+			{/each}
+		</ul>
+		{#if data.linkIssues.length > 40}<p class="mt-2 text-[12px] text-ink-soft">And {data.linkIssues.length - 40} more. Fix these first; the list updates on every sync.</p>{/if}
+		<p class="mt-3 text-[12px] leading-relaxed text-ink-soft">
+			In Google Drive, share each file or its folder as <span class="font-medium text-ink">Anyone with the link — Viewer</span>, then sync the section.
+			Sharing status is known only for files pulled in by Drive sync.
+		</p>
+	{:else}
+		<p class="mt-3 border border-dashed border-ink/30 bg-paper p-4 text-[13px] text-ink-soft">No broken, private, or non-Drive links in the active visits.</p>
+	{/if}
+</section>
+
 <section class="mt-12 grid gap-8 lg:grid-cols-[1.4fr_1fr]">
 	<div>
 		<h2 class="font-display text-[22px] font-semibold tracking-[-0.03em]">Home page & site texts</h2>

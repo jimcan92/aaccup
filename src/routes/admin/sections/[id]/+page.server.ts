@@ -23,6 +23,7 @@ const NOT_DRIVE = ' That link is not a Google Drive file or folder, so it shows 
 
 const KINDS = ['recommendation', 'compliance', 'narrative', 'supporting', 'checklist', 'presentation', 'institutional', 'form'];
 const FORMATS = ['pdf', 'docx', 'xlsx', 'pptx', 'folder', 'link'];
+const COMPLIANCE = ['complied', 'partial', 'not_yet'];
 
 type Area = { id: string; program_id: string };
 
@@ -48,6 +49,7 @@ function readDocument(form: FormData) {
 	const format = text(form, 'format') || (driveUrl ? formatFromUrl(driveUrl) : 'pdf');
 	return {
 		title: text(form, 'title'),
+		code: optional(form, 'code')?.slice(0, 40) ?? null,
 		drive_url: driveUrl,
 		kind: KINDS.includes(kind) ? kind : 'supporting',
 		format: FORMATS.includes(format) ? format : 'link',
@@ -63,6 +65,25 @@ function validDocument(values: ReturnType<typeof readDocument>): string | null {
 	if (!values.title) return 'A document needs a title.';
 	if (values.drive_url && !isHttpUrl(values.drive_url)) return 'The link must start with https://';
 	if (values.updated_label && !/^\d{4}-\d{2}-\d{2}$/.test(values.updated_label)) return 'Use the date format YYYY-MM-DD.';
+	return null;
+}
+
+function readRecommendation(form: FormData) {
+	const status = text(form, 'status');
+	return {
+		number: Math.min(Math.max(integer(form, 'number') || 1, 1), 999),
+		recommendation: text(form, 'recommendation').slice(0, 2000),
+		action_taken: optional(form, 'action_taken')?.slice(0, 4000) ?? null,
+		status: COMPLIANCE.includes(status) ? status : 'not_yet',
+		evidence_url: optional(form, 'evidence_url')
+	};
+}
+
+function validRecommendation(values: ReturnType<typeof readRecommendation>): string | null {
+	if (!values.recommendation) return 'Write the recommendation.';
+	if (values.evidence_url && !isHttpUrl(values.evidence_url) && !/^\/(?!\/)/.test(values.evidence_url)) {
+		return 'The evidence link must start with https:// or /.';
+	}
 	return null;
 }
 
@@ -88,10 +109,17 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
 	const { data: documents } = await supabase
 		.from('documents')
-		.select('id, title, kind, format, drive_url, status, updated_label, note, sort_order, workflow, updated_at, source, drive_public, drive_missing')
+		.select('id, title, code, kind, format, drive_url, status, updated_label, note, sort_order, workflow, updated_at, source, drive_public, drive_missing')
 		.eq('area_id', params.id)
 		.order('sort_order')
 		.order('created_at');
+
+	const { data: recommendations } = await supabase
+		.from('recommendations')
+		.select('id, number, recommendation, action_taken, status, evidence_url')
+		.eq('area_id', params.id)
+		.order('sort_order')
+		.order('number');
 
 	const ids = [section.id, ...(documents ?? []).map((document) => document.id)];
 	const { data: history } = await supabase
@@ -104,6 +132,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	return {
 		section,
 		documents: documents ?? [],
+		recommendations: recommendations ?? [],
 		history: (history ?? []).map((row) => ({
 			id: row.id,
 			entity: row.entity,
@@ -133,7 +162,8 @@ export const actions: Actions = {
 			title: text(form, 'title'),
 			short_title: optional(form, 'short_title'),
 			description: optional(form, 'description'),
-			focus: optional(form, 'focus')
+			focus: optional(form, 'focus'),
+			chair: optional(form, 'chair')?.slice(0, 120) ?? null
 		};
 		if (!values.title) return fail(400, { message: 'A section needs a title.' });
 
@@ -294,6 +324,43 @@ export const actions: Actions = {
 			if (rpcError) return dbFail(rpcError);
 		}
 		return { message: `Published ${pending?.length ?? 0} documents.` };
+	},
+
+	addRecommendation: async ({ request, locals, params }) => {
+		const { supabase } = await editableArea(locals, params.id);
+		const values = readRecommendation(await request.formData());
+		const problem = validRecommendation(values);
+		if (problem) return fail(400, { message: problem });
+
+		const { error: insertError } = await supabase
+			.from('recommendations')
+			.insert({ ...values, area_id: params.id, sort_order: values.number });
+		return dbFail(insertError) ?? { message: `Added recommendation ${values.number}.` };
+	},
+
+	saveRecommendation: async ({ request, locals, params }) => {
+		const { supabase } = await editableArea(locals, params.id);
+		const form = await request.formData();
+		const values = readRecommendation(form);
+		const problem = validRecommendation(values);
+		if (problem) return fail(400, { message: problem });
+
+		const { error: updateError } = await supabase
+			.from('recommendations')
+			.update({ ...values, sort_order: values.number })
+			.eq('id', text(form, 'id'))
+			.eq('area_id', params.id);
+		return dbFail(updateError) ?? { message: `Saved recommendation ${values.number}.` };
+	},
+
+	deleteRecommendation: async ({ request, locals, params }) => {
+		const { supabase } = requireStaff(locals, ['admin', 'focal']);
+		const { error: deleteError } = await supabase
+			.from('recommendations')
+			.delete()
+			.eq('id', text(await request.formData(), 'id'))
+			.eq('area_id', params.id);
+		return dbFail(deleteError) ?? { message: 'Recommendation deleted.' };
 	},
 
 	deleteDocument: async ({ request, locals, params }) => {

@@ -16,7 +16,7 @@
 
 <footer
 	class={cn(
-		'mt-auto',
+		'mt-auto print:hidden',
 		themed ? 'on-program bg-program-ink text-program-contrast' : 'border-t border-rule bg-paper text-ink'
 	)}
 >
