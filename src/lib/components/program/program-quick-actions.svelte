@@ -5,6 +5,7 @@
 	import LayoutDashboard from '@lucide/svelte/icons/layout-dashboard';
 	import LayoutGrid from '@lucide/svelte/icons/layout-grid';
 	import PencilLine from '@lucide/svelte/icons/pencil-line';
+	import Printer from '@lucide/svelte/icons/printer';
 	import Search from '@lucide/svelte/icons/search';
 	import Settings2 from '@lucide/svelte/icons/settings-2';
 	import { onMount } from 'svelte';
@@ -32,6 +33,8 @@
 		if (route !== '/[program]') here.items.push({ label: `${program.code} home`, href: `/${program.slug}`, icon: House });
 		if (page.url.pathname !== dossier) here.items.push({ label: 'Open the documents', href: dossier, icon: FolderOpen });
 		if (!route.endsWith('/documents')) here.items.push({ label: 'Search documents', href: `${base}/documents`, icon: Search });
+		// The printable index with QR codes exists for the current visit only.
+		if (base === `/${program.slug}` && !route.endsWith('/print')) here.items.push({ label: 'Print evidence index', href: `${base}/print`, icon: Printer });
 		if (staff.programId) {
 			here.items.push({ label: `Edit ${program.code} page`, href: `/admin/programs/${staff.programId}/landing`, icon: PencilLine });
 			here.items.push({ label: `Manage ${program.code}`, href: `/admin/programs/${staff.programId}`, icon: Settings2 });

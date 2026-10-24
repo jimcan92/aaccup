@@ -3,9 +3,10 @@
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import DocumentRow from '#lib/components/site/document-row.svelte';
+	import RecommendationMatrix from './recommendation-matrix.svelte';
 	import { countLinked, documentKinds, dossierPath } from '#lib/data/accreditation.js';
 	import type { Program, Section, Visit } from '#lib/data/types.js';
-	import { pad2 } from '#lib/format.js';
+	import { formatDate, manilaDay, pad2 } from '#lib/format.js';
 
 	let {
 		program,
@@ -25,6 +26,7 @@
 
 	const linked = $derived(countLinked(section.documents));
 	const pending = $derived(section.documents.length - linked);
+	const updated = $derived(formatDate(manilaDay(section.updatedAt)));
 
 	const groupName = $derived(
 		section.kind === 'common'
@@ -92,6 +94,16 @@
 			<p class="mt-3 max-w-2xl text-pretty text-[14px] leading-relaxed text-ink-soft sm:text-[15px]">
 				{section.description}
 			</p>
+			{#if section.chair || updated}
+				<dl class="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-[12px]">
+					{#if section.chair}
+						<div class="flex gap-1.5"><dt class="font-mono text-ink-soft">Area chair</dt><dd class="font-medium text-ink">{section.chair}</dd></div>
+					{/if}
+					{#if updated}
+						<div class="flex gap-1.5"><dt class="font-mono text-ink-soft">Last updated</dt><dd class="font-medium text-ink">{updated}</dd></div>
+					{/if}
+				</dl>
+			{/if}
 		</div>
 	</header>
 
@@ -107,6 +119,10 @@
 			<p class="font-mono text-[12px] text-program-ink">What the evaluator will look for</p>
 			<p class="mt-2 max-w-2xl text-[14px] leading-relaxed text-ink">{section.focus}</p>
 		</div>
+	{/if}
+
+	{#if section.recommendations?.length}
+		<RecommendationMatrix items={section.recommendations} />
 	{/if}
 
 	{#if section.documents.length > 0 && pending === section.documents.length}

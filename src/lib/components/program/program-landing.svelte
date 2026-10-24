@@ -41,7 +41,7 @@
 
 <!-- Hero -->
 <!-- Fills the first screen below the header's tall size (two rows on phones and tablets, one on desktop). -->
-<section class="on-program relative isolate flex min-h-[calc(100svh-10rem)] flex-col justify-center overflow-hidden bg-program text-program-contrast lg:min-h-[calc(100svh-7rem)]" aria-labelledby="program-title">
+<section class="on-program relative isolate flex min-h-[calc(100svh-7rem)] flex-col justify-center overflow-hidden bg-program text-program-contrast lg:min-h-[calc(100svh-7rem)]" aria-labelledby="program-title">
 	{#if banner}
 		<img src={imageSrc(banner.src)} alt={banner.alt} class="absolute inset-0 -z-20 h-full w-full object-cover" fetchpriority="high" />
 		<div

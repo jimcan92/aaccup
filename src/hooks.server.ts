@@ -39,7 +39,15 @@ export const handle: Handle = async ({ event, resolve }) => {
 		if (!event.locals.staff) clearStaffSession(event.cookies);
 	}
 
-	return resolve(event, {
+	const response = await resolve(event, {
 		filterSerializedResponseHeaders: (name) => name === 'content-range'
 	});
+
+	// Only this site may frame its pages (the admin previews do); the rest are browser hardening.
+	response.headers.set('X-Frame-Options', 'SAMEORIGIN');
+	response.headers.set('Content-Security-Policy', "frame-ancestors 'self'");
+	response.headers.set('X-Content-Type-Options', 'nosniff');
+	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+	response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+	return response;
 };

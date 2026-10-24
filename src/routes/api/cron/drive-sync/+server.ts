@@ -1,4 +1,4 @@
-import { error, json } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { CRON_SECRET } from '$app/env/private';
 import { driveConfigured } from '#lib/server/drive.js';
 import { syncAllVisits } from '#lib/server/drive-sync.js';
@@ -13,10 +13,10 @@ export const GET: RequestHandler = async ({ request }) => {
 	if (!CRON_SECRET || request.headers.get('authorization') !== `Bearer ${CRON_SECRET}`) {
 		error(401, 'Unauthorized');
 	}
-	if (!driveConfigured()) return json({ skipped: 'GOOGLE_SERVICE_ACCOUNT_JSON is not set' });
+	if (!driveConfigured()) return Response.json({ skipped: 'GOOGLE_SERVICE_ACCOUNT_JSON is not set' });
 
 	const results = await syncAllVisits();
-	return json({
+	return Response.json({
 		visits: Object.keys(results).length,
 		added: Object.values(results).reduce((sum, r) => sum + r.added, 0),
 		missing: Object.values(results).reduce((sum, r) => sum + r.missing, 0),

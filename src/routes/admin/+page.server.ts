@@ -1,4 +1,5 @@
 import { ACTIVE_CONTENT_KEYS } from '#lib/data/site.js';
+import { previewUrl } from '#lib/drive-url.js';
 import type { PageServerLoad } from './$types';
 
 export const prerender = false;
@@ -49,8 +50,43 @@ export const load: PageServerLoad = async ({ locals }) => {
 		};
 	});
 
+	// Links an evaluator could not open: not shared publicly, gone from the Drive folder, or not a
+	// Drive link at all (those show as "In preparation"). Active visits only; RLS limits area chairs.
+	type LinkRow = {
+		id: string;
+		title: string;
+		drive_url: string | null;
+		drive_public: boolean | null;
+		drive_missing: boolean;
+		area: { id: string; title: string; short_title: string | null; visit: { program: { code: string } } };
+	};
+	const { data: linkRows } = locals.supabase
+		? await locals.supabase
+				.from('documents')
+				.select('id, title, drive_url, drive_public, drive_missing, area:areas!inner(id, title, short_title, visit:visits!inner(status, program:programs(code)))')
+				.eq('area.visit.status', 'active')
+				.not('drive_url', 'is', null)
+		: { data: [] };
+
+	const linkIssues = ((linkRows ?? []) as unknown as LinkRow[])
+		.map((row) => ({
+			id: row.id,
+			title: row.title,
+			areaId: row.area.id,
+			section: `${row.area.visit.program.code} · ${row.area.short_title || row.area.title}`,
+			problem: row.drive_missing
+				? 'Missing in Drive'
+				: row.drive_public === false
+					? 'Not shared publicly'
+					: !previewUrl(row.drive_url ?? undefined)
+						? 'Not a Drive link'
+						: null
+		}))
+		.filter((row) => row.problem !== null);
+
 	return {
 		blocks: blocks ?? [],
-		programs: programSummaries
+		programs: programSummaries,
+		linkIssues
 	};
 };

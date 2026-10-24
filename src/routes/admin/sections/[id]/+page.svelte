@@ -13,6 +13,7 @@
 	import * as Dialog from '#lib/components/ui/dialog/index.js';
 	import { previewUrl } from '#lib/drive-url.js';
 	import { formatDate, kindLabel } from '#lib/format.js';
+	import { complianceLabels } from '#lib/components/program/recommendation-matrix.svelte';
 	import { fresh } from '#lib/fresh-link.js';
 	import type { PageProps } from './$types';
 
@@ -33,6 +34,9 @@
 	let editing = $state<string | null>(null);
 	let adding = $state<'one' | 'bulk' | null>(null);
 	let removing = $state<{ id: string; title: string } | null>(null);
+	let editingRec = $state<string | null>(null);
+	let addingRec = $state(false);
+	let removingRec = $state<{ id: string; number: number } | null>(null);
 	let removingSection = $state(false);
 	let bulk = $state('');
 	const bulkCount = $derived(bulk.split(/\r?\n/).filter((line) => /https?:\/\//.test(line)).length);
@@ -45,6 +49,9 @@
 		editing = null;
 		adding = null;
 		removing = null;
+		editingRec = null;
+		addingRec = false;
+		removingRec = null;
 	};
 </script>
 
@@ -52,8 +59,29 @@
 	<title>{data.section.title} · {program.code} · AACCUP Desk</title>
 </svelte:head>
 
+{#snippet recommendationFields(item?: (typeof data.recommendations)[number])}
+	<label class="grid gap-1.5 text-[13px] font-medium">No.<input name="number" type="number" min="1" max="999" required value={item?.number ?? data.recommendations.length + 1} class={field} /></label>
+	<label class="grid gap-1.5 text-[13px] font-medium">
+		Status
+		<select name="status" class={field}>
+			{#each Object.entries(complianceLabels) as [value, label] (value)}<option {value} selected={(item?.status ?? 'not_yet') === value}>{label}</option>{/each}
+		</select>
+	</label>
+	<label class="grid gap-1.5 text-[13px] font-medium sm:col-span-2">Recommendation<textarea name="recommendation" rows="3" required class={area}>{item?.recommendation ?? ''}</textarea></label>
+	<label class="grid gap-1.5 text-[13px] font-medium sm:col-span-2">Action taken<textarea name="action_taken" rows="3" class={area}>{item?.action_taken ?? ''}</textarea></label>
+	<label class="grid gap-1.5 text-[13px] font-medium sm:col-span-2">
+		Evidence link (optional)
+		<input name="evidence_url" placeholder="https://drive.google.com/… or /bsie/area-3" value={item?.evidence_url ?? ''} class="{field} font-mono text-[13px]" />
+	</label>
+{/snippet}
+
 {#snippet documentFields(document?: (typeof data.documents)[number])}
 	<label class="grid gap-1.5 text-[13px] font-medium sm:col-span-2">Title<input name="title" required value={document?.title ?? ''} class={field} /></label>
+	<label class="grid gap-1.5 text-[13px] font-medium sm:col-span-2">
+		Evidence code (optional)
+		<input name="code" maxlength="40" placeholder="A3-P1-S2" value={document?.code ?? ''} class="{field} font-mono text-[13px]" />
+		<span class="text-[12px] font-normal text-ink-soft">The code from the survey instrument, so evaluators can match the file to the indicator.</span>
+	</label>
 	<label class="grid gap-1.5 text-[13px] font-medium sm:col-span-2">
 		Drive link
 		<input name="drive_url" type="url" placeholder="https://drive.google.com/…" value={document?.drive_url ?? ''} class="{field} font-mono text-[13px]" />
@@ -164,7 +192,9 @@
 					<div class="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-3 sm:grid-cols-[2.75rem_minmax(0,1fr)_auto] sm:items-center">
 						<DocumentFormat format={document.format} />
 						<div class="min-w-0">
-							<p class="text-[14px] font-medium text-ink">{document.title}</p>
+							<p class="text-[14px] font-medium text-ink">
+								{#if document.code}<span class="mr-1.5 border border-ink/20 px-1 font-mono text-[11px] text-ink-soft">{document.code}</span>{/if}{document.title}
+							</p>
 							<p class="mt-0.5 flex flex-wrap items-center gap-x-2 text-[12px] text-ink-soft">
 								<span>{kindLabel(document.kind)}</span>
 								{#if document.drive_url}
@@ -225,6 +255,70 @@
 				<li class="py-8 text-[14px] text-ink-soft">No documents yet. Add one, or paste a list of Drive links.</li>
 			{/each}
 		</ul>
+
+		{#if data.section.kind === 'previous'}
+			<section class="mt-12" aria-labelledby="recommendations-heading">
+				<div class="flex flex-wrap items-end justify-between gap-3 border-b border-ink/20 pb-2">
+					<div>
+						<h2 id="recommendations-heading" class="font-display text-[20px] font-semibold tracking-[-0.03em]">Recommendations</h2>
+						<p class="mt-0.5 text-[12px] text-ink-soft">The last survey’s recommendations and what was done. Shown on the public page while the section is published.</p>
+					</div>
+					{#if data.canEdit}
+						<button type="button" onclick={() => (addingRec = !addingRec)} class="inline-flex h-9 items-center gap-1.5 border border-rule bg-paper px-3 text-[13px] font-medium hover:border-ink/30" aria-expanded={addingRec}>
+							<Plus class="size-4" /> Add recommendation
+						</button>
+					{/if}
+				</div>
+
+				{#if addingRec}
+					<form method="POST" action="?/addRecommendation" use:enhance={close} class="mt-4 grid gap-4 border border-rule bg-paper p-5 sm:grid-cols-2">
+						{@render recommendationFields()}
+						<button class="h-11 bg-ink px-5 text-[14px] font-medium text-paper hover:bg-ink-soft sm:w-fit">Add recommendation</button>
+					</form>
+				{/if}
+
+				<ul>
+					{#each data.recommendations as item (item.id)}
+						<li class="border-b border-rule py-3">
+							<div class="grid grid-cols-[2rem_minmax(0,1fr)_auto] gap-3">
+								<span class="font-display text-[16px] font-semibold">{item.number}</span>
+								<div class="min-w-0">
+									<p class="text-[14px] leading-relaxed text-ink">{item.recommendation}</p>
+									<p class="mt-1 flex flex-wrap items-center gap-x-2 text-[12px] text-ink-soft">
+										<span class="border border-ink/20 px-1">{complianceLabels[item.status as keyof typeof complianceLabels] ?? item.status}</span>
+										{#if item.action_taken}<span class="line-clamp-1">{item.action_taken}</span>{:else}<span>No action written yet</span>{/if}
+										{#if item.evidence_url}
+											<a href={item.evidence_url} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 underline underline-offset-2 hover:text-ink">Evidence <ArrowUpRight class="size-3" /></a>
+										{/if}
+									</p>
+								</div>
+								<div class="flex items-start gap-1">
+									{#if data.canEdit}
+										<button type="button" onclick={() => (editingRec = editingRec === item.id ? null : item.id)} class="grid size-9 place-items-center hover:bg-paper" aria-label={`Edit recommendation ${item.number}`} aria-expanded={editingRec === item.id}>
+											<Pencil class="size-4" />
+										</button>
+									{/if}
+									{#if data.canManage}
+										<button type="button" onclick={() => (removingRec = { id: item.id, number: item.number })} class="grid size-9 place-items-center text-ink-soft hover:bg-destructive/10 hover:text-destructive" aria-label={`Delete recommendation ${item.number}`}>
+											<Trash2 class="size-4" />
+										</button>
+									{/if}
+								</div>
+							</div>
+							{#if editingRec === item.id}
+								<form method="POST" action="?/saveRecommendation" use:enhance={close} class="mt-3 grid gap-4 bg-paper p-4 sm:grid-cols-2">
+									<input type="hidden" name="id" value={item.id} />
+									{@render recommendationFields(item)}
+									<button class="h-11 bg-ink px-5 text-[14px] font-medium text-paper hover:bg-ink-soft sm:w-fit">Save</button>
+								</form>
+							{/if}
+						</li>
+					{:else}
+						<li class="py-6 text-[14px] text-ink-soft">No recommendations yet. Add each one from the last survey report, with the action taken.</li>
+					{/each}
+				</ul>
+			</section>
+		{/if}
 	</section>
 
 	<aside class="space-y-8">
@@ -233,6 +327,7 @@
 				<legend class="mb-3 font-display text-[20px] font-semibold tracking-[-0.03em]">Section details</legend>
 				<label class="grid gap-1.5 text-[13px] font-medium sm:col-span-2">Title<input name="title" required value={data.section.title} class={field} /></label>
 				<label class="grid gap-1.5 text-[13px] font-medium sm:col-span-2">Short title<input name="short_title" value={data.section.short_title ?? ''} class={field} /></label>
+				<label class="grid gap-1.5 text-[13px] font-medium sm:col-span-2">Area chair<input name="chair" maxlength="120" placeholder="Name shown on the public page" value={data.section.chair ?? ''} class={field} /></label>
 				<label class="grid gap-1.5 text-[13px] font-medium">URL slug<input name="slug" value={data.section.slug} class="{field} font-mono" /></label>
 				<label class="grid gap-1.5 text-[13px] font-medium">Number<input name="number" type="number" value={data.section.number ?? ''} class={field} /></label>
 				<label class="grid gap-1.5 text-[13px] font-medium">Sort order<input name="sort_order" type="number" value={data.section.sort_order} class={field} /></label>
@@ -306,6 +401,18 @@
 		<form method="POST" action="?/deleteDocument" use:enhance={close} class="mt-2 flex justify-end gap-2">
 			<input type="hidden" name="id" value={removing?.id ?? ''} />
 			<button type="button" onclick={() => (removing = null)} class="h-10 border border-rule px-4 text-[14px]">Keep</button>
+			<button class="h-10 bg-destructive px-4 text-[14px] font-medium text-white">Delete</button>
+		</form>
+	</Dialog.Content>
+</Dialog.Root>
+
+<Dialog.Root open={removingRec !== null} onOpenChange={(open) => !open && (removingRec = null)}>
+	<Dialog.Content class="max-w-md rounded-none">
+		<Dialog.Title class="font-display text-[20px] font-semibold tracking-[-0.03em]">Delete recommendation {removingRec?.number}?</Dialog.Title>
+		<Dialog.Description class="text-[14px] leading-relaxed text-ink-soft">It is removed from this section and from the public page.</Dialog.Description>
+		<form method="POST" action="?/deleteRecommendation" use:enhance={close} class="mt-2 flex justify-end gap-2">
+			<input type="hidden" name="id" value={removingRec?.id ?? ''} />
+			<button type="button" onclick={() => (removingRec = null)} class="h-10 border border-rule px-4 text-[14px]">Keep</button>
 			<button class="h-10 bg-destructive px-4 text-[14px] font-medium text-white">Delete</button>
 		</form>
 	</Dialog.Content>

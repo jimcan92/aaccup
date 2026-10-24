@@ -6,10 +6,12 @@ import {
 	programs as staticPrograms,
 	visitDocuments
 } from '#lib/data/accreditation.js';
+import { followCodes } from './program-code.js';
 import type {
 	DocumentFormat,
 	DocumentKind,
 	DocumentStatus,
+	ComplianceStatus,
 	Program,
 	Section,
 	SectionKind,
@@ -85,6 +87,8 @@ type DossierJson = {
 		short_title: string | null;
 		description: string | null;
 		focus: string | null;
+		chair?: string | null;
+		updated_at?: string | null;
 		documents: {
 			id: string;
 			title: string;
@@ -94,6 +98,15 @@ type DossierJson = {
 			drive_url: string | null;
 			updated: string | null;
 			note: string | null;
+			code?: string | null;
+		}[];
+		recommendations?: {
+			id: string;
+			number: number;
+			recommendation: string;
+			action_taken: string | null;
+			status: ComplianceStatus;
+			evidence_url: string | null;
 		}[];
 	}[];
 };
@@ -153,23 +166,36 @@ export async function loadProgramCards(): Promise<ProgramCard[]> {
 }
 
 function fromJson(json: DossierJson): { program: Program; visit: Visit } {
+	// The program code in section and document text follows the saved code ("BSFI" reads "BSFi").
+	const follow = (value: string) => followCodes(value, [json.program.code]);
 	const sections: Section[] = json.sections.map((section) => ({
 		slug: section.slug,
 		kind: section.kind,
 		number: section.number ?? undefined,
-		title: section.title,
-		shortTitle: section.short_title || section.title,
-		description: section.description ?? '',
-		focus: section.focus ?? undefined,
+		title: follow(section.title),
+		shortTitle: follow(section.short_title || section.title),
+		description: follow(section.description ?? ''),
+		focus: section.focus ? follow(section.focus) : undefined,
+		chair: section.chair || undefined,
+		updatedAt: section.updated_at || undefined,
 		documents: section.documents.map((document) => ({
 			id: document.id,
-			title: document.title,
+			title: follow(document.title),
 			kind: document.kind,
 			format: document.format,
 			status: document.status,
 			driveUrl: document.drive_url ?? undefined,
 			updated: document.updated ?? undefined,
-			note: document.note ?? undefined
+			note: document.note ? follow(document.note) : undefined,
+			code: document.code || undefined
+		})),
+		recommendations: (section.recommendations ?? []).map((item) => ({
+			id: item.id,
+			number: item.number,
+			recommendation: follow(item.recommendation),
+			actionTaken: item.action_taken ? follow(item.action_taken) : undefined,
+			status: item.status,
+			evidenceUrl: item.evidence_url || undefined
 		}))
 	}));
 

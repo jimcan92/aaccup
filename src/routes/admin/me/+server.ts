@@ -1,4 +1,3 @@
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 /**
@@ -17,5 +16,5 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		programId = data?.id ?? null;
 	}
 
-	return json({ staff, programId }, { headers: { 'cache-control': 'private, no-store' } });
+	return Response.json({ staff, programId }, { headers: { 'cache-control': 'private, no-store' } });
 };

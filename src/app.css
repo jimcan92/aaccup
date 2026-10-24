@@ -292,6 +292,15 @@ html:not(.admin-light) section.bg-salt,
 	background-size: 40px 40px;
 }
 
+/* Paper gets plain white, not the graph-paper lines. */
+@media print {
+	html:not(.admin-light) section.bg-salt,
+	.grid-texture {
+		background-image: none;
+		background-color: #fff;
+	}
+}
+
 /* The home page's first screen: a slightly stronger grid that fades out from the top. */
 .grid-hero {
 	position: relative;

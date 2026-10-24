@@ -22,10 +22,11 @@
 	let copied = $state(false);
 
 	// These forms post to the visit and section pages' actions; the enhance wrapper shows
-	// their message as a toast and the spinner on the button.
+	// their message as a toast and the spinner on the button. navigate: false keeps the admin
+	// on this page (SvelteKit 3 otherwise moves to the page that owns the action).
 	const submit: SubmitFunction = () => async ({ result, update }) => {
 		if (result.type === 'success') editing = null;
-		await update({ reset: false });
+		await update({ reset: false, navigate: false });
 	};
 
 	async function copyTree() {

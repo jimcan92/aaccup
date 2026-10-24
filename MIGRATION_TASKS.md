@@ -32,8 +32,8 @@ Create a mutable copy with `new URL(page.url.href)`, mutate that copy, and use i
 
 #### Files to review
 
-- [ ] `src/lib/preview.ts`
-- [ ] `src/routes/admin/+layout.svelte`
+- [x] `src/lib/preview.ts`
+- [x] `src/routes/admin/+layout.svelte`
 
 ### Review `goto` destinations
 
@@ -49,7 +49,7 @@ Confirm each destination is an internal route. Use `window.location.href` for ex
 
 #### Files to review
 
-- [ ] `src/lib/preview.ts`
+- [x] `src/lib/preview.ts`
 
 ### Replace `invalidateAll` with `refreshAll`
 
@@ -65,7 +65,7 @@ Replace `invalidateAll()` with `refreshAll()`. Note that `refreshAll()` will kee
 
 #### Files to review
 
-- [ ] `src/lib/preview.ts`
+- [x] `src/lib/preview.ts`
 
 ### Review enhanced forms with explicit actions
 
@@ -81,15 +81,15 @@ Determine whether each action resolves to another page and confirm navigation is
 
 #### Files to review
 
-- [ ] `src/lib/components/admin/drive-setup.svelte`
-- [ ] `src/lib/components/admin/landing-block-editor.svelte`
-- [ ] `src/lib/components/admin/landing-page-editor.svelte`
-- [ ] `src/lib/components/admin/site-texts-card.svelte`
-- [ ] `src/routes/admin/people/+page.svelte`
-- [ ] `src/routes/admin/programs/+page.svelte`
-- [ ] `src/routes/admin/programs/[id]/+page.svelte`
-- [ ] `src/routes/admin/sections/[id]/+page.svelte`
-- [ ] `src/routes/admin/visits/[id]/+page.svelte`
+- [x] `src/lib/components/admin/drive-setup.svelte`
+- [x] `src/lib/components/admin/landing-block-editor.svelte`
+- [x] `src/lib/components/admin/landing-page-editor.svelte`
+- [x] `src/lib/components/admin/site-texts-card.svelte`
+- [x] `src/routes/admin/people/+page.svelte`
+- [x] `src/routes/admin/programs/+page.svelte`
+- [x] `src/routes/admin/programs/[id]/+page.svelte`
+- [x] `src/routes/admin/sections/[id]/+page.svelte`
+- [x] `src/routes/admin/visits/[id]/+page.svelte`
 
 ### CORS for static assets in development is handled by Vite
 
@@ -117,22 +117,22 @@ Use `Response.json(...)` and `new Response(text)` instead.
 
 #### Files to review
 
-- [ ] `src/lib/server/admin.ts`
-- [ ] `src/lib/server/landing-blocks.ts`
-- [ ] `src/routes/admin/content/[id]/autosave/+server.ts`
-- [ ] `src/routes/admin/me/+server.ts`
-- [ ] `src/routes/admin/programs/+page.server.ts`
-- [ ] `src/routes/admin/programs/[id]/+page.server.ts`
-- [ ] `src/routes/admin/sections/[id]/+page.server.ts`
-- [ ] `src/routes/admin/upload/+server.ts`
-- [ ] `src/routes/admin/visits/[id]/+page.server.ts`
-- [ ] `src/routes/api/cron/drive-sync/+server.ts`
-- [ ] `src/routes/api/programs/+server.ts`
+- [x] `src/lib/server/admin.ts`
+- [x] `src/lib/server/landing-blocks.ts`
+- [x] `src/routes/admin/content/[id]/autosave/+server.ts`
+- [x] `src/routes/admin/me/+server.ts`
+- [x] `src/routes/admin/programs/+page.server.ts`
+- [x] `src/routes/admin/programs/[id]/+page.server.ts`
+- [x] `src/routes/admin/sections/[id]/+page.server.ts`
+- [x] `src/routes/admin/upload/+server.ts`
+- [x] `src/routes/admin/visits/[id]/+page.server.ts`
+- [x] `src/routes/api/cron/drive-sync/+server.ts`
+- [x] `src/routes/api/programs/+server.ts`
 
 ## Final verification
 
-- [ ] Review every migration task and ignore any irrelevant findings.
-- [ ] Resolve remaining `@migration-task` comments.
-- [ ] Run the project's type checker and tests.
-- [ ] Build the project successfully.
+- [x] Review every migration task and ignore any irrelevant findings.
+- [x] Resolve remaining `@migration-task` comments.
+- [x] Run the project's type checker and tests.
+- [x] Build the project successfully.
 - [ ] Delete this file when all migration work is complete.

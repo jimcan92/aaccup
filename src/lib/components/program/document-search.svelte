@@ -68,6 +68,7 @@
 
 			const haystack = [
 				document.title,
+				document.code,
 				document.note,
 				document.section.title,
 				document.section.shortTitle,

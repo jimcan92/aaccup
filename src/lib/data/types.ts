@@ -21,6 +21,21 @@ export interface EvidenceDocument {
 	driveUrl?: string;
 	updated?: string;
 	note?: string;
+	/** Evidence code from the survey instrument, e.g. "A3-P1-S2". */
+	code?: string;
+}
+
+/** How far a previous-survey recommendation is complied with. */
+export type ComplianceStatus = 'complied' | 'partial' | 'not_yet';
+
+/** One recommendation of the previous survey and what the program did about it. */
+export interface Recommendation {
+	id: string;
+	number: number;
+	recommendation: string;
+	actionTaken?: string;
+	status: ComplianceStatus;
+	evidenceUrl?: string;
 }
 
 /**
@@ -40,7 +55,12 @@ export interface Section {
 	description: string;
 	/** What the evaluator will look for. */
 	focus?: string;
+	/** Name of the area chair responsible for the section. */
+	chair?: string;
+	/** ISO time of the latest change to the section or its documents. */
+	updatedAt?: string;
 	documents: EvidenceDocument[];
+	recommendations?: Recommendation[];
 }
 
 export type VisitStatus = 'active' | 'archived';
