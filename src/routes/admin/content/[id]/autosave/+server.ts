@@ -1,16 +1,15 @@
-import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request, locals, params }) => {
 	if (!locals.supabase) {
-		return json({ error: 'Supabase is not configured.' }, { status: 500 });
+		return Response.json({ error: 'Supabase is not configured.' }, { status: 500 });
 	}
 
 	const payload = await request.json().catch(() => null);
 	const value = typeof payload?.value === 'string' ? payload.value : null;
 
 	if (value === null) {
-		return json({ error: 'No value received.' }, { status: 400 });
+		return Response.json({ error: 'No value received.' }, { status: 400 });
 	}
 
 	const { data: block, error: readError } = await locals.supabase
@@ -20,18 +19,18 @@ export const POST: RequestHandler = async ({ request, locals, params }) => {
 		.maybeSingle();
 
 	if (readError) {
-		return json({ error: readError.message }, { status: 400 });
+		return Response.json({ error: readError.message }, { status: 400 });
 	}
 
 	if (!block) {
-		return json({ error: 'Content block not found.' }, { status: 404 });
+		return Response.json({ error: 'Content block not found.' }, { status: 404 });
 	}
 
 	if (block.type === 'json') {
 		try {
 			JSON.parse(value);
 		} catch {
-			return json({ error: 'Invalid JSON.' }, { status: 400 });
+			return Response.json({ error: 'Invalid JSON.' }, { status: 400 });
 		}
 	}
 
@@ -41,8 +40,8 @@ export const POST: RequestHandler = async ({ request, locals, params }) => {
 		.eq('id', params.id);
 
 	if (error) {
-		return json({ error: error.message }, { status: 400 });
+		return Response.json({ error: error.message }, { status: 400 });
 	}
 
-	return json({ ok: true, savedAt: new Date().toISOString() });
+	return Response.json({ ok: true, savedAt: new Date().toISOString() });
 };

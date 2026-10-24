@@ -7,6 +7,18 @@ export function replaceCode(value: string, oldCode: string, newCode: string): st
 }
 
 /**
+ * Write each program code in a text exactly as the program saved it, whatever case it was typed
+ * in: with the code saved as "BSFi", "BSFI" and "bsfi" both read "BSFi". Whole words only.
+ */
+export function followCodes(value: string, codes: string[]): string {
+	return codes.reduce((text, code) => {
+		if (!code) return text;
+		const escaped = code.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+		return text.replace(new RegExp(`(?<![A-Za-z0-9])${escaped}(?![A-Za-z0-9])`, 'gi'), code);
+	}, value);
+}
+
+/**
  * After a program's code changes, rename the old code in that program's own document titles
  * and section descriptions (seeded rows read "BSFI — AACCUP certification"). Other programs
  * and other text are not touched.

@@ -19,7 +19,7 @@ export function currentPreviewId(): string | null {
 }
 
 function urlWith(id: string | null): URL {
-	const url = new URL(page.url);
+	const url = new URL(page.url.href);
 	if (id) url.searchParams.set('doc', id);
 	else url.searchParams.delete('doc');
 	return url;
