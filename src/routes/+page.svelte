@@ -41,7 +41,7 @@
 {/if}
 
 <!-- The first screen: heading and the program cards fill the viewport; the blocks start below it. -->
-<main id="main" class="grid-hero flex min-h-[calc(100svh-7rem)] flex-col bg-salt">
+<main id="main" class="grid-hero flex min-h-[calc(100svh-4rem)] lg:min-h-[calc(100svh-7rem)] flex-col bg-salt">
   <div
     class="mx-auto flex w-full max-w-[1280px] flex-1 flex-col px-5 pb-8 pt-10 sm:px-8 lg:pt-14"
   >

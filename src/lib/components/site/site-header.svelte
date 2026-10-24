@@ -17,7 +17,8 @@
 	/**
 	 * The one public header, in the root layout. On program pages (their data has a program, visit
 	 * and base) it shows the program in its colour with search, the visit selector and, on smaller
-	 * screens, the sections drawer; elsewhere the campus header. Both start tall and shrink on scroll.
+	 * screens, the sections drawer; elsewhere the campus header. On wide screens both start tall and shrink
+	 * on scroll; phones and tablets keep the compact size, since a tall header there eats the first screen.
 	 */
 	type ProgramData = { program?: Program; visit?: Visit; base?: string };
 	const current = $derived.by(() => {
@@ -107,9 +108,9 @@
 <!--
 	The header is fixed over a spacer that keeps its tall size, so shrinking it never moves the page
 	(moving the page changed the scroll position and made the header jump back and forth).
-	Program pages add a second row on phones and tablets.
+	Program pages add a second row on phones and tablets, where the header stays compact.
 -->
-<div class={current ? 'h-40 lg:h-28' : 'h-28'} aria-hidden="true"></div>
+<div class={current ? 'h-28' : 'h-16 lg:h-28'} aria-hidden="true"></div>
 <header
 	{style}
 	class="fixed inset-x-0 top-0 z-40 border-b transition-[background-color,box-shadow,border-color] duration-500 ease-out {current
@@ -120,9 +121,9 @@
 				? 'border-rule bg-[color-mix(in_srgb,var(--salt)_90%,var(--ink))]/95 shadow-[0_8px_24px_-18px_rgb(0_0_0/0.45)] backdrop-blur'
 				: 'border-transparent bg-paper/85 backdrop-blur-sm'}`}"
 >
-	<div class="mx-auto flex max-w-[1280px] items-center gap-3 px-5 transition-[height] duration-500 ease-out will-change-[height] sm:px-8 {compact ? 'h-16' : 'h-28'}">
+	<div class="mx-auto flex max-w-[1280px] items-center gap-3 px-5 transition-[height] duration-500 ease-out will-change-[height] sm:px-8 {compact ? 'h-16' : 'h-16 lg:h-28'}">
 		<!-- Logo (and program code) start larger and settle to their usual size; a transform, so nothing reflows. -->
-		<div class="flex min-w-0 origin-left items-center gap-3 transition-transform duration-500 ease-out will-change-transform {compact ? 'scale-100' : 'scale-[1.35]'}">
+		<div class="flex min-w-0 origin-left items-center gap-3 transition-transform duration-500 ease-out will-change-transform {compact ? 'scale-100' : 'scale-100 lg:scale-[1.35]'}">
 			<Logo compact class="shrink-0" />
 			{#if current}
 				<span class="hidden h-7 w-px bg-program-contrast/25 sm:block" aria-hidden="true"></span>
