@@ -81,15 +81,15 @@ Determine whether each action resolves to another page and confirm navigation is
 
 #### Files to review
 
-- [ ] `src/lib/components/admin/drive-setup.svelte`
-- [ ] `src/lib/components/admin/landing-block-editor.svelte`
-- [ ] `src/lib/components/admin/landing-page-editor.svelte`
-- [ ] `src/lib/components/admin/site-texts-card.svelte`
-- [ ] `src/routes/admin/people/+page.svelte`
-- [ ] `src/routes/admin/programs/+page.svelte`
-- [ ] `src/routes/admin/programs/[id]/+page.svelte`
-- [ ] `src/routes/admin/sections/[id]/+page.svelte`
-- [ ] `src/routes/admin/visits/[id]/+page.svelte`
+- [x] `src/lib/components/admin/drive-setup.svelte`
+- [x] `src/lib/components/admin/landing-block-editor.svelte`
+- [x] `src/lib/components/admin/landing-page-editor.svelte`
+- [x] `src/lib/components/admin/site-texts-card.svelte`
+- [x] `src/routes/admin/people/+page.svelte`
+- [x] `src/routes/admin/programs/+page.svelte`
+- [x] `src/routes/admin/programs/[id]/+page.svelte`
+- [x] `src/routes/admin/sections/[id]/+page.svelte`
+- [x] `src/routes/admin/visits/[id]/+page.svelte`
 
 ### CORS for static assets in development is handled by Vite
 
@@ -131,8 +131,8 @@ Use `Response.json(...)` and `new Response(text)` instead.
 
 ## Final verification
 
-- [ ] Review every migration task and ignore any irrelevant findings.
-- [ ] Resolve remaining `@migration-task` comments.
-- [ ] Run the project's type checker and tests.
-- [ ] Build the project successfully.
+- [x] Review every migration task and ignore any irrelevant findings.
+- [x] Resolve remaining `@migration-task` comments.
+- [x] Run the project's type checker and tests.
+- [x] Build the project successfully.
 - [ ] Delete this file when all migration work is complete.
