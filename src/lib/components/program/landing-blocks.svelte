@@ -1,4 +1,5 @@
 <script lang="ts">
+	import RichText from '#lib/components/site/rich-text.svelte';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import X from '@lucide/svelte/icons/x';
@@ -16,7 +17,7 @@
 	import VmgoBlock from './blocks/vmgo-block.svelte';
 	import EventsBlock from './blocks/events-block.svelte';
 	import OrgBlock from './blocks/org-block.svelte';
-	import { imageSrc, paragraphs } from '#lib/image-url.js';
+	import { imageSrc } from '#lib/image-url.js';
 	import { hasContent, type GalleryItem, type LandingBlock } from '#lib/landing.js';
 	import Photo from '#lib/components/site/photo.svelte';
 	import { reveal, stagger } from '#lib/motion.js';
@@ -66,7 +67,7 @@
 					<h2 class="text-balance font-display text-[clamp(1.6rem,3.2vw,2.6rem)] font-semibold leading-[1.02] tracking-[-0.04em] text-ink">{block.content.title}</h2>
 				{/if}
 				<div class="max-w-[68ch] space-y-4 text-[15px] leading-relaxed text-ink-soft sm:text-[16px] {block.content.title ? '' : 'lg:col-start-2'}">
-					{#each paragraphs(block.content.body) as paragraph, index (index)}<p>{paragraph}</p>{/each}
+					<RichText text={block.content.body} />
 				</div>
 			</div>
 		</section>

@@ -1,7 +1,8 @@
 <script lang="ts">
+	import RichTextarea from '#lib/components/admin/blocks/rich-textarea.svelte';
 	import type { MediaContent } from '#lib/landing.js';
 	import ImageField from './image-field.svelte';
-	import { area, field, hint, label } from './ui';
+	import { field, hint, label } from './ui';
 
 	let { value = $bindable(), programId }: { value: MediaContent; programId: string } = $props();
 
@@ -11,7 +12,7 @@
 </script>
 
 <div class="grid gap-4">
-	<label class={label}>Text<textarea bind:value={value.body} rows="5" class={area} placeholder="Leave an empty line between paragraphs."></textarea></label>
+	<div class={label}><span>Text</span><RichTextarea bind:value={value.body} rows={5} ariaLabel="Text" /></div>
 	<div class="grid gap-1.5">
 		<span class="text-[13px] font-medium">Photo</span>
 		<ImageField bind:value={value.src} {programId} />

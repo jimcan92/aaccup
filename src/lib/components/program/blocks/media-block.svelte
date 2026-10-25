@@ -1,8 +1,8 @@
 <script lang="ts">
+	import RichText from '#lib/components/site/rich-text.svelte';
 	import Photo from '#lib/components/site/photo.svelte';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ImageIcon from '@lucide/svelte/icons/image';
-	import { paragraphs } from '#lib/image-url.js';
 	import type { MediaContent } from '#lib/landing.js';
 
 	let { content, tone }: { content: MediaContent; tone: 'paper' | 'salt' } = $props();
@@ -25,7 +25,7 @@
 				<h2 class="text-balance font-display text-[clamp(1.6rem,3.2vw,2.6rem)] font-semibold leading-[1.02] tracking-[-0.04em] text-ink">{content.title}</h2>
 			{/if}
 			<div class="mt-4 max-w-[60ch] space-y-4 text-[15px] leading-relaxed text-ink-soft sm:text-[16px]">
-				{#each paragraphs(content.body) as paragraph, index (index)}<p>{paragraph}</p>{/each}
+				<RichText text={content.body} />
 			</div>
 			{#if content.button?.label && content.button.href}
 				<a

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { StatementSize, VmgoContent } from '#lib/landing.js';
+	import type { StatementFont, StatementSize, VmgoContent } from '#lib/landing.js';
 	import Section from './section.svelte';
 
 	let { content, tone }: { content: VmgoContent; tone: 'paper' | 'salt' } = $props();
@@ -11,10 +11,16 @@
 		xl: 'text-[clamp(1.75rem,3.6vw,2.75rem)] leading-[1.1]'
 	};
 
+	// The reading font by default; the heading font when an editor picks it for a short, bold statement.
+	const fontClass: Record<StatementFont, string> = {
+		body: 'font-sans tracking-[-0.01em]',
+		display: 'font-display tracking-[-0.02em]'
+	};
+
 	const statements = $derived(
 		[
-			{ label: 'Vision', text: content.vision, size: content.visionSize ?? 'md' },
-			{ label: 'Mission', text: content.mission, size: content.missionSize ?? 'md' }
+			{ label: 'Vision', text: content.vision, size: content.visionSize ?? 'md', font: content.visionFont ?? 'body' },
+			{ label: 'Mission', text: content.mission, size: content.missionSize ?? 'md', font: content.missionFont ?? 'body' }
 		].filter((statement) => statement.text)
 	);
 	const lists = $derived(
@@ -31,7 +37,7 @@
 			{#each statements as statement (statement.label)}
 				<div class="border-t-4 border-program bg-paper p-6 shadow-[0_0_0_1px_var(--color-rule)] sm:p-8">
 					<h3 class="font-mono text-[12px] uppercase tracking-[0.12em] text-program">{statement.label}</h3>
-					<p class="mt-3 text-pretty font-display {sizeClass[statement.size]} font-medium tracking-[-0.02em] text-ink">{statement.text}</p>
+					<p class="mt-3 text-pretty {fontClass[statement.font]} {sizeClass[statement.size]} font-medium text-ink">{statement.text}</p>
 				</div>
 			{/each}
 		</div>

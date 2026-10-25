@@ -1,8 +1,9 @@
 <script lang="ts">
+	import RichTextarea from '#lib/components/admin/blocks/rich-textarea.svelte';
 	import Plus from '@lucide/svelte/icons/plus';
 	import type { EventsContent } from '#lib/landing.js';
 	import ItemControls from './item-controls.svelte';
-	import { addButton, area, field, hint, move } from './ui';
+	import { addButton, field, hint, move } from './ui';
 
 	let { value = $bindable() }: { value: EventsContent } = $props();
 
@@ -21,7 +22,7 @@
 					<label class="grid gap-1 text-[12px] text-ink-soft">Time (optional)<input bind:value={item.time} placeholder="8:00 AM – 5:00 PM" class={field} /></label>
 				</div>
 				<input bind:value={item.place} aria-label="Place" placeholder="Place (optional), e.g. Campus gym" class={field} />
-				<textarea bind:value={item.body} aria-label="Details" rows="2" class={area} placeholder="Details (optional)"></textarea>
+				<RichTextarea bind:value={item.body} ariaLabel="Details" rows={2} placeholder="Details (optional)" />
 				<input bind:value={item.href} aria-label="Link" placeholder="Link for more (optional), https://…" class="{field} font-mono text-[12px]" />
 			</div>
 			<ItemControls {index} count={value.items.length} noun="event" onmove={(delta) => (value.items = move(value.items, index, delta))} onremove={() => (value.items = value.items.filter((_, i) => i !== index))} />

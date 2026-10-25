@@ -1,4 +1,5 @@
 <script lang="ts">
+	import RichTextarea from '#lib/components/admin/blocks/rich-textarea.svelte';
 	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
 	import { enhance } from '#lib/admin-enhance.js';
 	import ArrowDown from '@lucide/svelte/icons/arrow-down';
@@ -193,10 +194,10 @@
 			{:else if block.kind === 'events'}
 				<EventsEditor bind:value={extra} />
 			{:else if block.kind === 'text'}
-				<label class="grid gap-1.5 text-[13px] font-medium">
-					Text
-					<textarea bind:value={body} rows="8" class="w-full border border-rule bg-salt p-3 text-[14px] leading-relaxed outline-none focus:border-ink" placeholder="Leave an empty line between paragraphs."></textarea>
-				</label>
+				<div class="grid gap-1.5 text-[13px] font-medium">
+					<span>Text</span>
+					<RichTextarea bind:value={body} rows={8} ariaLabel="Text" />
+				</div>
 			{:else if block.kind === 'stats'}
 				<div class="grid gap-2">
 					{#each stats as stat, index (index)}

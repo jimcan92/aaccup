@@ -1,8 +1,8 @@
 <script lang="ts">
+	import RichText from '#lib/components/site/rich-text.svelte';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
 	import MapPin from '@lucide/svelte/icons/map-pin';
-	import { paragraphs } from '#lib/image-url.js';
 	import { formatDate, type EventItem, type EventsContent } from '#lib/landing.js';
 	import Section from './section.svelte';
 
@@ -40,7 +40,7 @@
 						</p>
 						{#if item.body}
 							<div class="mt-2 space-y-2 text-[14px] leading-relaxed text-ink-soft">
-								{#each paragraphs(item.body) as paragraph, p (p)}<p>{paragraph}</p>{/each}
+								<RichText text={item.body} />
 							</div>
 						{/if}
 					</div>
