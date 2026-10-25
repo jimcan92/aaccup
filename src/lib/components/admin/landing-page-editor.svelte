@@ -343,10 +343,11 @@
 								</form>
 							{/if}
 						</div>
-						<!-- A 1280px-wide page scaled to fit; a picture only, so links and buttons inside do nothing. -->
-						<div bind:clientWidth={frameWidth} class="mt-2 max-h-[55dvh] overflow-y-auto overflow-x-hidden border border-rule bg-salt" inert>
+						<!-- A 1280px-wide page scaled to fit. The box scrolls; the block inside is inert (a picture only),
+						     since an inert scroll box would not scroll. -->
+						<div bind:clientWidth={frameWidth} class="mt-2 max-h-[55dvh] overflow-y-auto overflow-x-hidden border border-rule bg-salt">
 							{#if picked}
-								<div style="height: {innerHeight * copyScale}px">
+								<div style="height: {innerHeight * copyScale}px" inert>
 									<div bind:clientHeight={innerHeight} class="program-scope origin-top-left bg-salt" style="width: 1280px; transform: scale({copyScale}); {source?.theme ? themeStyle(source.theme) : ''}">
 										{#key picked.id}
 											<LandingBlocks blocks={[{ id: picked.id, kind: picked.kind, content: picked.content } as never]} editable />
