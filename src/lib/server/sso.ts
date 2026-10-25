@@ -131,7 +131,28 @@ async function writeSsoCache(cookies: Cookies, user: SsoUser, fingerprint: strin
 	});
 }
 
-async function fetchSsoUser(cookie: string): Promise<SsoUser | null> {
+/** The photo address AACCUP passes around: a short link, never the image itself. */
+export const AVATAR_PATH = '/admin/me/avatar';
+
+/**
+ * Accounts stores uploaded photos as data URLs (up to a few MB of text). Copying that into the
+ * cache cookie makes the browser drop the cookie, and into page data makes every admin page heavy.
+ * So a data URL becomes AVATAR_PATH, which serves the image; a plain https link is kept.
+ */
+function displayImage(image: string | null | undefined): string | null {
+	if (!image) return null;
+	if (image.startsWith('data:image/')) return AVATAR_PATH;
+	return /^https:\/\//.test(image) && image.length < 2000 ? image : null;
+}
+
+/** The user's photo as Accounts stores it, for AVATAR_PATH: a data URL or a link. */
+export async function fetchSsoImage(request: Request): Promise<string | null> {
+	const cookie = ctuCookies(request.headers.get('cookie'));
+	if (!cookie) return null;
+	return (await fetchSession(cookie))?.image ?? null;
+}
+
+async function fetchSession(cookie: string) {
 	try {
 		const response = await fetch(`${accountsUrl()}/api/auth/get-session`, {
 			headers: { cookie, accept: 'application/json' },
@@ -153,11 +174,16 @@ async function fetchSsoUser(cookie: string): Promise<SsoUser | null> {
 
 		const user = body?.user;
 		if (!user?.id || !user.email || user.banned) return null;
-
-		return { id: user.id, email: user.email.toLowerCase(), name: user.name ?? user.email, image: user.image ?? null };
+		return user as typeof user & { id: string; email: string };
 	} catch {
 		return null;
 	}
+}
+
+async function fetchSsoUser(cookie: string): Promise<SsoUser | null> {
+	const user = await fetchSession(cookie);
+	if (!user) return null;
+	return { id: user.id, email: user.email.toLowerCase(), name: user.name ?? user.email, image: displayImage(user.image) };
 }
 
 export async function getSsoUser(request: Request, cookies: Cookies): Promise<SsoUser | null> {
