@@ -22,7 +22,7 @@
 	import EyeOff from '@lucide/svelte/icons/eye-off';
 	import Monitor from '@lucide/svelte/icons/monitor';
 	import Smartphone from '@lucide/svelte/icons/smartphone';
-	import { onMount } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 	import { MediaQuery } from 'svelte/reactivity';
 	import { readMessage, type PreviewMessage } from '#lib/block-preview.js';
 	import { adminUi } from '#lib/admin-ui.svelte.js';
@@ -46,7 +46,8 @@
 		canEdit,
 		canManage,
 		empty,
-		previewSrc
+		previewSrc,
+		top
 	}: {
 		label: string;
 		publicHref: string;
@@ -60,6 +61,8 @@
 		empty: string;
 		/** The page that renders this page's drafts for the preview frame. */
 		previewSrc: string;
+		/** Shown above the toolbar in the editor column, so it sits beside the preview too. */
+		top?: Snippet;
 	} = $props();
 
 	// Preview: beside the editors on wide screens (open by default, remembered); a fullscreen dialog otherwise.
@@ -198,6 +201,7 @@
 
 <div class={showSide ? 'grid grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] gap-8' : ''}>
 <div class="min-w-0">
+{#if top}<div class="mb-6">{@render top()}</div>{/if}
 <!-- Stays in view while scrolling, so adding a block never means scrolling to the bottom. -->
 <div class="sticky top-16 z-10 -mx-5 flex flex-wrap items-center gap-2 border-b border-rule bg-salt/95 px-5 py-3 backdrop-blur sm:-mx-8 sm:px-8 lg:top-0 {showSide ? 'xl:mx-0 xl:px-0' : ''}">
 	<p class="mr-auto text-[13px] text-ink-soft">
