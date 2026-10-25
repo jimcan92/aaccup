@@ -30,10 +30,11 @@
 	// Credentials continue the paper/salt alternation after the blocks that show.
 	const shown = $derived(blocks.filter(hasContent).length);
 
-	// The first photo of the first gallery is the banner behind the hero.
+	// The banner behind the hero: the program's cover image, else the first photo of the first gallery or carousel.
 	const banner = $derived.by(() => {
+		if (program.cover) return { src: program.cover, alt: program.name };
 		for (const block of blocks) if (block.kind === 'gallery' && block.content.items?.[0]?.src) return block.content.items[0];
-		return program.cover ? { src: program.cover, alt: program.name } : null;
+		return null;
 	});
 </script>
 

@@ -139,7 +139,7 @@
 								<span class="text-[13px] font-medium">Cover image</span>
 								<ImageField bind:value={typed.cover} programId={data.program.id} label="Cover" />
 								<input type="hidden" name="cover_url" value={typed.cover} />
-								<span class="text-[12px] text-ink-soft">The photo behind the program’s card on the home page. Empty: the first photo of the gallery below is used.</span>
+								<span class="text-[12px] text-ink-soft">The photo behind the program title and the program’s card on the home page. Empty: the first photo of the first gallery or carousel below is used.</span>
 							</div>
 						</div>
 
