@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 @import '@fontsource-variable/bricolage-grotesque';
-@import '@fontsource-variable/instrument-sans';
+@import '@fontsource-variable/inter';
 @import '@fontsource/ibm-plex-mono/400.css';
 @import '@fontsource/ibm-plex-mono/500.css';
 
@@ -110,7 +110,7 @@
 }
 
 @theme inline {
-	--font-sans: 'Instrument Sans Variable', ui-sans-serif, system-ui, sans-serif;
+	--font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
 	--font-display: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
 	--font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
 
@@ -169,7 +169,8 @@
 
 	body {
 		@apply bg-background font-sans text-foreground antialiased;
-		font-feature-settings: 'ss01' 1, 'cv01' 1;
+		/* Inter: l with a tail and I with serifs, so codes like "Level III" and "BSFi" read unambiguously. */
+		font-feature-settings: 'cv05' 1, 'cv08' 1;
 		overflow-x: clip;
 	}
 

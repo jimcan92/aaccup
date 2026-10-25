@@ -67,24 +67,24 @@
 		<div class="min-w-0">
 			<div class="flex flex-wrap items-center gap-2">
 				{#if document.code}
-					<span class="border border-program/35 px-1.5 py-0.5 font-mono text-[11px] text-program-ink">{document.code}</span>
+					<span class="border border-program/35 px-1.5 py-0.5 font-mono text-[12px] text-program-ink">{document.code}</span>
 				{/if}
-				<h3 class="font-display text-[15px] font-semibold leading-snug tracking-[-0.015em] text-ink">
+				<h3 class="font-display text-[16px] font-semibold leading-snug tracking-[-0.015em] text-ink">
 					{document.title}
 				</h3>
 				{#if !linked}
-					<span class="border border-dashed border-ink/30 px-1.5 py-0.5 font-mono text-[11px] text-ink-soft">
+					<span class="border border-dashed border-ink/30 px-1.5 py-0.5 font-mono text-[12px] text-ink-soft">
 						In preparation
 					</span>
 				{/if}
 			</div>
 
 			{#if context}
-				<p class="mt-1 text-[12px] font-medium text-ink-soft">{context}</p>
+				<p class="mt-1 text-[13px] font-medium text-ink-soft">{context}</p>
 			{/if}
 
 			{#if document.note}
-				<p class="mt-1.5 max-w-xl text-[13px] leading-relaxed text-ink-soft">
+				<p class="mt-1.5 max-w-2xl text-[14px] leading-relaxed text-ink-soft">
 					{document.note}
 				</p>
 			{/if}
@@ -94,10 +94,10 @@
 			class="col-start-2 flex items-center justify-between gap-4 sm:col-start-3 sm:flex-col sm:items-end sm:justify-start"
 		>
 			{#if date}
-				<span class="font-mono text-[11px] text-ink-soft">{date}</span>
+				<span class="font-mono text-[12px] text-ink-soft">{date}</span>
 			{/if}
 			{#if linked}
-				<span class="inline-flex items-center gap-1 text-[12px] font-medium text-program">
+				<span class="inline-flex items-center gap-1 text-[13px] font-medium text-program">
 					{expanded ? 'Hide preview' : actionLabel}
 					{#if expanded}
 						<ChevronDown class="size-3.5 rotate-180" />
@@ -134,7 +134,7 @@
 						href={document.driveUrl}
 						target="_blank"
 						rel="noopener noreferrer"
-						class="inline-flex h-8 items-center gap-1.5 border border-program/40 bg-paper px-3 text-[12px] font-medium text-program-ink transition-colors hover:bg-program-soft"
+						class="inline-flex h-8 items-center gap-1.5 border border-program/40 bg-paper px-3 text-[13px] font-medium text-program-ink transition-colors hover:bg-program-soft"
 					>
 						<ExternalLink class="size-3.5" />
 						Open in Drive
@@ -142,7 +142,7 @@
 					<button
 						type="button"
 						onclick={closePreview}
-						class="inline-flex h-8 items-center gap-1.5 border border-rule bg-paper px-3 text-[12px] font-medium text-ink transition-colors hover:bg-salt"
+						class="inline-flex h-8 items-center gap-1.5 border border-rule bg-paper px-3 text-[13px] font-medium text-ink transition-colors hover:bg-salt"
 					>
 						<X class="size-3.5" />
 						Close
@@ -161,7 +161,7 @@
 						referrerpolicy="no-referrer"
 					></iframe>
 				</div>
-				<p class="mt-2 text-[12px] text-ink-soft">
+				<p class="mt-2 text-[13px] text-ink-soft">
 					If the preview asks for access, the file is not shared as “Anyone with the link”. Use Open in Drive or contact the task force.
 				</p>
 			</div>
