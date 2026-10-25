@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
 	import ArrowDown from '@lucide/svelte/icons/arrow-down';
 	import ArrowUp from '@lucide/svelte/icons/arrow-up';
 	import ImagePlus from '@lucide/svelte/icons/image-plus';
@@ -146,10 +147,11 @@
 									No image
 								</div>
 							{/if}
+							{#if uploading === index}<Skeleton class="absolute inset-0 bg-ink" />{/if}
 						</div>
 
-						<label class="mt-2 flex h-8 cursor-pointer items-center justify-center gap-1.5 border border-ink/20 text-[12px] font-medium text-ink hover:bg-salt">
-							<ImagePlus class="size-3" />
+						<label class="mt-2 flex h-8 cursor-pointer items-center justify-center gap-1.5 border border-ink/20 text-[12px] font-medium text-ink hover:bg-salt" data-loading={uploading === index ? '' : undefined}>
+							{#if uploading !== index}<ImagePlus class="size-3" />{/if}
 							{uploading === index ? 'Uploading…' : 'Upload image'}
 							<input
 								type="file"

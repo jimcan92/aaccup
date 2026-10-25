@@ -1,4 +1,5 @@
 <script lang="ts">
+	import DocumentSkeleton from '#lib/components/site/document-skeleton.svelte';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
@@ -149,7 +150,7 @@
 				</div>
 				<div class="relative h-[min(75vh,56rem)] overflow-hidden border border-rule bg-paper">
 					{#if loading}
-						<p class="absolute inset-0 grid place-items-center text-[13px] text-ink-soft" aria-live="polite">Loading preview…</p>
+						<DocumentSkeleton />
 					{/if}
 					<iframe
 						src={embed}

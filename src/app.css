@@ -320,3 +320,245 @@ html:not(.admin-light) section.bg-salt,
 	background-size: 100% 100%, 48px 48px, 48px 48px;
 	mask-image: radial-gradient(ellipse 85% 75% at 50% 15%, #000 35%, transparent 100%);
 }
+
+/* ---------------------------------------------------------------------------
+   Quiet motion (src/lib/motion.ts). Short distances, ease-out, played once.
+   The reduced-motion rule above cuts every duration, so nothing waits or moves there.
+   --------------------------------------------------------------------------- */
+:root {
+	--ease-out-soft: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* Set by the reveal action only, so content is never hidden without JavaScript. */
+[data-reveal] {
+	opacity: 0;
+	translate: 0 12px;
+	transition:
+		opacity 0.6s ease-out,
+		translate 0.7s var(--ease-out-soft);
+	transition-delay: var(--reveal-delay, 0ms);
+}
+
+[data-reveal][data-shown] {
+	opacity: 1;
+	translate: 0 0;
+}
+
+/* A whole block: its background stays, the content inside its section rises. */
+[data-reveal='inner'] {
+	opacity: 1;
+	translate: 0 0;
+}
+
+[data-reveal='inner'] > section > * {
+	opacity: 0;
+	translate: 0 12px;
+	transition:
+		opacity 0.6s ease-out,
+		translate 0.7s var(--ease-out-soft);
+}
+
+[data-reveal='inner'][data-shown] > section > * {
+	opacity: 1;
+	translate: 0 0;
+}
+
+/* Hero text rises in on first paint: heading, then the lines under it. */
+@keyframes rise {
+	from {
+		opacity: 0;
+		translate: 0 10px;
+	}
+}
+
+.rise {
+	animation: rise 0.7s var(--ease-out-soft) both;
+}
+
+.rise-2 {
+	animation-delay: 80ms;
+}
+
+.rise-3 {
+	animation-delay: 160ms;
+}
+
+/* A photo frame: skeleton tone and an image icon until the photo arrives, then the photo sharpens in. */
+.photo-frame {
+	position: relative;
+	overflow: hidden;
+	background-color: color-mix(in srgb, var(--ink) 7%, transparent);
+}
+
+.photo-frame > .photo-icon {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	color: color-mix(in srgb, var(--ink) 35%, transparent);
+	pointer-events: none;
+	transition:
+		opacity 0.5s ease-out,
+		scale 0.5s var(--ease-out-soft);
+}
+
+.photo-frame:has(img[data-loaded]) > .photo-icon {
+	opacity: 0;
+	scale: 0.85;
+}
+
+img[data-photo] {
+	transition:
+		opacity 0.6s ease-out,
+		filter 0.7s ease-out,
+		scale 0.7s var(--ease-out-soft);
+}
+
+img[data-photo]:not([data-loaded]) {
+	opacity: 0;
+	filter: blur(10px);
+	scale: 1.03;
+}
+
+/* Hero photos settle from a slight zoom once loaded. */
+img[data-photo].settle {
+	transition:
+		opacity 0.8s ease-out,
+		filter 0.8s ease-out,
+		scale 1.6s var(--ease-out-soft);
+}
+
+img[data-photo].settle:not([data-loaded]) {
+	scale: 1.05;
+}
+
+/* Home program cards: the badge in the corner opens into the photo on hover or keyboard focus.
+   The photo copy is clipped to the badge square and grows to the whole card. */
+.card-morph {
+	--badge-inset: 1.25rem;
+	--badge: 3.5rem;
+	clip-path: inset(
+		var(--badge-inset) var(--badge-inset) calc(100% - var(--badge-inset) - var(--badge))
+			calc(100% - var(--badge-inset) - var(--badge))
+	);
+	transition: clip-path 0.7s var(--ease-out-soft);
+}
+
+.card-badge {
+	transition:
+		opacity 0.45s ease-out,
+		scale 0.45s var(--ease-out-soft);
+}
+
+@media (min-width: 640px) {
+	.card-morph {
+		--badge-inset: 1.5rem;
+		--badge: 4rem;
+	}
+}
+
+.group:hover .card-morph,
+.group:focus-visible .card-morph {
+	clip-path: inset(0);
+}
+
+.group:hover .card-badge[data-morphs],
+.group:focus-visible .card-badge[data-morphs] {
+	opacity: 0;
+	scale: 0.9;
+}
+
+/* Section snapping on the home and program pages (set by snapPage). Proximity, so long sections
+   still scroll freely; the padding keeps a snapped section clear of the compact header. Wide screens only. */
+@media (min-width: 768px) {
+	html.snap-page {
+		scroll-snap-type: y proximity;
+		scroll-padding-top: 4rem;
+	}
+
+	html.snap-page [data-snap] {
+		scroll-snap-align: start;
+	}
+}
+
+/* Skeleton shimmer (ui/skeleton): a slow, faint sweep. */
+@keyframes skeleton-sweep {
+	from {
+		background-position: 150% 0;
+	}
+	to {
+		background-position: -50% 0;
+	}
+}
+
+@layer components {
+	.skeleton {
+		background-color: color-mix(in srgb, var(--ink) 8%, transparent);
+		background-image: linear-gradient(
+			100deg,
+			transparent 30%,
+			color-mix(in srgb, var(--paper) 55%, transparent) 50%,
+			transparent 70%
+		);
+		background-size: 200% 100%;
+		background-repeat: no-repeat;
+		animation: skeleton-sweep 1.6s ease-in-out infinite;
+	}
+}
+
+/* Page navigation bar (site/nav-progress): eases most of the way, then completes and fades. */
+@keyframes nav-progress {
+	from {
+		scale: 0 1;
+	}
+	to {
+		scale: 0.8 1;
+	}
+}
+
+.nav-progress[data-state='loading'] {
+	animation: nav-progress 4s cubic-bezier(0.1, 0.6, 0.2, 1) forwards;
+}
+
+.nav-progress[data-state='done'] {
+	scale: 1 1;
+	opacity: 0;
+	transition:
+		scale 0.2s ease-out,
+		opacity 0.3s ease-out 0.15s;
+}
+
+/* Toasts (ui/sonner): square like the rest of the site, with a thin accent for the type. */
+[data-sonner-toast].cn-toast {
+	border-radius: 0 !important;
+	border-left-width: 3px;
+	box-shadow: 0 10px 28px -18px rgb(0 0 0 / 0.45);
+	font-size: 13px;
+}
+
+[data-sonner-toast].cn-toast[data-type='success'] {
+	border-left-color: var(--program);
+}
+
+[data-sonner-toast].cn-toast[data-type='error'] {
+	border-left-color: var(--destructive);
+}
+
+[data-sonner-toast].cn-toast[data-type='warning'] {
+	border-left-color: #b45309;
+}
+
+[data-sonner-toast].cn-toast[data-type='info'] {
+	border-left-color: var(--ink-soft);
+}
+
+[data-sonner-toast].cn-toast[data-type='error'] [data-icon] {
+	color: var(--destructive);
+}
+
+[data-sonner-toast].cn-toast [data-close-button] {
+	border-radius: 0 !important;
+	background: var(--paper);
+	color: var(--ink);
+	border-color: var(--rule);
+}

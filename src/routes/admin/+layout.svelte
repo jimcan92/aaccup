@@ -146,7 +146,7 @@
 {/snippet}
 
 <!-- Form results show here, lower right, wherever the page is scrolled. -->
-<Toaster position="bottom-right" richColors closeButton />
+<Toaster position="bottom-right" theme="light" closeButton />
 
 {#if data.isLogin}
 	{@render children()}

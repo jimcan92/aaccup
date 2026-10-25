@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
 	import { enhance } from '#lib/admin-enhance.js';
 	import ArrowDown from '@lucide/svelte/icons/arrow-down';
 	import ArrowUp from '@lucide/svelte/icons/arrow-up';
@@ -233,14 +234,15 @@
 					{#if first}<p class="text-[12px] text-ink-soft">The first photo of the first gallery is also the banner behind the program title.</p>{/if}
 					{#each photos as photo, index (index)}
 						<div class="grid gap-3 border border-rule p-3 sm:grid-cols-[7rem_minmax(0,1fr)_auto]">
-							<div class="grid aspect-[4/3] place-items-center overflow-hidden bg-salt">
+							<div class="relative grid aspect-[4/3] place-items-center overflow-hidden bg-salt">
 								{#if photo.src}<img src={imageSrc(photo.src, 400)} alt="" class="h-full w-full object-cover" />{:else}<ImagePlus class="size-6 text-ink-soft" />{/if}
+								{#if uploading === index}<Skeleton class="absolute inset-0 bg-salt" />{/if}
 							</div>
 							<div class="grid gap-2">
 								<div class="flex flex-col gap-2 sm:flex-row">
 									<input bind:value={photo.src} aria-label="Photo link" placeholder="Upload, or paste a Google Drive / image link" class="{field} font-mono text-[12px]" />
-									<label class="inline-flex h-10 shrink-0 cursor-pointer items-center gap-1.5 border border-rule px-3 text-[13px] font-medium hover:border-ink/30">
-										<ImagePlus class="size-4" /> {uploading === index ? 'Uploading…' : 'Upload'}
+									<label class="inline-flex h-10 shrink-0 cursor-pointer items-center gap-1.5 border border-rule px-3 text-[13px] font-medium hover:border-ink/30" data-loading={uploading === index ? '' : undefined}>
+										{#if uploading !== index}<ImagePlus class="size-4" />{/if} {uploading === index ? 'Uploading…' : 'Upload'}
 										<input type="file" accept="image/*" class="sr-only" onchange={(event) => upload(index, (event.currentTarget as HTMLInputElement).files?.[0])} />
 									</label>
 								</div>
