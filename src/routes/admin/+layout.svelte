@@ -19,6 +19,8 @@
 
 	let { data, children }: LayoutProps = $props();
 	let menuOpen = $state(false);
+	// A CTU Accounts photo that does not load falls back to the initials.
+	let photoFailed = $state(false);
 
 	const nav = $derived(
 		[
@@ -92,12 +94,22 @@
 	</ul>
 {/snippet}
 
+<!-- The CTU Accounts photo when there is one (and it loads); the initials otherwise. -->
+{#snippet avatar(name: string, text: string)}
+	<span class="relative grid size-10 shrink-0 place-items-center overflow-hidden bg-paper/10 font-display font-semibold {text}">
+		{initials(name)}
+		{#if data.ssoUser?.image && !photoFailed}
+			<img src={data.ssoUser.image} alt="" referrerpolicy="no-referrer" class="absolute inset-0 h-full w-full object-cover" onerror={() => (photoFailed = true)} />
+		{/if}
+	</span>
+{/snippet}
+
 {#snippet railUser()}
 	{#if data.staff}
 		{@const name = data.staff.full_name || data.staff.email}
 		<div class="flex flex-col items-center gap-1">
-			<span class="grid size-10 place-items-center bg-paper/10 font-display text-[13px] font-semibold" title={`${name} · ${roleInfo[data.staff.role]?.label ?? data.staff.role}`}>
-				{initials(name)}<span class="sr-only">{name}, {roleInfo[data.staff.role]?.label ?? data.staff.role}</span>
+			<span title={`${name} · ${roleInfo[data.staff.role]?.label ?? data.staff.role}`}>
+				{@render avatar(name, 'text-[13px]')}<span class="sr-only">{name}, {roleInfo[data.staff.role]?.label ?? data.staff.role}</span>
 			</span>
 			{#each [{ href: '/', label: 'View public site', icon: ArrowUpRight, isFresh: true }, { href: data.logoutUrl, label: 'Sign out of CTU Accounts', icon: LogOut, isFresh: false }] as link (link.label)}
 				{@const Icon = link.icon}
@@ -114,9 +126,7 @@
 {#snippet userCard()}
 	{#if data.staff}
 		<div class="flex items-center gap-3">
-			<span class="grid size-10 shrink-0 place-items-center bg-paper/10 font-display text-[14px] font-semibold">
-				{initials(data.staff.full_name || data.staff.email)}
-			</span>
+			{@render avatar(data.staff.full_name || data.staff.email, 'text-[14px]')}
 			<div class="min-w-0">
 				<p class="truncate text-[13px] font-medium text-paper">{data.staff.full_name || data.staff.email}</p>
 				<p class="truncate text-[12px] text-paper/55">{roleInfo[data.staff.role]?.label ?? data.staff.role}</p>
