@@ -31,7 +31,11 @@
 	import PreviewDialog from '#lib/components/admin/preview-dialog.svelte';
 	import PreviewPane from '#lib/components/admin/preview-pane.svelte';
 	import * as Dialog from '#lib/components/ui/dialog/index.js';
-	import { blockLabel } from '#lib/landing.js';
+	import { blockLabel, type BlockKind } from '#lib/landing.js';
+	import LandingBlocks from '#lib/components/program/landing-blocks.svelte';
+	import { Skeleton } from '#lib/components/ui/skeleton/index.js';
+	import { themeStyle } from '#lib/theme.js';
+	import type { ProgramTheme } from '#lib/data/types.js';
 	import { fresh } from '#lib/fresh-link.js';
 
 	type Block = { id: string; kind: string; draft: unknown; published: unknown; updated_at: string };
@@ -137,6 +141,39 @@
 
 	let removing = $state<{ id: string; label: string } | null>(null);
 	let adding = $state(false);
+
+	// Add block: a new block of a kind, or a copy of a block from another page.
+	type Source = {
+		id: string;
+		label: string;
+		theme: ProgramTheme | null;
+		blocks: { id: string; kind: BlockKind; label: string; title: string; live: boolean; content: unknown }[];
+	};
+	let addMode = $state<'new' | 'copy'>('new');
+	let sources = $state<Source[] | null>(null);
+	let sourcesError = $state<string | null>(null);
+	let sourceId = $state('');
+	let pickedId = $state('');
+	const source = $derived(sources?.find((item) => item.id === sourceId) ?? sources?.[0]);
+	const picked = $derived(source?.blocks.find((item) => item.id === pickedId) ?? source?.blocks[0]);
+	let frameWidth = $state(0);
+	let innerHeight = $state(0);
+	const copyScale = $derived(frameWidth ? Math.min(1, frameWidth / 1280) : 0.5);
+
+	// The other pages' blocks load the first time the copy view opens.
+	$effect(() => {
+		if (!adding || addMode !== 'copy' || sources) return;
+		fetch(`/admin/blocks?exclude=${encodeURIComponent(folderId)}`)
+			.then(async (response) => {
+				if (!response.ok) throw new Error('The other pages’ blocks could not be loaded.');
+				sources = (await response.json()).sources as Source[];
+				sourceId = sources[0]?.id ?? '';
+			})
+			.catch((err) => (sourcesError = (err as Error).message));
+	});
+	$effect(() => {
+		if (!adding) addMode = 'new';
+	});
 
 	const live = $derived(blocks.filter((block) => block.published !== null).length);
 
@@ -245,14 +282,84 @@
 <PreviewDialog src={previewSrc} hint="Drafts included. Tap a block to edit it." bind:open={preview.dialogOpen} bind:frame={dialogFrame} />
 
 <Dialog.Root bind:open={adding}>
-	<Dialog.Content class="max-h-[90dvh] max-w-3xl gap-0 overflow-y-auto rounded-none p-0 sm:max-w-3xl" showCloseButton={false}>
+	<Dialog.Content class="max-h-[90dvh] gap-0 overflow-y-auto rounded-none p-0 {addMode === 'copy' ? 'max-w-6xl sm:max-w-6xl' : 'max-w-3xl sm:max-w-3xl'}" showCloseButton={false}>
 		<div class="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-rule bg-paper px-5 py-4">
 			<div>
 				<Dialog.Title class="font-display text-[20px] font-semibold tracking-[-0.03em]">Add a block</Dialog.Title>
 				<Dialog.Description class="mt-1 text-[13px] text-ink-soft">It goes at the bottom of the page as a draft; move it with the arrows.</Dialog.Description>
+				<div class="mt-3 inline-flex border border-rule" role="tablist" aria-label="Add a block">
+					{#each [{ value: 'new', label: 'New block' }, { value: 'copy', label: 'Copy from another page' }] as option (option.value)}
+						<button type="button" role="tab" aria-selected={addMode === option.value} onclick={() => (addMode = option.value as 'new' | 'copy')} class="h-9 cursor-pointer px-3 text-[13px] font-medium {addMode === option.value ? 'bg-ink text-paper' : 'bg-paper text-ink-soft hover:text-ink'}">{option.label}</button>
+					{/each}
+				</div>
 			</div>
 			<Dialog.Close class="grid size-9 shrink-0 cursor-pointer place-items-center text-ink-soft hover:bg-salt hover:text-ink" aria-label="Close"><X class="size-4" /></Dialog.Close>
 		</div>
+		{#if addMode === 'copy'}
+			{#if sourcesError}
+				<p class="m-5 border border-destructive/30 p-4 text-[14px] text-destructive" role="alert">{sourcesError}</p>
+			{:else if !sources}
+				<div class="grid gap-4 p-5 md:grid-cols-[18rem_minmax(0,1fr)]" role="status"><span class="sr-only">Loading blocks</span><Skeleton class="h-80" /><Skeleton class="h-80" /></div>
+			{:else if !sources.length}
+				<p class="p-5 text-[14px] text-ink-soft">No other page has blocks yet.</p>
+			{:else}
+				<div class="grid gap-5 p-5 md:grid-cols-[18rem_minmax(0,1fr)]">
+					<div class="min-w-0">
+						<label class="grid gap-1.5 text-[13px] font-medium">
+							From
+							<select bind:value={sourceId} onchange={() => (pickedId = '')} class="h-10 w-full border border-rule bg-salt px-3 text-[14px] outline-none focus:border-ink">
+								{#each sources as item (item.id)}<option value={item.id}>{item.label} ({item.blocks.length})</option>{/each}
+							</select>
+						</label>
+						<ul class="mt-3 max-h-[55dvh] overflow-y-auto border border-rule">
+							{#each source?.blocks ?? [] as item (item.id)}
+								<li>
+									<button type="button" onclick={() => (pickedId = item.id)} aria-pressed={picked?.id === item.id} class="block w-full cursor-pointer border-b border-rule px-3 py-2.5 text-left last:border-b-0 {picked?.id === item.id ? 'bg-ink text-paper' : 'hover:bg-salt'}">
+										<span class="block text-[13px] font-medium">{item.label}</span>
+										<span class="block truncate text-[12px] {picked?.id === item.id ? 'text-paper/75' : 'text-ink-soft'}">{item.title || 'No heading'}{item.live ? '' : ' · draft'}</span>
+									</button>
+								</li>
+							{/each}
+						</ul>
+					</div>
+
+					<div class="min-w-0">
+						<div class="flex flex-wrap items-center gap-2">
+							<p class="mr-auto text-[12px] text-ink-soft">Preview · as it looks on {source?.label === 'Home page' ? 'the home page' : source?.label.split(' — ')[0]}</p>
+							{#if picked && canEdit}
+								<form
+									method="POST"
+									action="?/copy"
+									use:enhance={() => async ({ result, update }) => {
+										await update();
+										if (result.type === 'success') {
+											adding = false;
+											showNewest();
+										}
+									}}
+								>
+									<input type="hidden" name="from" value={picked.id} />
+									<button class="inline-flex h-10 cursor-pointer items-center gap-2 bg-ink px-4 text-[13px] font-medium text-paper hover:bg-ink-soft"><Plus class="size-4" /> Copy this block</button>
+								</form>
+							{/if}
+						</div>
+						<!-- A 1280px-wide page scaled to fit; a picture only, so links and buttons inside do nothing. -->
+						<div bind:clientWidth={frameWidth} class="mt-2 max-h-[55dvh] overflow-y-auto overflow-x-hidden border border-rule bg-salt" inert>
+							{#if picked}
+								<div style="height: {innerHeight * copyScale}px">
+									<div bind:clientHeight={innerHeight} class="program-scope origin-top-left bg-salt" style="width: 1280px; transform: scale({copyScale}); {source?.theme ? themeStyle(source.theme) : ''}">
+										{#key picked.id}
+											<LandingBlocks blocks={[{ id: picked.id, kind: picked.kind, content: picked.content } as never]} editable />
+										{/key}
+									</div>
+								</div>
+							{/if}
+						</div>
+						<p class="mt-2 text-[12px] text-ink-soft">The copy is a separate draft: photos and links stay as they are. Change what belongs to the other page before publishing.</p>
+					</div>
+				</div>
+			{/if}
+		{:else}
 		<div class="grid gap-2 p-5 sm:grid-cols-2">
 			{#each add as option (option.kind)}
 				{@const Icon = option.icon}
@@ -278,6 +385,7 @@
 				</form>
 			{/each}
 		</div>
+		{/if}
 	</Dialog.Content>
 </Dialog.Root>
 
