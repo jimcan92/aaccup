@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { enhance } from '#lib/admin-enhance.js';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import Copy from '@lucide/svelte/icons/copy';
@@ -8,6 +7,7 @@
 	import PageHeader from '#lib/components/admin/page-header.svelte';
 	import StatusBadge from '#lib/components/admin/status-badge.svelte';
 	import { pad2 } from '#lib/format.js';
+	import { sectionHref } from '#lib/admin-links.js';
 	import { fresh } from '#lib/fresh-link.js';
 	import type { PageProps } from './$types';
 
@@ -32,12 +32,7 @@
 	<title>{program.code} {data.visit.year} · AACCUP Desk</title>
 </svelte:head>
 
-<a href={`/admin/programs/${program.id}`} class="inline-flex min-h-9 items-center gap-2 text-[13px] text-ink-soft hover:text-ink">
-	<ArrowLeft class="size-4" />
-	{program.code}
-</a>
-
-<div class="mt-4">
+<div>
 	<PageHeader eyebrow={`${program.code} · Visit`} title={`${data.visit.year} · ${data.visit.label}`}>
 		{#snippet actions()}
 			{#if data.visit.status === 'active'}
@@ -67,7 +62,7 @@
 				<ul>
 					{#each group.sections as section (section.id)}
 						<li>
-							<a href={`/admin/sections/${section.id}`} class="group grid grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-3 border-b border-rule px-1 py-3 hover:bg-paper sm:grid-cols-[2.5rem_minmax(0,1fr)_auto_auto_1rem] sm:px-3">
+							<a href={sectionHref(program.id, data.visit.id, section.id)} class="group grid grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-3 border-b border-rule px-1 py-3 hover:bg-paper sm:grid-cols-[2.5rem_minmax(0,1fr)_auto_auto_1rem] sm:px-3">
 								<span class="font-mono text-[13px] text-ink-soft">{section.kind === 'common' ? '—' : section.number ? pad2(section.number) : '··'}</span>
 								<span class="min-w-0">
 									<span class="block truncate text-[14px] font-medium">{section.title}</span>

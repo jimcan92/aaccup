@@ -1,26 +1,13 @@
 <script lang="ts">
-	import { page } from '$app/state';
 	import { enhance } from '#lib/admin-enhance.js';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
-	import FileText from '@lucide/svelte/icons/file-text';
-	import FolderOpen from '@lucide/svelte/icons/folder-open';
-	import PageHeader from '#lib/components/admin/page-header.svelte';
 	import ImageField from '#lib/components/admin/blocks/image-field.svelte';
 	import LandingPageEditor from '#lib/components/admin/landing-page-editor.svelte';
 	import type { ProgramPatch } from '#lib/block-preview.js';
 	import { contrastRatio } from '#lib/theme.js';
-	import ProgramDocs from './program-docs.svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
-
-	// Two tabs, each with its own preview: the program page (details and blocks), and the documents.
-	const tab = $derived(page.url.searchParams.get('tab') === 'docs' ? 'docs' : 'page');
-	const tabs = [
-		{ value: 'page', label: 'Program page', href: '?', icon: FileText },
-		{ value: 'docs', label: 'Documents', href: '?tab=docs', icon: FolderOpen }
-	] as const;
 
 	let detailsOpen = $state(true);
 
@@ -87,27 +74,6 @@
 	<title>{data.program.code} · Programs · AACCUP Desk</title>
 </svelte:head>
 
-<a href="/admin/programs" class="inline-flex min-h-9 items-center gap-2 text-[13px] text-ink-soft hover:text-ink">
-	<ArrowLeft class="size-4" />
-	All programs
-</a>
-
-<div class="mt-4">
-	<PageHeader eyebrow={`Program · /${data.program.slug}`} title={`${data.program.code} — ${data.program.name}`} />
-</div>
-
-<nav class="-mt-px mb-6 flex gap-1 overflow-x-auto" aria-label="Program sections">
-	{#each tabs as item (item.value)}
-		{@const Icon = item.icon}
-		<a href={item.href} data-sveltekit-noscroll data-sveltekit-replacestate aria-current={tab === item.value ? 'page' : undefined} class="inline-flex h-11 shrink-0 items-center gap-2 border-b-2 px-4 text-[14px] font-medium {tab === item.value ? 'border-ink text-ink' : 'border-transparent text-ink-soft hover:text-ink'}">
-			<Icon class="size-4" /> {item.label}
-		</a>
-	{/each}
-</nav>
-
-{#if tab === 'docs'}
-	<ProgramDocs {data} {field} />
-{:else}
 	<LandingPageEditor
 		label={data.program.code}
 		publicHref={`/${data.program.slug}`}
@@ -222,4 +188,3 @@
 			</section>
 		{/snippet}
 	</LandingPageEditor>
-{/if}

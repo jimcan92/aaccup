@@ -11,6 +11,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import QuickActions, { type QuickGroup } from '#lib/components/site/quick-actions.svelte';
+	import { documentsHref } from '#lib/admin-links.js';
 	import { dossierPath } from '#lib/data/accreditation.js';
 	import type { Program, Visit } from '#lib/data/types.js';
 	import { menuPrograms, staffInfo, type MenuProgram } from '#lib/menu-data.js';
@@ -37,7 +38,7 @@
 		if (base === `/${program.slug}` && !route.endsWith('/print')) here.items.push({ label: 'Print evidence index', href: `${base}/print`, icon: Printer });
 		if (staff.programId) {
 			here.items.push({ label: `Edit ${program.code} page`, href: `/admin/programs/${staff.programId}`, icon: PencilLine });
-			here.items.push({ label: `Manage ${program.code} documents`, href: `/admin/programs/${staff.programId}?tab=docs`, icon: Settings2 });
+			here.items.push({ label: `Manage ${program.code} documents`, href: documentsHref(staff.programId), icon: Settings2 });
 		}
 		return [
 			here,

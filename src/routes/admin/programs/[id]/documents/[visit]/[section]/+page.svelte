@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { enhance } from '#lib/admin-enhance.js';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import ClipboardPaste from '@lucide/svelte/icons/clipboard-paste';
 	import FolderSync from '@lucide/svelte/icons/folder-sync';
@@ -105,12 +104,7 @@
 	<label class="grid gap-1.5 text-[13px] font-medium sm:col-span-2">Note<textarea name="note" rows="2" class={area}>{document?.note ?? ''}</textarea></label>
 {/snippet}
 
-<a href={`/admin/visits/${visit.id}`} class="inline-flex min-h-9 items-center gap-2 text-[13px] text-ink-soft hover:text-ink">
-	<ArrowLeft class="size-4" />
-	{program.code} · {visit.year} {visit.label}
-</a>
-
-<div class="mt-4">
+<div>
 	<PageHeader
 		eyebrow={`${program.code} · ${groupLabel}${data.section.number ? ` · ${data.section.number}` : ''}`}
 		title={data.section.title}

@@ -8,17 +8,24 @@
 	import PreviewDialog from '#lib/components/admin/preview-dialog.svelte';
 	import PreviewPane from '#lib/components/admin/preview-pane.svelte';
 	import StatusBadge from '#lib/components/admin/status-badge.svelte';
+	import { visitHref } from '#lib/admin-links.js';
 	import { fresh } from '#lib/fresh-link.js';
 	import { PreviewToggle } from '#lib/preview-toggle.svelte.js';
-	import type { PageData } from './$types';
+	import type { PageProps } from './$types';
 
 	// The Documents tab: Drive setup and visits, beside the public documents page.
-	let { data, field }: { data: PageData; field: string } = $props();
+	let { data }: PageProps = $props();
+
+	const field = 'h-11 w-full border border-rule bg-salt px-3 text-[14px] text-ink outline-none focus:border-ink disabled:opacity-60';
 
 	const preview = new PreviewToggle();
 	// The public page is cached at the edge; a fresh mark shows the latest. Only rendered in the browser.
 	const previewSrc = $derived(`/${data.program.slug}/dossier?fresh=${Date.now()}`);
 </script>
+
+<svelte:head>
+	<title>{data.program.code} documents · AACCUP Desk</title>
+</svelte:head>
 
 <div class={preview.side ? 'grid grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] gap-8' : ''}>
 <div class="min-w-0">
@@ -49,7 +56,7 @@
 	<ul>
 		{#each data.visits as visit (visit.id)}
 			<li>
-				<a href={`/admin/visits/${visit.id}`} class="group grid gap-2 border-b border-rule px-1 py-4 hover:bg-paper sm:grid-cols-[1fr_auto_auto_auto] sm:items-center sm:gap-6 sm:px-3">
+				<a href={visitHref(data.program.id, visit.id)} class="group grid gap-2 border-b border-rule px-1 py-4 hover:bg-paper sm:grid-cols-[1fr_auto_auto_auto] sm:items-center sm:gap-6 sm:px-3">
 					<span>
 						<span class="block text-[15px] font-medium">{visit.year} · {visit.label}</span>
 						<span class="font-mono text-[12px] text-ink-soft">/{data.program.slug}{visit.status === 'active' ? '' : `/${visit.slug}`}</span>

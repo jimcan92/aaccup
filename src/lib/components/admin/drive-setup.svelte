@@ -7,6 +7,7 @@
 	import FolderSync from '@lucide/svelte/icons/folder-sync';
 	import Hand from '@lucide/svelte/icons/hand';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
+	import { sectionHref, visitHref } from '#lib/admin-links.js';
 	import { expectedFolderName, folderTree } from '#lib/drive-names.js';
 	import type { DriveSetup } from '#lib/server/drive-setup.js';
 
@@ -53,7 +54,7 @@
 			</p>
 		</div>
 		{#if canSync && setup.configured && (visit.rootFolderId || matched)}
-			<form method="POST" action={`/admin/visits/${visit.id}?/syncDrive`} use:enhance={submit}>
+			<form method="POST" action={`${visitHref(visit.programId, visit.id)}?/syncDrive`} use:enhance={submit}>
 				<button class="inline-flex h-10 items-center gap-2 bg-ink px-4 text-[13px] font-medium text-paper hover:bg-ink-soft">
 					<FolderSync class="size-4" />
 					Sync now
@@ -79,7 +80,7 @@
 					as Viewer. Subfolders named like the guide are matched to sections on every sync.
 				</p>
 				{#if canManage}
-					<form method="POST" action={`/admin/visits/${visit.id}?/setRootFolder`} use:enhance={submit} class="mt-3 flex flex-col gap-2 sm:flex-row">
+					<form method="POST" action={`${visitHref(visit.programId, visit.id)}?/setRootFolder`} use:enhance={submit} class="mt-3 flex flex-col gap-2 sm:flex-row">
 						<input
 							name="folder"
 							aria-label="Root folder link"
@@ -149,7 +150,7 @@
 								{/if}
 							</div>
 							{#if editing === section.id}
-								<form method="POST" action={`/admin/sections/${section.id}?/setFolder`} use:enhance={submit} class="mt-2 flex flex-col gap-2 pl-7 sm:flex-row">
+								<form method="POST" action={`${sectionHref(visit.programId, visit.id, section.id)}?/setFolder`} use:enhance={submit} class="mt-2 flex flex-col gap-2 pl-7 sm:flex-row">
 									<input
 										name="folder"
 										aria-label={`Folder link for ${section.title}`}

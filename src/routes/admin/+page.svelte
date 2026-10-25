@@ -100,7 +100,7 @@
 		<ul class="mt-4 border-t border-rule">
 			{#each data.linkIssues.slice(0, 40) as issue (issue.id)}
 				<li>
-					<a href={`/admin/sections/${issue.areaId}`} class="grid gap-1 border-b border-rule px-1 py-3 transition-colors hover:bg-paper sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4 sm:px-3">
+					<a href={issue.href} class="grid gap-1 border-b border-rule px-1 py-3 transition-colors hover:bg-paper sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4 sm:px-3">
 						<span class="min-w-0">
 							<span class="block truncate text-[14px] font-medium text-ink">{issue.title}</span>
 							<span class="block text-[12px] text-ink-soft">{issue.section}</span>
