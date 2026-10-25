@@ -232,7 +232,7 @@
 				</div>
 			{:else}
 				<div class="grid gap-3">
-					{#if first}<p class="text-[12px] text-ink-soft">The first photo of the first gallery is also the banner behind the program title.</p>{/if}
+					{#if first}<p class="text-[12px] text-ink-soft">Without a cover image in the program details, the first photo of the first gallery is the banner behind the program title.</p>{/if}
 					{#each photos as photo, index (index)}
 						<div class="grid gap-3 border border-rule p-3 sm:grid-cols-[7rem_minmax(0,1fr)_auto]">
 							<div class="relative grid aspect-[4/3] place-items-center overflow-hidden bg-salt">
