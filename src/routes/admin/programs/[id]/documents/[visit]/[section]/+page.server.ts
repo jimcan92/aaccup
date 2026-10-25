@@ -17,6 +17,7 @@ import { previewUrl } from '#lib/drive-url.js';
 import { driveConfigured, folderIdFrom, folderName } from '#lib/server/drive.js';
 import { summary, syncArea } from '#lib/server/drive-sync.js';
 import type { StaffProfile } from '#lib/server/sso.js';
+import { documentsHref, visitHref } from '#lib/admin-links.js';
 import type { Actions, PageServerLoad } from './$types';
 
 const NOT_DRIVE = ' That link is not a Google Drive file or folder, so it shows as “In preparation” until a Drive link replaces it.';
@@ -103,21 +104,23 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	const { data: section } = await supabase
 		.from('areas')
 		.select('*, visit:visits(id, slug, year, label, status, program:programs(id, code, slug))')
-		.eq('id', params.id)
+		.eq('id', params.section)
+		.eq('visit_id', params.visit)
+		.eq('program_id', params.id)
 		.maybeSingle();
 	if (!section) error(404, 'Section not found');
 
 	const { data: documents } = await supabase
 		.from('documents')
 		.select('id, title, code, kind, format, drive_url, status, updated_label, note, sort_order, workflow, updated_at, source, drive_public, drive_missing')
-		.eq('area_id', params.id)
+		.eq('area_id', params.section)
 		.order('sort_order')
 		.order('created_at');
 
 	const { data: recommendations } = await supabase
 		.from('recommendations')
 		.select('id, number, recommendation, action_taken, status, evidence_url')
-		.eq('area_id', params.id)
+		.eq('area_id', params.section)
 		.order('sort_order')
 		.order('number');
 
@@ -129,8 +132,14 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		.order('created_at', { ascending: false })
 		.limit(15);
 
+	const visit = section.visit as { year: number; label: string };
 	return {
 		section,
+		crumbs: [
+			{ label: 'Documents', href: documentsHref(params.id) },
+			{ label: `${visit.year} · ${visit.label}`, href: visitHref(params.id, params.visit) },
+			{ label: section.title as string }
+		],
 		documents: documents ?? [],
 		recommendations: recommendations ?? [],
 		history: (history ?? []).map((row) => ({
@@ -175,29 +184,29 @@ export const actions: Actions = {
 			values.sort_order = integer(form, 'sort_order');
 		}
 
-		const { error: updateError } = await supabase.from('areas').update(values).eq('id', params.id);
+		const { error: updateError } = await supabase.from('areas').update(values).eq('id', params.section);
 		return dbFail(updateError) ?? { message: 'Section saved.' };
 	},
 
 	submitSection: async ({ locals, params }) => {
-		const { supabase } = await editableArea(locals, params.id);
-		const { error: rpcError } = await supabase.rpc('submit_area', { p_id: params.id });
+		const { supabase } = await editableArea(locals, params.section);
+		const { error: rpcError } = await supabase.rpc('submit_area', { p_id: params.section });
 		return dbFail(rpcError) ?? { message: 'Section submitted for review.' };
 	},
 
 	publishSection: async ({ locals, params }) => {
 		const { supabase } = requireStaff(locals, ['admin', 'focal']);
-		const { error: rpcError } = await supabase.rpc('publish_area', { p_id: params.id });
+		const { error: rpcError } = await supabase.rpc('publish_area', { p_id: params.section });
 		return dbFail(rpcError) ?? { message: 'Section published. It appears on the public site within a minute.' };
 	},
 
 	deleteSection: async ({ locals, params }) => {
 		const { supabase } = requireStaff(locals, ['admin', 'focal']);
-		const { data: area } = await supabase.from('areas').select('visit_id').eq('id', params.id).single();
-		const { error: deleteError } = await supabase.from('areas').delete().eq('id', params.id);
+		const { data: area } = await supabase.from('areas').select('visit_id').eq('id', params.section).single();
+		const { error: deleteError } = await supabase.from('areas').delete().eq('id', params.section);
 		const failed = dbFail(deleteError);
 		if (failed) return failed;
-		redirect(303, `/admin/visits/${area?.visit_id ?? ''}`);
+		redirect(303, visitHref(params.id, area?.visit_id ?? params.visit));
 	},
 
 	setFolder: async ({ request, locals, params }) => {
@@ -209,7 +218,7 @@ export const actions: Actions = {
 			const { error: resetError } = await supabase
 				.from('areas')
 				.update({ drive_folder_id: null, drive_folder_name: null, drive_folder_source: 'auto' })
-				.eq('id', params.id);
+				.eq('id', params.section);
 			return dbFail(resetError) ?? { message: 'Back to automatic matching. The next visit sync picks the folder.' };
 		}
 
@@ -228,25 +237,25 @@ export const actions: Actions = {
 		const { error: updateError } = await supabase
 			.from('areas')
 			.update({ drive_folder_id: id, drive_folder_name: name, drive_folder_source: 'manual' })
-			.eq('id', params.id);
+			.eq('id', params.section);
 		return dbFail(updateError) ?? { message: `Folder ${name ? `“${name}” ` : ''}set for this section. Sync to pull its files.` };
 	},
 
 	syncSection: async ({ locals, params }) => {
-		const { staff } = await editableArea(locals, params.id);
+		const { staff } = await editableArea(locals, params.section);
 		if (!driveConfigured()) return fail(400, { message: 'Google Drive is not configured on this deployment.' });
-		return { message: summary(await syncArea(params.id, staff.id)) };
+		return { message: summary(await syncArea(params.section, staff.id)) };
 	},
 
 	addDocument: async ({ request, locals, params }) => {
-		const { supabase } = await editableArea(locals, params.id);
+		const { supabase } = await editableArea(locals, params.section);
 		const values = readDocument(await request.formData());
 		const problem = validDocument(values);
 		if (problem) return fail(400, { message: problem });
 
 		const { error: insertError } = await supabase
 			.from('documents')
-			.insert({ ...values, area_id: params.id, sort_order: await nextSort(supabase, params.id), workflow: 'draft' });
+			.insert({ ...values, area_id: params.section, sort_order: await nextSort(supabase, params.section), workflow: 'draft' });
 		return (
 			dbFail(insertError) ?? {
 				message: `Added “${values.title}” as a draft.${values.drive_url && values.status === 'pending' ? NOT_DRIVE : ''}`
@@ -255,18 +264,18 @@ export const actions: Actions = {
 	},
 
 	bulkAdd: async ({ request, locals, params }) => {
-		const { staff, supabase } = await editableArea(locals, params.id);
+		const { staff, supabase } = await editableArea(locals, params.section);
 		const form = await request.formData();
 		const parsed = parseBulkLinks(text(form, 'links'));
 		if (typeof parsed === 'string') return fail(400, { message: parsed, links: text(form, 'links') });
 
 		const kind = KINDS.includes(text(form, 'kind')) ? text(form, 'kind') : 'supporting';
 		const publish = canManage(staff) && form.get('publish') === 'on';
-		const start = await nextSort(supabase, params.id);
+		const start = await nextSort(supabase, params.section);
 
 		const { error: insertError } = await supabase.from('documents').insert(
 			parsed.map((row, index) => ({
-				area_id: params.id,
+				area_id: params.section,
 				title: row.title,
 				drive_url: row.url,
 				format: row.format,
@@ -284,7 +293,7 @@ export const actions: Actions = {
 	},
 
 	saveDocument: async ({ request, locals, params }) => {
-		const { staff, supabase } = await editableArea(locals, params.id);
+		const { staff, supabase } = await editableArea(locals, params.section);
 		const form = await request.formData();
 		const id = text(form, 'id');
 		const values = readDocument(form);
@@ -293,7 +302,7 @@ export const actions: Actions = {
 
 		// An area chair's change goes back through review instead of going live directly.
 		const update = staff.role === 'area_chair' ? { ...values, workflow: 'draft' } : values;
-		const { error: updateError } = await supabase.from('documents').update(update).eq('id', id).eq('area_id', params.id);
+		const { error: updateError } = await supabase.from('documents').update(update).eq('id', id).eq('area_id', params.section);
 		return (
 			dbFail(updateError) ?? {
 				message:
@@ -305,7 +314,7 @@ export const actions: Actions = {
 	},
 
 	submitDocument: async ({ request, locals, params }) => {
-		const { supabase } = await editableArea(locals, params.id);
+		const { supabase } = await editableArea(locals, params.section);
 		const { error: rpcError } = await supabase.rpc('submit_document', { p_id: text(await request.formData(), 'id') });
 		return dbFail(rpcError) ?? { message: 'Submitted for review.' };
 	},
@@ -318,7 +327,7 @@ export const actions: Actions = {
 
 	publishAll: async ({ locals, params }) => {
 		const { supabase } = requireStaff(locals, ['admin', 'focal']);
-		const { data: pending } = await supabase.from('documents').select('id').eq('area_id', params.id).neq('workflow', 'published');
+		const { data: pending } = await supabase.from('documents').select('id').eq('area_id', params.section).neq('workflow', 'published');
 		for (const document of pending ?? []) {
 			const { error: rpcError } = await supabase.rpc('publish_document', { p_id: document.id });
 			if (rpcError) return dbFail(rpcError);
@@ -327,19 +336,19 @@ export const actions: Actions = {
 	},
 
 	addRecommendation: async ({ request, locals, params }) => {
-		const { supabase } = await editableArea(locals, params.id);
+		const { supabase } = await editableArea(locals, params.section);
 		const values = readRecommendation(await request.formData());
 		const problem = validRecommendation(values);
 		if (problem) return fail(400, { message: problem });
 
 		const { error: insertError } = await supabase
 			.from('recommendations')
-			.insert({ ...values, area_id: params.id, sort_order: values.number });
+			.insert({ ...values, area_id: params.section, sort_order: values.number });
 		return dbFail(insertError) ?? { message: `Added recommendation ${values.number}.` };
 	},
 
 	saveRecommendation: async ({ request, locals, params }) => {
-		const { supabase } = await editableArea(locals, params.id);
+		const { supabase } = await editableArea(locals, params.section);
 		const form = await request.formData();
 		const values = readRecommendation(form);
 		const problem = validRecommendation(values);
@@ -349,7 +358,7 @@ export const actions: Actions = {
 			.from('recommendations')
 			.update({ ...values, sort_order: values.number })
 			.eq('id', text(form, 'id'))
-			.eq('area_id', params.id);
+			.eq('area_id', params.section);
 		return dbFail(updateError) ?? { message: `Saved recommendation ${values.number}.` };
 	},
 
@@ -359,13 +368,13 @@ export const actions: Actions = {
 			.from('recommendations')
 			.delete()
 			.eq('id', text(await request.formData(), 'id'))
-			.eq('area_id', params.id);
+			.eq('area_id', params.section);
 		return dbFail(deleteError) ?? { message: 'Recommendation deleted.' };
 	},
 
 	deleteDocument: async ({ request, locals, params }) => {
 		const { supabase } = requireStaff(locals, ['admin', 'focal']);
-		const { error: deleteError } = await supabase.from('documents').delete().eq('id', text(await request.formData(), 'id')).eq('area_id', params.id);
+		const { error: deleteError } = await supabase.from('documents').delete().eq('id', text(await request.formData(), 'id')).eq('area_id', params.section);
 		return dbFail(deleteError) ?? { message: 'Document deleted.' };
 	}
 };

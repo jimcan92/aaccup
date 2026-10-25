@@ -1,23 +1,30 @@
 <script lang="ts">
 	import { enhance } from '#lib/admin-enhance.js';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
-	import PageHeader from '#lib/components/admin/page-header.svelte';
-	import StatusBadge from '#lib/components/admin/status-badge.svelte';
-	import DriveSetup from '#lib/components/admin/drive-setup.svelte';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import ImageField from '#lib/components/admin/blocks/image-field.svelte';
+	import LandingPageEditor from '#lib/components/admin/landing-page-editor.svelte';
+	import type { ProgramPatch } from '#lib/block-preview.js';
 	import { contrastRatio } from '#lib/theme.js';
-	import { fresh } from '#lib/fresh-link.js';
 	import type { PageProps } from './$types';
 
-	let { data, form }: PageProps = $props();
+	let { data }: PageProps = $props();
 
-	// The logo field uploads on its own; the form posts the resulting link.
+	let detailsOpen = $state(true);
+
+	// Kept as state, so unsaved edits survive switching tabs and reach the preview as they are typed.
 	// svelte-ignore state_referenced_locally
-	let logo = $state<string>(data.program.logo_url ?? '');
-	// svelte-ignore state_referenced_locally
-	let cover = $state<string>(data.program.cover_url ?? '');
+	let typed = $state({
+		code: data.program.code,
+		name: data.program.name,
+		degree: data.program.degree ?? '',
+		summary: data.program.summary ?? '',
+		tagline: data.program.tagline ?? '',
+		logo: data.program.logo_url ?? '',
+		cover: data.program.cover_url ?? '',
+		website: data.program.website_url ?? '',
+		email: data.program.email ?? '',
+		phone: data.program.phone ?? ''
+	});
 
 	// Kept in a variable: inside a Svelte attribute, `{6}` would be read as an expression.
 	const HEX_PATTERN = '#[0-9a-fA-F]{6}';
@@ -30,6 +37,21 @@
 		contrast: data.program.theme_contrast ?? '#ffffff'
 	});
 
+	// Empty optional fields are hidden on the public page, as the dossier loader does.
+	const patch = $derived<ProgramPatch>({
+		code: typed.code,
+		name: typed.name,
+		degree: typed.degree,
+		summary: typed.summary,
+		tagline: typed.tagline || undefined,
+		logo: typed.logo || undefined,
+		cover: typed.cover || undefined,
+		website: typed.website || undefined,
+		email: typed.email || undefined,
+		phone: typed.phone || undefined,
+		theme: { ...colors }
+	});
+
 	const checks = $derived([
 		{ label: 'Text on program color', ratio: contrastRatio(colors.contrast, colors.program) },
 		{ label: 'Program color on tint', ratio: contrastRatio(colors.program, colors.soft) },
@@ -37,6 +59,9 @@
 	]);
 
 	const field = 'h-11 w-full border border-rule bg-salt px-3 text-[14px] text-ink outline-none focus:border-ink disabled:opacity-60';
+	const label = 'grid gap-1.5 text-[13px] font-medium';
+	const group = 'border-t border-rule pt-5';
+	const groupTitle = 'mb-3 font-display text-[15px] font-semibold tracking-[-0.01em]';
 	const colorFields = [
 		{ key: 'program', label: 'Program color', hint: 'Header, buttons, numbers' },
 		{ key: 'ink', label: 'Dark ink', hint: 'Text on light surfaces' },
@@ -49,162 +74,118 @@
 	<title>{data.program.code} · Programs · AACCUP Desk</title>
 </svelte:head>
 
-<a href="/admin/programs" class="inline-flex min-h-9 items-center gap-2 text-[13px] text-ink-soft hover:text-ink">
-	<ArrowLeft class="size-4" />
-	All programs
-</a>
+	<LandingPageEditor
+		label={data.program.code}
+		publicHref={`/${data.program.slug}`}
+		folderId={data.program.id}
+		blocks={data.blocks}
+		error={data.error}
+		canEdit={data.canEdit}
+		canManage={data.canManage}
+		empty="No blocks yet. The public page shows the program title, summary, and the link to the documents until you add some."
+		previewSrc={`/admin/programs/${data.program.id}/landing/preview`}
+		program={patch}
+		inBar
+	>
+		{#snippet top()}
+			<section class="border border-rule bg-paper" aria-labelledby="details-heading">
+				<button type="button" onclick={() => (detailsOpen = !detailsOpen)} aria-expanded={detailsOpen} aria-controls="program-details" class="flex w-full cursor-pointer items-center gap-2 px-4 py-3 text-left {detailsOpen ? 'border-b border-rule' : ''}">
+					<span class="mr-auto">
+						<span id="details-heading" class="block font-display text-[17px] font-semibold tracking-[-0.02em]">Program details</span>
+						<span class="block text-[12px] text-ink-soft">Name, tagline, logo, contact and colors. They show on the home page card and at the top of the program page.</span>
+					</span>
+					<span class="text-[12px] text-ink-soft">{data.program.status === 'published' ? 'Published' : 'Draft'}</span>
+					<ChevronDown class="size-4 shrink-0 transition-transform {detailsOpen ? 'rotate-180' : ''}" />
+				</button>
 
-<div class="mt-4">
-	<PageHeader eyebrow={`Program · /${data.program.slug}`} title={`${data.program.code} — ${data.program.name}`}>
-		{#snippet actions()}
-			<a href={`/admin/programs/${data.program.id}/landing`} class="inline-flex h-10 items-center gap-2 bg-ink px-4 text-[13px] font-medium text-paper hover:bg-ink-soft">
-				Edit program page
-			</a>
-			<a href={`/${data.program.slug}`} use:fresh target="_blank" rel="noopener noreferrer" class="inline-flex h-10 items-center gap-2 border border-rule bg-paper px-4 text-[13px] font-medium hover:border-ink/30">
-				Public page
-				<ArrowUpRight class="size-4" />
-			</a>
+				<form id="program-details" method="POST" action="?/update" use:enhance={() => async ({ update }) => update({ reset: false })} class="p-4" hidden={!detailsOpen}>
+					<fieldset disabled={!data.canManage} class="min-w-0 space-y-5">
+						<div class="grid gap-4 sm:grid-cols-[9rem_1fr]">
+							<label class={label}>Code<input name="code" required bind:value={typed.code} class={field} /></label>
+							<label class={label}>Name<input name="name" required bind:value={typed.name} class={field} /></label>
+							<label class={label}>URL slug<input name="slug" required value={data.program.slug} class="{field} font-mono text-[13px]" /></label>
+							<label class={label}>Degree<input name="degree" bind:value={typed.degree} class={field} /></label>
+							<label class={label}>Sort order<input name="sort_order" type="number" value={data.program.sort_order} class={field} /></label>
+							<label class={label}>
+								Visibility
+								<select name="status" class={field}>
+									<option value="published" selected={data.program.status === 'published'}>Published — on the public site</option>
+									<option value="draft" selected={data.program.status !== 'published'}>Draft — hidden</option>
+								</select>
+							</label>
+						</div>
+
+						<div class="{group} grid gap-4">
+							<p class={groupTitle}>Tagline and summary</p>
+							<label class={label}>
+								Tagline
+								<input name="tagline" bind:value={typed.tagline} maxlength="160" placeholder="One short line, e.g. Stewards of Cebu’s coastal waters" class={field} />
+							</label>
+							<label class={label}>
+								Summary for evaluators
+								<textarea name="summary" rows="4" bind:value={typed.summary} class="w-full border border-rule bg-salt p-3 text-[14px] font-normal leading-relaxed outline-none focus:border-ink"></textarea>
+							</label>
+						</div>
+
+						<div class="{group} grid gap-5">
+							<p class="{groupTitle} -mb-2">Logo and cover</p>
+							<div class="grid gap-1.5">
+								<span class="text-[13px] font-medium">Logo</span>
+								<ImageField bind:value={typed.logo} programId={data.program.id} label="Logo" contain />
+								<input type="hidden" name="logo_url" value={typed.logo} />
+								<span class="text-[12px] text-ink-soft">A square image with a transparent or plain background looks best.</span>
+							</div>
+							<div class="grid gap-1.5">
+								<span class="text-[13px] font-medium">Cover image</span>
+								<ImageField bind:value={typed.cover} programId={data.program.id} label="Cover" />
+								<input type="hidden" name="cover_url" value={typed.cover} />
+								<span class="text-[12px] text-ink-soft">The photo behind the program’s card on the home page. Empty: the first photo of the gallery below is used.</span>
+							</div>
+						</div>
+
+						<div class="{group} grid gap-4 sm:grid-cols-2">
+							<p class="{groupTitle} -mb-1 sm:col-span-2">Contact <span class="font-sans text-[12px] font-normal text-ink-soft">· optional; empty fields are hidden</span></p>
+							<label class="{label} sm:col-span-2">Website<input name="website_url" type="url" bind:value={typed.website} placeholder="https://…" class="{field} font-mono text-[13px]" /></label>
+							<label class={label}>Email<input name="email" type="email" bind:value={typed.email} placeholder="bsfi.moalboal@ctu.edu.ph" class={field} /></label>
+							<label class={label}>Contact number<input name="phone" type="tel" bind:value={typed.phone} placeholder="0917 123 4567" class={field} /></label>
+						</div>
+
+						<div class={group}>
+							<p class={groupTitle}>Colors</p>
+							<div class="grid gap-4 sm:grid-cols-2">
+								{#each colorFields as item (item.key)}
+									<label class={label}>
+										{item.label}
+										<span class="flex gap-2">
+											<input type="color" bind:value={colors[item.key]} class="h-11 w-14 shrink-0 cursor-pointer border border-rule bg-salt p-1" aria-label={`${item.label} picker`} />
+											<input name={`theme_${item.key}`} bind:value={colors[item.key]} pattern={HEX_PATTERN} required class="{field} font-mono" />
+										</span>
+										<span class="text-[12px] font-normal text-ink-soft">{item.hint}</span>
+									</label>
+								{/each}
+							</div>
+							<ul class="mt-4 space-y-1.5 text-[13px]">
+								{#each checks as check (check.label)}
+									{@const pass = check.ratio >= 4.5}
+									<li class="flex items-center justify-between">
+										<span>{check.label}</span>
+										<span class="font-mono text-[12px] {pass ? 'text-bsfi' : 'text-destructive'}">{check.ratio.toFixed(1)}:1 {pass ? 'AA' : 'too low'}</span>
+									</li>
+								{/each}
+							</ul>
+							<p class="mt-2 text-[12px] text-ink-soft">Text needs at least 4.5:1. If the text color fails on the program color, the site switches to white or ink automatically.</p>
+						</div>
+					</fieldset>
+
+					{#if data.canManage}
+						<div class="mt-5 flex flex-wrap items-center gap-2 border-t border-rule pt-4">
+							<button class="h-10 bg-ink px-4 text-[13px] font-medium text-paper hover:bg-ink-soft">Save details</button>
+							<span class="text-[12px] text-ink-soft">Details go live within a minute of saving; the blocks below stay drafts until published.</span>
+						</div>
+					{:else}
+						<p class="mt-4 text-[12px] text-ink-soft">Only admins and focal persons edit the details.</p>
+					{/if}
+				</form>
+			</section>
 		{/snippet}
-	</PageHeader>
-</div>
-
-
-<div class="mt-8 grid gap-10 xl:grid-cols-[1.2fr_1fr]">
-	<form method="POST" action="?/update" use:enhance={() => async ({ update }) => update({ reset: false })} class="space-y-6">
-		<fieldset disabled={!data.canManage} class="grid gap-4 sm:grid-cols-[8rem_1fr]">
-			<legend class="mb-3 font-display text-[20px] font-semibold tracking-[-0.03em]">Details</legend>
-			<label class="grid gap-1.5 text-[13px] font-medium">Code<input name="code" required value={data.program.code} class={field} /></label>
-			<label class="grid gap-1.5 text-[13px] font-medium">Name<input name="name" required value={data.program.name} class={field} /></label>
-			<label class="grid gap-1.5 text-[13px] font-medium">URL slug<input name="slug" required value={data.program.slug} class={field} /></label>
-			<label class="grid gap-1.5 text-[13px] font-medium">Degree<input name="degree" value={data.program.degree ?? ''} class={field} /></label>
-			<label class="grid gap-1.5 text-[13px] font-medium sm:col-span-2">
-				Summary for evaluators
-				<textarea name="summary" rows="4" class="w-full border border-rule bg-salt p-3 text-[14px] leading-relaxed outline-none focus:border-ink">{data.program.summary ?? ''}</textarea>
-			</label>
-			<label class="grid gap-1.5 text-[13px] font-medium">Sort order<input name="sort_order" type="number" value={data.program.sort_order} class={field} /></label>
-			<label class="grid gap-1.5 text-[13px] font-medium">
-				Visibility
-				<select name="status" class={field}>
-					<option value="published" selected={data.program.status === 'published'}>Published — on the public site</option>
-					<option value="draft" selected={data.program.status !== 'published'}>Draft — hidden</option>
-				</select>
-			</label>
-		</fieldset>
-
-		<fieldset disabled={!data.canManage} class="grid gap-4 sm:grid-cols-2">
-			<legend class="mb-1 font-display text-[20px] font-semibold tracking-[-0.03em]">Identity and contact</legend>
-			<p class="text-[12px] text-ink-soft sm:col-span-2">Shown on the home page card and the program home page. All optional; empty fields are hidden.</p>
-			<label class="grid gap-1.5 text-[13px] font-medium sm:col-span-2">
-				Tagline
-				<input name="tagline" value={data.program.tagline ?? ''} maxlength="160" placeholder="One short line, e.g. Stewards of Cebu’s coastal waters" class={field} />
-			</label>
-			<div class="grid gap-1.5 sm:col-span-2">
-				<span class="text-[13px] font-medium">Logo</span>
-				<ImageField bind:value={logo} programId={data.program.id} label="Logo" contain />
-				<input type="hidden" name="logo_url" value={logo} />
-				<span class="text-[12px] text-ink-soft">A square image with a transparent or plain background looks best.</span>
-			</div>
-			<div class="grid gap-1.5 sm:col-span-2">
-				<span class="text-[13px] font-medium">Cover image</span>
-				<ImageField bind:value={cover} programId={data.program.id} label="Cover" />
-				<input type="hidden" name="cover_url" value={cover} />
-				<span class="text-[12px] text-ink-soft">The photo behind the program’s card on the home page. Empty: the first photo of the program page’s gallery is used.</span>
-			</div>
-			<label class="grid gap-1.5 text-[13px] font-medium sm:col-span-2">Website<input name="website_url" type="url" value={data.program.website_url ?? ''} placeholder="https://…" class="{field} font-mono text-[13px]" /></label>
-			<label class="grid gap-1.5 text-[13px] font-medium">Email<input name="email" type="email" value={data.program.email ?? ''} placeholder="bsfi.moalboal@ctu.edu.ph" class={field} /></label>
-			<label class="grid gap-1.5 text-[13px] font-medium">Contact number<input name="phone" type="tel" value={data.program.phone ?? ''} placeholder="0917 123 4567" class={field} /></label>
-		</fieldset>
-
-		<fieldset disabled={!data.canManage}>
-			<legend class="mb-3 font-display text-[20px] font-semibold tracking-[-0.03em]">Theme</legend>
-			<div class="grid gap-4 sm:grid-cols-2">
-				{#each colorFields as item (item.key)}
-					<label class="grid gap-1.5 text-[13px] font-medium">
-						{item.label}
-						<span class="flex gap-2">
-							<input type="color" bind:value={colors[item.key]} class="h-11 w-14 shrink-0 cursor-pointer border border-rule bg-salt p-1" aria-label={`${item.label} picker`} />
-							<input name={`theme_${item.key}`} bind:value={colors[item.key]} pattern={HEX_PATTERN} required class="{field} font-mono" />
-						</span>
-						<span class="text-[12px] font-normal text-ink-soft">{item.hint}</span>
-					</label>
-				{/each}
-			</div>
-		</fieldset>
-
-		{#if data.canManage}
-			<button class="h-11 bg-ink px-6 text-[14px] font-medium text-paper hover:bg-ink-soft">Save program</button>
-		{/if}
-	</form>
-
-	<aside class="space-y-4">
-		<p class="font-mono text-[12px] text-ink-soft">Preview</p>
-		<div class="border border-rule" style:background={colors.soft}>
-			<div class="flex items-center justify-between px-4 py-3" style:background={colors.program} style:color={colors.contrast}>
-				<span class="font-display text-[18px] font-semibold">{data.program.code}</span>
-				<span class="text-[12px]">Search · Manage</span>
-			</div>
-			<div class="p-4">
-				<p class="font-display text-[44px] font-semibold leading-none tracking-[-0.06em]" style:color={colors.program}>{data.program.code}</p>
-				<p class="mt-2 text-[14px] font-medium" style:color={colors.ink}>{data.program.name}</p>
-				<span class="mt-3 inline-block px-3 py-1.5 text-[12px] font-medium" style:background={colors.program} style:color={colors.contrast}>Open in Drive</span>
-			</div>
-		</div>
-		<ul class="space-y-1.5 text-[13px]">
-			{#each checks as check (check.label)}
-				{@const pass = check.ratio >= 4.5}
-				<li class="flex items-center justify-between border-b border-rule pb-1.5">
-					<span>{check.label}</span>
-					<span class="font-mono text-[12px] {pass ? 'text-bsfi' : 'text-destructive'}">{check.ratio.toFixed(1)}:1 {pass ? 'AA' : 'too low'}</span>
-				</li>
-			{/each}
-		</ul>
-		<p class="text-[12px] text-ink-soft">Text needs at least 4.5:1. If the text color fails on the program color, the site switches to white or ink automatically.</p>
-	</aside>
-</div>
-
-{#if data.drive?.visit}
-	<div class="mt-14">
-		<DriveSetup setup={data.drive} canManage={data.canManage} />
-	</div>
-{/if}
-
-<section class="mt-14">
-	<div class="flex items-end justify-between border-b border-ink/20 pb-2">
-		<h2 class="font-display text-[22px] font-semibold tracking-[-0.03em]">Visits</h2>
-		<span class="font-mono text-[12px] text-ink-soft">{data.visits.length}</span>
-	</div>
-	<ul>
-		{#each data.visits as visit (visit.id)}
-			<li>
-				<a href={`/admin/visits/${visit.id}`} class="group grid gap-2 border-b border-rule px-1 py-4 hover:bg-paper sm:grid-cols-[1fr_auto_auto_auto] sm:items-center sm:gap-6 sm:px-3">
-					<span>
-						<span class="block text-[15px] font-medium">{visit.year} · {visit.label}</span>
-						<span class="font-mono text-[12px] text-ink-soft">/{data.program.slug}{visit.status === 'active' ? '' : `/${visit.slug}`}</span>
-					</span>
-					<span class="text-[13px] text-ink-soft">{visit.sections} sections · {visit.linked}/{visit.total} linked</span>
-					<span class="flex gap-2">
-						{#if visit.status === 'active'}<span class="border border-ink/30 px-2 py-0.5 text-[12px] font-medium">Active</span>{/if}
-						<StatusBadge status={visit.workflow} />
-					</span>
-					<ArrowRight class="hidden size-4 sm:block" />
-				</a>
-			</li>
-		{:else}
-			<li class="py-6 text-[14px] text-ink-soft">No visits yet.</li>
-		{/each}
-	</ul>
-
-	{#if data.canManage}
-		<form method="POST" action="?/createVisit" use:enhance class="mt-6 grid gap-4 border border-rule bg-paper p-5 md:grid-cols-[7rem_9rem_1fr_1fr_auto] md:items-end">
-			<p class="font-display text-[18px] font-semibold md:col-span-5">Add a visit</p>
-			<label class="grid gap-1.5 text-[13px] font-medium">Year<input name="year" type="number" required min="1980" max="2100" class={field} /></label>
-			<label class="grid gap-1.5 text-[13px] font-medium">Level<input name="level" required placeholder="Level IV" class={field} /></label>
-			<label class="grid gap-1.5 text-[13px] font-medium">Public label<input name="label" placeholder="Level IV visit" class={field} /></label>
-			<label class="grid gap-1.5 text-[13px] font-medium">Previous survey label<input name="previous_label" placeholder="2026 survey" class={field} /></label>
-			<button class="h-11 bg-ink px-5 text-[14px] font-medium text-paper hover:bg-ink-soft">Add</button>
-			<p class="text-[12px] text-ink-soft md:col-span-5">
-				New visits start archived and in draft, with an empty common-documents section. Say “visit”, not “accredited”, unless the status is official.
-			</p>
-		</form>
-	{/if}
-</section>
+	</LandingPageEditor>

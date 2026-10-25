@@ -4,6 +4,7 @@ import { canManage, dbFail, integer, optional, requireStaff, SLUG, text, VISIT_S
 import { driveConfigured, folderIdFrom, folderName } from '#lib/server/drive.js';
 import { loadDriveSetup } from '#lib/server/drive-setup.js';
 import { summary, syncVisit } from '#lib/server/drive-sync.js';
+import { documentsHref, sectionHref } from '#lib/admin-links.js';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
@@ -12,7 +13,8 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	const { data: visit } = await supabase
 		.from('visits')
 		.select('*, program:programs(id, code, slug, name, theme_program)')
-		.eq('id', params.id)
+		.eq('id', params.visit)
+		.eq('program_id', params.id)
 		.maybeSingle();
 	if (!visit) error(404, 'Visit not found');
 
@@ -20,21 +22,22 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		supabase
 			.from('areas')
 			.select('id, kind, number, slug, title, short_title, status, sort_order, drive_folder_id, drive_folder_name, documents(id, status, workflow, drive_public, drive_missing)')
-			.eq('visit_id', params.id)
+			.eq('visit_id', params.visit)
 			.order('sort_order')
 			.order('number'),
 		// Copy sources: other visits that have a common section.
 		supabase
 			.from('visits')
 			.select('id, year, label, program:programs(code), areas!inner(kind)')
-			.neq('id', params.id)
+			.neq('id', params.visit)
 			.eq('areas.kind', 'common')
 			.order('year', { ascending: false }),
-		loadDriveSetup(supabase, params.id)
+		loadDriveSetup(supabase, params.visit)
 	]);
 
 	return {
 		visit,
+		crumbs: [{ label: 'Documents', href: documentsHref(params.id) }, { label: `${visit.year} · ${visit.label}` }],
 		sections: (areas ?? []).map((area) => ({
 			...area,
 			linked: area.documents.filter((document) => document.status === 'linked').length,
@@ -71,13 +74,13 @@ export const actions: Actions = {
 			return fail(400, { message: 'Use “visit” in the label (e.g. “Level III visit”), not “accredited”.' });
 		}
 
-		const { error: updateError } = await supabase.from('visits').update(values).eq('id', params.id);
+		const { error: updateError } = await supabase.from('visits').update(values).eq('id', params.visit);
 		return dbFail(updateError) ?? { message: 'Visit saved.' };
 	},
 
 	activate: async ({ locals, params }) => {
 		const { supabase } = requireStaff(locals, ['admin', 'focal']);
-		const { data: visit } = await supabase.from('visits').select('program_id').eq('id', params.id).single();
+		const { data: visit } = await supabase.from('visits').select('program_id').eq('id', params.visit).single();
 		if (!visit) return fail(404, { message: 'Visit not found.' });
 
 		// One active visit per program: archive the current one first.
@@ -88,7 +91,7 @@ export const actions: Actions = {
 			.eq('status', 'active');
 		if (archiveError) return dbFail(archiveError);
 
-		const { error: activateError } = await supabase.from('visits').update({ status: 'active' }).eq('id', params.id);
+		const { error: activateError } = await supabase.from('visits').update({ status: 'active' }).eq('id', params.visit);
 		return dbFail(activateError) ?? { message: 'This is now the active visit. /program shows it; the previous one moved to its own URL.' };
 	},
 
@@ -112,7 +115,7 @@ export const actions: Actions = {
 		const { data: section, error: insertError } = await supabase
 			.from('areas')
 			.insert({
-				visit_id: params.id,
+				visit_id: params.visit,
 				kind,
 				number,
 				slug,
@@ -128,14 +131,14 @@ export const actions: Actions = {
 
 		const failed = dbFail(insertError);
 		if (failed) return failed;
-		redirect(303, `/admin/sections/${section!.id}`);
+		redirect(303, sectionHref(params.id, params.visit, section!.id));
 	},
 
 	setRootFolder: async ({ request, locals, params }) => {
 		const { supabase } = requireStaff(locals, ['admin', 'focal']);
 		const raw = text(await request.formData(), 'folder');
 		if (!raw) {
-			const { error: clearError } = await supabase.from('visits').update({ drive_root_folder_id: null }).eq('id', params.id);
+			const { error: clearError } = await supabase.from('visits').update({ drive_root_folder_id: null }).eq('id', params.visit);
 			return dbFail(clearError) ?? { message: 'Drive folder removed. Existing documents stay as they are.' };
 		}
 
@@ -151,14 +154,14 @@ export const actions: Actions = {
 			}
 		}
 
-		const { error: updateError } = await supabase.from('visits').update({ drive_root_folder_id: id }).eq('id', params.id);
+		const { error: updateError } = await supabase.from('visits').update({ drive_root_folder_id: id }).eq('id', params.visit);
 		return dbFail(updateError) ?? { message: `Drive folder ${name ? `“${name}” ` : ''}saved. Run Sync now to match its subfolders.` };
 	},
 
 	syncDrive: async ({ locals, params }) => {
 		const { staff } = requireStaff(locals, ['admin', 'focal']);
 		if (!driveConfigured()) return fail(400, { message: 'Google Drive is not configured on this deployment (GOOGLE_SERVICE_ACCOUNT_JSON).' });
-		const totals = await syncVisit(params.id, 'manual', staff.id);
+		const totals = await syncVisit(params.visit, 'manual', staff.id);
 		return { message: summary(totals) };
 	},
 
@@ -169,7 +172,7 @@ export const actions: Actions = {
 
 		const { data: copied, error: rpcError } = await supabase.rpc('copy_common_documents', {
 			p_from_visit: from,
-			p_to_visit: params.id
+			p_to_visit: params.visit
 		});
 		return (
 			dbFail(rpcError) ?? {

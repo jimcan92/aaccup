@@ -8,7 +8,7 @@ export async function loadDriveSetup(supabase: SupabaseClient, visitId: string) 
 	const [{ data: visit }, { data: areas }, { data: runs }] = await Promise.all([
 		supabase
 			.from('visits')
-			.select('id, slug, year, label, status, drive_root_folder_id, program:programs(code)')
+			.select('id, slug, year, label, status, drive_root_folder_id, program:programs(id, code)')
 			.eq('id', visitId)
 			.single(),
 		supabase
@@ -35,6 +35,7 @@ export async function loadDriveSetup(supabase: SupabaseClient, visitId: string) 
 					year: visit.year as number,
 					label: visit.label as string,
 					code: (visit.program as unknown as { code: string } | null)?.code ?? '',
+					programId: (visit.program as unknown as { id: string } | null)?.id ?? '',
 					rootFolderId: visit.drive_root_folder_id as string | null
 				}
 			: null,

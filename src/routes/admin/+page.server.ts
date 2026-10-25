@@ -1,4 +1,5 @@
 import { ACTIVE_CONTENT_KEYS } from '#lib/data/site.js';
+import { sectionHref } from '#lib/admin-links.js';
 import { previewUrl } from '#lib/drive-url.js';
 import type { PageServerLoad } from './$types';
 
@@ -58,12 +59,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 		drive_url: string | null;
 		drive_public: boolean | null;
 		drive_missing: boolean;
-		area: { id: string; title: string; short_title: string | null; visit: { program: { code: string } } };
+		area: { id: string; title: string; short_title: string | null; visit: { id: string; program: { id: string; code: string } } };
 	};
 	const { data: linkRows } = locals.supabase
 		? await locals.supabase
 				.from('documents')
-				.select('id, title, drive_url, drive_public, drive_missing, area:areas!inner(id, title, short_title, visit:visits!inner(status, program:programs(code)))')
+				.select('id, title, drive_url, drive_public, drive_missing, area:areas!inner(id, title, short_title, visit:visits!inner(id, status, program:programs(id, code)))')
 				.eq('area.visit.status', 'active')
 				.not('drive_url', 'is', null)
 		: { data: [] };
@@ -72,7 +73,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.map((row) => ({
 			id: row.id,
 			title: row.title,
-			areaId: row.area.id,
+			href: sectionHref(row.area.visit.program.id, row.area.visit.id, row.area.id),
 			section: `${row.area.visit.program.code} · ${row.area.short_title || row.area.title}`,
 			problem: row.drive_missing
 				? 'Missing in Drive'
