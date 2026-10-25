@@ -116,19 +116,34 @@
   <!-- As many columns as programs, up to four, and fewer on narrower screens. -->
   <section
     id="programs"
-    class="mx-auto w-full max-w-[1280px] scroll-mt-16 px-5 pb-8 sm:px-8 {content.heroImage
-      ? 'pt-10 lg:pt-14'
+    class="mx-auto flex w-full max-w-[1280px] flex-col px-5 pb-8 sm:px-8 {content.heroImage
+      ? 'min-h-svh pt-24'
       : 'pt-2'}"
     aria-label="Programs"
   >
-    <ul class="grid auto-rows-fr gap-5 {columns[Math.min(data.programs.length, 4)]}">
+    <!-- With a hero photo the cards get the second screen to themselves (pt-24 clears the compact header). -->
+    <ul class="grid flex-1 auto-rows-fr gap-5 {columns[Math.min(data.programs.length, 4)]}">
       {#each data.programs as program (program.slug)}
         <li style={themeStyle(program.theme)} class="program-scope">
           <a
             href={`/${program.slug}`}
-            class="group on-program relative isolate flex h-full min-h-[18rem] flex-col overflow-hidden bg-program text-program-contrast transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_24px_40px_-24px_rgb(8_42_44/0.6)]"
-            style="background-image: linear-gradient(160deg, var(--program) 40%, color-mix(in srgb, var(--program) 78%, black))"
+            class="group on-program relative isolate flex h-full min-h-[22rem] flex-col overflow-hidden bg-program text-program-contrast transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_24px_40px_-24px_rgb(8_42_44/0.6)]"
           >
+            {#if program.cover}
+              <img
+                src={imageSrc(program.cover, 1400)}
+                alt=""
+                class="absolute inset-0 -z-20 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                loading={content.heroImage ? "lazy" : "eager"}
+              />
+            {/if}
+            <!-- Program-colour tint: light at the top, solid behind the text at the bottom. -->
+            <div
+              class="absolute inset-0 -z-10"
+              style="background-image: linear-gradient(180deg, color-mix(in srgb, var(--program) 55%, transparent) 0%, color-mix(in srgb, var(--program) 78%, transparent) 45%, var(--program) 82%)"
+              aria-hidden="true"
+            ></div>
+
             <div class="flex items-start justify-between gap-4 p-5 sm:p-6">
               <p class="font-mono text-[11px] opacity-90">
                 {program.visit.year} · {program.visit.label}

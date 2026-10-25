@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$app/env/public';
 import { loadProgramCards } from '#lib/server/dossier.js';
-import { loadSitePage } from '#lib/server/program-page.js';
+import { loadProgramPage, loadSitePage } from '#lib/server/program-page.js';
 import { followCodes } from '#lib/server/program-code.js';
 import { ACTIVE_CONTENT_KEYS, site as defaultSite } from '#lib/data/site.js';
 import type { PageServerLoad } from './$types';
@@ -54,9 +54,22 @@ export const load: PageServerLoad = async ({ setHeaders, url, locals }) => {
 	const codes = programCards.map((card) => card.code);
 	const text = (key: (typeof ACTIVE_CONTENT_KEYS)[number], fallback: string) => followCodes(blocks[key] ?? fallback, codes);
 
+	// A card without its own cover uses the first photo of the program page's gallery.
+	const cards = await Promise.all(
+		programCards.map(async (card) => {
+		if (card.cover) return card;
+		const blocks = await loadProgramPage(card.slug);
+		const gallery = blocks.find((block) => block.kind === 'gallery' && block.content.items?.[0]?.src);
+
+		return {
+			...card,
+			cover: gallery?.kind === 'gallery' ? gallery.content.items[0].src : undefined
+		};
+	}));
+
 	return {
 		preview,
-		programs: programCards,
+		programs: cards,
 		blocks: siteBlocks,
 		// Set only by the admin preview, which renders this page with draft blocks.
 		editable: false as boolean,
