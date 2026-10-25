@@ -23,6 +23,7 @@
 	import type { Snippet } from 'svelte';
 	import { readMessage, type PreviewMessage, type ProgramPatch } from '#lib/block-preview.js';
 	import { PreviewToggle } from '#lib/preview-toggle.svelte.js';
+	import { pageBar } from '#lib/page-bar.svelte.js';
 	import type { LandingBlock } from '#lib/landing.js';
 	import X from '@lucide/svelte/icons/x';
 	import { tick } from 'svelte';
@@ -47,6 +48,7 @@
 		empty,
 		previewSrc,
 		program,
+		inBar = false,
 		top
 	}: {
 		label: string;
@@ -63,6 +65,8 @@
 		previewSrc: string;
 		/** The program's details as typed in `top`, unsaved; the preview shows them too. */
 		program?: ProgramPatch;
+		/** Inside a program: the buttons go to the program's sticky bar instead of a toolbar here. */
+		inBar?: boolean;
 		/** Shown under the toolbar in the editor column, above the blocks, so it sits beside the preview too. */
 		top?: Snippet;
 	} = $props();
@@ -136,6 +140,16 @@
 
 	const live = $derived(blocks.filter((block) => block.published !== null).length);
 
+	$effect(() => {
+		if (!inBar) return;
+		pageBar.actions = [
+			{ id: 'public', label: 'View public page', icon: ArrowUpRight, href: publicHref, external: true },
+			{ id: 'preview', label: showSide ? 'Hide preview' : 'Preview', icon: showSide ? EyeOff : Eye, onclick: () => preview.toggle(), pressed: showSide },
+			...(canEdit ? [{ id: 'add', label: 'Add block', icon: Plus, onclick: () => (adding = true), primary: true }] : [])
+		];
+		return () => (pageBar.actions = []);
+	});
+
 	// After adding, show the new block (always last) below the sticky toolbar.
 	async function showNewest() {
 		await tick();
@@ -166,6 +180,7 @@
 
 <div class={showSide ? 'grid grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] gap-8' : ''}>
 <div class="min-w-0">
+{#if !inBar}
 <!-- Stays in view while scrolling, so adding a block never means scrolling to the bottom. -->
 <div class="sticky top-16 z-10 -mx-5 flex flex-wrap items-center gap-2 border-b border-rule bg-salt/95 px-5 py-3 backdrop-blur sm:-mx-8 sm:px-8 lg:top-0 {showSide ? 'xl:mx-0 xl:px-0' : ''}">
 	<p class="mr-auto text-[13px] text-ink-soft">
@@ -184,16 +199,24 @@
 		</button>
 	{/if}
 </div>
+{/if}
 
 {#if error}<p class="mt-6 border border-destructive/30 bg-paper p-4 text-[14px] text-destructive" role="alert">{error}</p>{/if}
 
-{#if top}<div class="mt-6">{@render top()}</div>{/if}
+{#if top}<div class={inBar ? '' : 'mt-6'}>{@render top()}</div>{/if}
+
+{#if inBar}
+	<p class="mt-8 flex items-baseline gap-2 border-b border-ink/20 pb-2">
+		<span class="font-display text-[20px] font-semibold tracking-[-0.03em]">Blocks</span>
+		<span class="text-[13px] text-ink-soft">{blocks.length} · {live} live</span>
+	</p>
+{/if}
 
 <div id="blocks" class="mt-6 space-y-5">
 	{#each blocks as block, index (`${block.id}:${block.updated_at}`)}
 		<div
 			id={`block-${block.id}`}
-			class="scroll-mt-36 transition-shadow duration-500 lg:scroll-mt-20 {selected === block.id ? 'shadow-[0_0_0_3px_var(--color-signal)]' : ''}"
+			class="{inBar ? 'scroll-mt-[calc(var(--sticky-offset)+1rem)]' : 'scroll-mt-36 lg:scroll-mt-20'} transition-shadow duration-500 {selected === block.id ? 'shadow-[0_0_0_3px_var(--color-signal)]' : ''}"
 			onfocusin={() => follow(block.id)}
 		><LandingBlockEditor
 			block={block as never}

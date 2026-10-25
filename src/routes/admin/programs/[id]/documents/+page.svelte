@@ -9,8 +9,8 @@
 	import PreviewPane from '#lib/components/admin/preview-pane.svelte';
 	import StatusBadge from '#lib/components/admin/status-badge.svelte';
 	import { visitHref } from '#lib/admin-links.js';
-	import { fresh } from '#lib/fresh-link.js';
 	import { PreviewToggle } from '#lib/preview-toggle.svelte.js';
+	import { pageBar } from '#lib/page-bar.svelte.js';
 	import type { PageProps } from './$types';
 
 	// The Documents tab: Drive setup and visits, beside the public documents page.
@@ -21,6 +21,14 @@
 	const preview = new PreviewToggle();
 	// The public page is cached at the edge; a fresh mark shows the latest. Only rendered in the browser.
 	const previewSrc = $derived(`/${data.program.slug}/dossier?fresh=${Date.now()}`);
+
+	$effect(() => {
+		pageBar.actions = [
+			{ id: 'public', label: 'View documents page', icon: ArrowUpRight, href: `/${data.program.slug}/dossier`, external: true },
+			{ id: 'preview', label: preview.side ? 'Hide preview' : 'Preview', icon: preview.side ? EyeOff : Eye, onclick: () => preview.toggle(), pressed: preview.side }
+		];
+		return () => (pageBar.actions = []);
+	});
 </script>
 
 <svelte:head>
@@ -29,21 +37,9 @@
 
 <div class={preview.side ? 'grid grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] gap-8' : ''}>
 <div class="min-w-0">
-<div class="sticky top-16 z-10 -mx-5 flex flex-wrap items-center gap-2 border-b border-rule bg-salt/95 px-5 py-3 backdrop-blur sm:-mx-8 sm:px-8 lg:top-0 {preview.side ? 'xl:mx-0 xl:px-0' : ''}">
-	<p class="mr-auto text-[13px] text-ink-soft">
-		<span class="font-medium text-ink">{data.program.code} documents</span> · {data.visits.length}
-		{data.visits.length === 1 ? 'visit' : 'visits'}
-	</p>
-	<button type="button" onclick={() => preview.toggle()} class="inline-flex h-10 cursor-pointer items-center gap-2 border px-4 text-[13px] font-medium {preview.side ? 'border-ink bg-paper' : 'border-rule bg-paper hover:border-ink/30'}" aria-pressed={preview.wide ? preview.side : undefined}>
-		{#if preview.side}<EyeOff class="size-4" /> Hide preview{:else}<Eye class="size-4" /> Preview{/if}
-	</button>
-	<a href={`/${data.program.slug}/dossier`} use:fresh target="_blank" rel="noopener noreferrer" class="inline-flex h-10 items-center gap-2 border border-rule bg-paper px-4 text-[13px] font-medium hover:border-ink/30">
-		View documents page <ArrowUpRight class="size-4" />
-	</a>
-</div>
 
 {#if data.drive?.visit}
-	<div class="mt-6">
+	<div>
 		<DriveSetup setup={data.drive} canManage={data.canManage} />
 	</div>
 {/if}

@@ -85,6 +85,7 @@
 		empty="No blocks yet. The public page shows the program title, summary, and the link to the documents until you add some."
 		previewSrc={`/admin/programs/${data.program.id}/landing/preview`}
 		program={patch}
+		inBar
 	>
 		{#snippet top()}
 			<section class="border border-rule bg-paper" aria-labelledby="details-heading">

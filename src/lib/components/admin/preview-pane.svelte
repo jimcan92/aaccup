@@ -16,7 +16,8 @@
 	const scale = $derived(device === 'desktop' && paneWidth ? Math.min(1, paneWidth / 1280) : 1);
 </script>
 
-<aside class="sticky top-4 flex h-[calc(100dvh-2rem)] flex-col self-start border border-rule bg-paper" aria-label="Page preview">
+<!-- Below any sticky bars above it (--sticky-offset, set by the program layout). -->
+<aside class="sticky top-[calc(var(--sticky-offset,0px)+1rem)] flex h-[calc(100dvh-var(--sticky-offset,0px)-2rem)] flex-col self-start border border-rule bg-paper" aria-label="Page preview">
 	<div class="flex items-center gap-2 border-b border-rule px-3 py-2">
 		<p class="mr-auto text-[12px] text-ink-soft">{hint}</p>
 		{#each [{ value: 'desktop', label: 'Desktop', icon: Monitor }, { value: 'phone', label: 'Phone', icon: Smartphone }] as option (option.value)}
