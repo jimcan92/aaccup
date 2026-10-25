@@ -30,6 +30,13 @@
 	const base = $derived(current?.base ?? '/');
 	const style = $derived(current ? themeStyle(current.program.theme) : '');
 
+	// The home page with a hero photo: the header starts clear over the photo, then turns ink once scrolled.
+	type HomeData = { content?: { heroImage?: string }; home?: { content?: { heroImage?: string } } };
+	const overPhoto = $derived.by(() => {
+		const data = page.data as HomeData;
+		return !current && Boolean(data.content?.heroImage ?? data.home?.content?.heroImage);
+	});
+
 	let drawerOpen = $state(false);
 	const visits = $derived(current ? [...current.program.visits].sort((a, b) => b.year - a.year) : []);
 
@@ -117,9 +124,13 @@
 		? `program-scope on-program text-program-contrast ${compact
 				? 'border-black/15 bg-[color-mix(in_srgb,var(--program)_86%,black)] shadow-[0_10px_28px_-18px_rgb(0_0_0/0.6)]'
 				: 'border-transparent bg-program/92 backdrop-blur-sm'}`
-		: `text-ink ${compact
-				? 'border-rule bg-[color-mix(in_srgb,var(--salt)_90%,var(--ink))]/95 shadow-[0_8px_24px_-18px_rgb(0_0_0/0.45)] backdrop-blur'
-				: 'border-transparent bg-paper/85 backdrop-blur-sm'}`}"
+		: overPhoto
+			? `text-[#f8faf5] ${compact
+					? 'border-black/20 bg-[#082a2c]/95 shadow-[0_8px_24px_-18px_rgb(0_0_0/0.6)] backdrop-blur'
+					: 'border-transparent bg-transparent'}`
+			: `text-ink ${compact
+					? 'border-rule bg-[color-mix(in_srgb,var(--salt)_90%,var(--ink))]/95 shadow-[0_8px_24px_-18px_rgb(0_0_0/0.45)] backdrop-blur'
+					: 'border-transparent bg-paper/85 backdrop-blur-sm'}`}"
 >
 	<div class="mx-auto flex max-w-[1280px] items-center gap-3 px-5 transition-[height] duration-500 ease-out will-change-[height] sm:px-8 {compact ? 'h-16' : 'h-16 lg:h-28'}">
 		<!-- Logo (and program code) start larger and settle to their usual size; a transform, so nothing reflows. -->
@@ -148,8 +159,13 @@
 				<ManageLink compact class="border border-program-contrast/35 px-2 hover:bg-program-contrast/10 sm:px-3" />
 				<ThemeToggle class="hover:bg-program-contrast/10" />
 			{:else}
-				<ManageLink class="h-10 bg-ink text-paper hover:bg-ink-soft sm:px-4" />
-				<ThemeToggle class="text-ink hover:bg-ink/8" />
+				{#if overPhoto}
+					<ManageLink class="h-10 bg-[#f8faf5] text-[#082a2c] hover:bg-[#f8faf5]/85 sm:px-4" />
+					<ThemeToggle class="hover:bg-[#f8faf5]/12" />
+				{:else}
+					<ManageLink class="h-10 bg-ink text-paper hover:bg-ink-soft sm:px-4" />
+					<ThemeToggle class="text-ink hover:bg-ink/8" />
+				{/if}
 			{/if}
 		</div>
 	</div>
