@@ -140,6 +140,28 @@ export function landingActions(programOf: (params: Record<string, string>) => st
 			return dbFail(insertError) ?? { message: `${carousel ? 'Photo carousel' : blockLabels[kind]} added.${filled}` };
 		},
 
+		// A copy of a block from another page (or this one), added at the bottom as a draft.
+		copy: async ({ request, locals, params }) => {
+			const programId = programOf(params);
+			const { supabase } = await editor(locals, programId);
+			const { data: source } = await supabase.from('program_blocks').select('kind, draft, published').eq('id', text(await request.formData(), 'from')).maybeSingle();
+			if (!source || !KINDS.includes(source.kind as Kind)) return fail(404, { message: 'That block is gone. Reload and pick another.' });
+
+			// Run it through the same checks as a save, so a copy is always a valid block here.
+			const content = cleanContent(source.kind as Kind, JSON.stringify(source.published ?? source.draft ?? {}));
+			if (typeof content === 'string') return fail(400, { message: content });
+
+			const list = await siblings(supabase, programId);
+			const { error: insertError } = await supabase.from('program_blocks').insert({
+				program_id: programId,
+				kind: source.kind,
+				draft: content,
+				sort_order: (list.at(-1)?.sort_order ?? -1) + 1,
+				status: 'draft'
+			});
+			return dbFail(insertError) ?? { message: `${blockLabels[source.kind as Kind]} copied as a draft. Change what belongs to the other page, then publish.` };
+		},
+
 		save: async ({ request, locals, params }) => {
 			const programId = programOf(params);
 			const { supabase } = await editor(locals, programId);

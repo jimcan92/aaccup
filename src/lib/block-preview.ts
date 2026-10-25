@@ -37,7 +37,10 @@ export function connectPreview(
 		if (message?.type === 'aaccup:blocks') onBlocks(message.blocks, message.drafts);
 		if (message?.type === 'aaccup:program') onProgram?.(message.program);
 		if (message?.type === 'aaccup:scroll') {
-			document.querySelector(`[data-block-id="${CSS.escape(message.id)}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			// Scroll this frame only: scrollIntoView would also scroll the editor page around it,
+			// moving the button under the pointer between press and release so the click is lost.
+			const block = document.querySelector(`[data-block-id="${CSS.escape(message.id)}"]`);
+			if (block) window.scrollTo({ top: block.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' });
 		}
 	};
 
