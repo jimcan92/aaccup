@@ -13,7 +13,8 @@
 	import { previewUrl } from '#lib/drive-url.js';
 	import { formatDate, kindLabel } from '#lib/format.js';
 	import { complianceLabels } from '#lib/components/program/recommendation-matrix.svelte';
-	import { pageBar } from '#lib/page-bar.svelte.js';
+	import PublicPreview from '#lib/components/admin/public-preview.svelte';
+	import type { BarAction } from '#lib/page-bar.svelte.js';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -30,15 +31,12 @@
 	const unpublished = $derived(data.documents.filter((document) => document.workflow !== 'published').length);
 	const linked = $derived(data.documents.filter((document) => document.status === 'linked').length);
 
-	// Submit, Publish and the public page sit in the program's sticky bar.
-	$effect(() => {
-		pageBar.actions = [
-			{ id: 'public', label: 'Public page', icon: ArrowUpRight, href: publicUrl, external: true },
-			...(data.canEdit && ['draft', 'approved'].includes(data.section.status) ? [{ id: 'submit', label: 'Submit section', submit: '?/submitSection' }] : []),
-			...(data.canManage && data.section.status !== 'published' ? [{ id: 'publish', label: 'Publish section', submit: '?/publishSection', primary: true }] : [])
-		];
-		return () => (pageBar.actions = []);
-	});
+	// Submit, Publish and the public page sit in the program's sticky bar, beside Preview.
+	const actions = $derived<BarAction[]>([
+		{ id: 'public', label: 'Public page', icon: ArrowUpRight, href: publicUrl, external: true },
+		...(data.canEdit && ['draft', 'approved'].includes(data.section.status) ? [{ id: 'submit', label: 'Submit section', submit: '?/submitSection' }] : []),
+		...(data.canManage && data.section.status !== 'published' ? [{ id: 'publish', label: 'Publish section', submit: '?/publishSection', primary: true }] : [])
+	]);
 
 	let editing = $state<string | null>(null);
 	let adding = $state<'one' | 'bulk' | null>(null);
@@ -114,6 +112,8 @@
 	<label class="grid gap-1.5 text-[13px] font-medium sm:col-span-2">Note<textarea name="note" rows="2" class={area}>{document?.note ?? ''}</textarea></label>
 {/snippet}
 
+<PublicPreview src={publicUrl} hint="this section’s public page, as published" {actions}>
+{#snippet children(side: boolean)}
 <div>
 	<PageHeader
 		eyebrow={`${program.code} · ${groupLabel}${data.section.number ? ` · ${data.section.number}` : ''}`}
@@ -131,7 +131,7 @@
 	<p class="mt-6 border border-dashed border-ink/30 bg-paper p-4 text-[13px] text-ink-soft">You can read this section. Editing is for admins, focal persons, and the assigned area chair.</p>
 {/if}
 
-<div class="mt-8 grid gap-10 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+<div class="mt-8 grid gap-10 {side ? '' : 'xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]'}">
 	<section aria-labelledby="documents-heading">
 		<div class="flex flex-wrap items-end justify-between gap-3 border-b border-ink/20 pb-2">
 			<h2 id="documents-heading" class="font-display text-[20px] font-semibold tracking-[-0.03em]">Documents</h2>
@@ -388,6 +388,8 @@
 		{/if}
 	</aside>
 </div>
+{/snippet}
+</PublicPreview>
 
 <Dialog.Root open={removing !== null} onOpenChange={(open) => !open && (removing = null)}>
 	<Dialog.Content class="max-w-md rounded-none">

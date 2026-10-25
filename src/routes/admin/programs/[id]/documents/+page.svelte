@@ -2,41 +2,28 @@
 	import { enhance } from '#lib/admin-enhance.js';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
-	import Eye from '@lucide/svelte/icons/eye';
-	import EyeOff from '@lucide/svelte/icons/eye-off';
 	import DriveSetup from '#lib/components/admin/drive-setup.svelte';
-	import PreviewDialog from '#lib/components/admin/preview-dialog.svelte';
-	import PreviewPane from '#lib/components/admin/preview-pane.svelte';
+	import PublicPreview from '#lib/components/admin/public-preview.svelte';
 	import StatusBadge from '#lib/components/admin/status-badge.svelte';
 	import { visitHref } from '#lib/admin-links.js';
-	import { PreviewToggle } from '#lib/preview-toggle.svelte.js';
-	import { pageBar } from '#lib/page-bar.svelte.js';
 	import type { PageProps } from './$types';
 
 	// The Documents tab: Drive setup and visits, beside the public documents page.
 	let { data }: PageProps = $props();
 
 	const field = 'h-11 w-full border border-rule bg-salt px-3 text-[14px] text-ink outline-none focus:border-ink disabled:opacity-60';
-
-	const preview = new PreviewToggle();
-	// The public page is cached at the edge; a fresh mark shows the latest. Only rendered in the browser.
-	const previewSrc = $derived(`/${data.program.slug}/dossier?fresh=${Date.now()}`);
-
-	$effect(() => {
-		pageBar.actions = [
-			{ id: 'public', label: 'View documents page', icon: ArrowUpRight, href: `/${data.program.slug}/dossier`, external: true },
-			{ id: 'preview', label: preview.side ? 'Hide preview' : 'Preview', icon: preview.side ? EyeOff : Eye, onclick: () => preview.toggle(), pressed: preview.side }
-		];
-		return () => (pageBar.actions = []);
-	});
 </script>
 
 <svelte:head>
 	<title>{data.program.code} documents · AACCUP Desk</title>
 </svelte:head>
 
-<div class={preview.side ? 'grid grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] gap-8' : ''}>
-<div class="min-w-0">
+<PublicPreview
+	src={`/${data.program.slug}/dossier`}
+	hint="the public documents page, as published"
+	actions={[{ id: 'public', label: 'View documents page', icon: ArrowUpRight, href: `/${data.program.slug}/dossier`, external: true }]}
+>
+{#snippet children()}
 
 {#if data.drive?.visit}
 	<div>
@@ -84,11 +71,5 @@
 		</form>
 	{/if}
 </section>
-</div>
-
-{#if preview.side}
-	<PreviewPane src={previewSrc} hint="Preview · the public documents page, as published" />
-{/if}
-</div>
-
-<PreviewDialog src={previewSrc} hint="The public documents page, as published." bind:open={preview.dialogOpen} />
+{/snippet}
+</PublicPreview>
