@@ -61,7 +61,7 @@
 		empty: string;
 		/** The page that renders this page's drafts for the preview frame. */
 		previewSrc: string;
-		/** Shown above the toolbar in the editor column, so it sits beside the preview too. */
+		/** Shown under the toolbar in the editor column, above the blocks, so it sits beside the preview too. */
 		top?: Snippet;
 	} = $props();
 
@@ -201,7 +201,6 @@
 
 <div class={showSide ? 'grid grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] gap-8' : ''}>
 <div class="min-w-0">
-{#if top}<div class="mb-6">{@render top()}</div>{/if}
 <!-- Stays in view while scrolling, so adding a block never means scrolling to the bottom. -->
 <div class="sticky top-16 z-10 -mx-5 flex flex-wrap items-center gap-2 border-b border-rule bg-salt/95 px-5 py-3 backdrop-blur sm:-mx-8 sm:px-8 lg:top-0 {showSide ? 'xl:mx-0 xl:px-0' : ''}">
 	<p class="mr-auto text-[13px] text-ink-soft">
@@ -222,6 +221,8 @@
 </div>
 
 {#if error}<p class="mt-6 border border-destructive/30 bg-paper p-4 text-[14px] text-destructive" role="alert">{error}</p>{/if}
+
+{#if top}<div class="mt-6">{@render top()}</div>{/if}
 
 <div id="blocks" class="mt-6 space-y-5">
 	{#each blocks as block, index (`${block.id}:${block.updated_at}`)}
