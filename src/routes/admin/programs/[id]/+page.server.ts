@@ -1,6 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { canManage, dbFail, HEX, integer, isHttpUrl, optional, requireStaff, SLUG, text, VISIT_SLUG } from '#lib/server/admin.js';
 import { loadDriveSetup } from '#lib/server/drive-setup.js';
+import { canEditBlocks, landingActions, loadBlocks } from '#lib/server/landing-blocks.js';
 import { renameProgramCode } from '#lib/server/program-code.js';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -32,6 +33,9 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 				total: documents.length
 			};
 		}),
+		// The program page's blocks, edited on the Program page tab.
+		...(await loadBlocks(supabase, params.id)),
+		canEdit: canEditBlocks(staff, program.id),
 		canManage: canManage(staff)
 	};
 };
@@ -41,6 +45,7 @@ function slugify(value: string): string {
 }
 
 export const actions: Actions = {
+	...landingActions((params) => params.id),
 	update: async ({ request, locals, params }) => {
 		const { supabase } = requireStaff(locals, ['admin', 'focal']);
 		const form = await request.formData();

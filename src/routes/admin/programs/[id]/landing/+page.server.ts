@@ -1,20 +1,5 @@
-import { error } from '@sveltejs/kit';
-import { canManage, requireStaff } from '#lib/server/admin.js';
-import { canEditBlocks, landingActions, loadBlocks } from '#lib/server/landing-blocks.js';
-import type { Actions, PageServerLoad } from './$types';
+import { redirect } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals, params }) => {
-	const { staff, supabase } = requireStaff(locals);
-
-	const { data: program } = await supabase.from('programs').select('id, code, slug, name').eq('id', params.id).maybeSingle();
-	if (!program) error(404, 'Program not found');
-
-	return {
-		program,
-		...(await loadBlocks(supabase, params.id)),
-		canEdit: canEditBlocks(staff, program.id),
-		canManage: canManage(staff)
-	};
-};
-
-export const actions: Actions = landingActions((params) => params.id);
+// The program page editor is now the Program page tab of the program itself.
+export const load: PageServerLoad = ({ params }) => redirect(308, `/admin/programs/${params.id}`);

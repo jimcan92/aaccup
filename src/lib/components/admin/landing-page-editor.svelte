@@ -21,7 +21,7 @@
 	import Eye from '@lucide/svelte/icons/eye';
 	import EyeOff from '@lucide/svelte/icons/eye-off';
 	import type { Snippet } from 'svelte';
-	import { readMessage, type PreviewMessage } from '#lib/block-preview.js';
+	import { readMessage, type PreviewMessage, type ProgramPatch } from '#lib/block-preview.js';
 	import { PreviewToggle } from '#lib/preview-toggle.svelte.js';
 	import type { LandingBlock } from '#lib/landing.js';
 	import X from '@lucide/svelte/icons/x';
@@ -46,6 +46,7 @@
 		canManage,
 		empty,
 		previewSrc,
+		program,
 		top
 	}: {
 		label: string;
@@ -60,6 +61,8 @@
 		empty: string;
 		/** The page that renders this page's drafts for the preview frame. */
 		previewSrc: string;
+		/** The program's details as typed in `top`, unsaved; the preview shows them too. */
+		program?: ProgramPatch;
 		/** Shown under the toolbar in the editor column, above the blocks, so it sits beside the preview too. */
 		top?: Snippet;
 	} = $props();
@@ -97,6 +100,12 @@
 		const timer = setTimeout(() => post(message), 150);
 		return () => clearTimeout(timer);
 	});
+	$effect(() => {
+		if (!program) return;
+		const message: PreviewMessage = { type: 'aaccup:program', program };
+		const timer = setTimeout(() => post(message), 150);
+		return () => clearTimeout(timer);
+	});
 
 	// A click on a block in the preview opens that block's editor.
 	async function select(id: string) {
@@ -112,6 +121,7 @@
 		if (message?.type === 'aaccup:ready') {
 			const frame = [sideFrame, dialogFrame].find((item) => item?.contentWindow === event.source);
 			post({ type: 'aaccup:blocks', blocks: previewBlocks, drafts }, frame);
+			if (program) post({ type: 'aaccup:program', program }, frame);
 		}
 		if (message?.type === 'aaccup:select') select(message.id);
 	}

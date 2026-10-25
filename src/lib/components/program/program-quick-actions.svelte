@@ -36,8 +36,8 @@
 		// The printable index with QR codes exists for the current visit only.
 		if (base === `/${program.slug}` && !route.endsWith('/print')) here.items.push({ label: 'Print evidence index', href: `${base}/print`, icon: Printer });
 		if (staff.programId) {
-			here.items.push({ label: `Edit ${program.code} page`, href: `/admin/programs/${staff.programId}/landing`, icon: PencilLine });
-			here.items.push({ label: `Manage ${program.code}`, href: `/admin/programs/${staff.programId}`, icon: Settings2 });
+			here.items.push({ label: `Edit ${program.code} page`, href: `/admin/programs/${staff.programId}`, icon: PencilLine });
+			here.items.push({ label: `Manage ${program.code} documents`, href: `/admin/programs/${staff.programId}?tab=docs`, icon: Settings2 });
 		}
 		return [
 			here,
