@@ -8,13 +8,15 @@
 	import StatusBadge from '#lib/components/admin/status-badge.svelte';
 	import { pad2 } from '#lib/format.js';
 	import { sectionHref } from '#lib/admin-links.js';
-	import { pageBar } from '#lib/page-bar.svelte.js';
+	import PublicPreview from '#lib/components/admin/public-preview.svelte';
+	import type { BarAction } from '#lib/page-bar.svelte.js';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
 
 	const program = $derived(data.visit.program as { id: string; code: string; slug: string; name: string; theme_program: string | null });
-	const publicUrl = $derived(data.visit.status === 'active' ? `/${program.slug}` : `/${program.slug}/${data.visit.slug}`);
+	// The visit's documents page: /program/dossier for the active visit, /program/<visit> for the others.
+	const publicUrl = $derived(data.visit.status === 'active' ? `/${program.slug}/dossier` : `/${program.slug}/${data.visit.slug}`);
 	const hasCommon = $derived(data.sections.some((section) => section.kind === 'common'));
 	const groups = $derived(
 		(['common', 'current', 'previous'] as const).map((kind) => ({
@@ -24,14 +26,11 @@
 		}))
 	);
 
-	// Make active and the public page sit in the program's sticky bar.
-	$effect(() => {
-		pageBar.actions = [
-			{ id: 'public', label: 'Public page', icon: ArrowUpRight, href: publicUrl, external: true },
-			...(data.visit.status !== 'active' && data.canManage ? [{ id: 'activate', label: 'Make this the active visit', submit: '?/activate', primary: true }] : [])
-		];
-		return () => (pageBar.actions = []);
-	});
+	// Make active and the public page sit in the program's sticky bar, beside Preview.
+	const actions = $derived<BarAction[]>([
+		{ id: 'public', label: 'Public page', icon: ArrowUpRight, href: publicUrl, external: true },
+		...(data.visit.status !== 'active' && data.canManage ? [{ id: 'activate', label: 'Make this the active visit', submit: '?/activate', primary: true }] : [])
+	]);
 
 	let newKind = $state('current');
 	const field = 'h-11 w-full border border-rule bg-salt px-3 text-[14px] text-ink outline-none focus:border-ink';
@@ -41,6 +40,8 @@
 	<title>{program.code} {data.visit.year} · AACCUP Desk</title>
 </svelte:head>
 
+<PublicPreview src={publicUrl} hint="this visit’s public page, as published" {actions}>
+{#snippet children(side: boolean)}
 <div>
 	<PageHeader eyebrow={`${program.code} · Visit`} title={`${data.visit.year} · ${data.visit.label}`}>
 		{#snippet actions()}
@@ -54,7 +55,7 @@
 </div>
 
 
-<div class="mt-8 grid gap-10 xl:grid-cols-[1.35fr_1fr]">
+<div class="mt-8 grid gap-10 {side ? '' : 'xl:grid-cols-[1.35fr_1fr]'}">
 	<section>
 		{#each groups as group (group.kind)}
 			<div class="mb-10">
@@ -159,4 +160,6 @@
 		<DriveSetup setup={data.drive} canManage={data.canManage} />
 	</div>
 {/if}
+{/snippet}
+</PublicPreview>
 
