@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { enhance } from '#lib/admin-enhance.js';
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
 	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.js';
 	import { fresh } from '#lib/fresh-link.js';
@@ -45,8 +46,11 @@
 	const visible = $derived(actions.slice(actions.length - shown));
 	const hidden = $derived(actions.slice(0, actions.length - shown));
 
+	const formId = (action: BarAction) => `bar-form-${action.id}`;
+
 	function run(action: BarAction) {
-		if (action.onclick) action.onclick();
+		if (action.submit) (document.getElementById(formId(action)) as HTMLFormElement | null)?.requestSubmit();
+		else if (action.onclick) action.onclick();
 		else if (action.href && action.external) {
 			const url = new URL(action.href, location.href);
 			url.searchParams.set('fresh', String(Date.now()));
@@ -61,7 +65,11 @@
 
 {#snippet button(action: BarAction, measuring = false)}
 	{@const Icon = action.icon}
-	{#if action.href && !action.onclick}
+	{#if action.submit}
+		<button type="submit" form={measuring ? undefined : formId(action)} class="{base} {look(action)}" tabindex={measuring ? -1 : undefined}>
+			{#if Icon}<Icon class="size-4" />{/if}{action.label}
+		</button>
+	{:else if action.href && !action.onclick}
 		{#if action.external}
 			<a href={action.href} use:fresh target="_blank" rel="noopener noreferrer" class="{base} {look(action)}" tabindex={measuring ? -1 : undefined}>
 				{action.label}{#if Icon}<Icon class="size-4" />{/if}
@@ -104,6 +112,11 @@
 		{/if}
 		{#each visible as action (action.id)}{@render button(action)}{/each}
 	</div>
+
+	<!-- The forms behind submit buttons, here so a button can move into More and still post. -->
+	{#each actions.filter((action) => action.submit) as action (action.id)}
+		<form id={formId(action)} method="POST" action={action.submit} use:enhance hidden></form>
+	{/each}
 
 	<!-- Full-size copies to measure; never seen or reached. -->
 	<div bind:this={measure} class="pointer-events-none invisible absolute left-0 top-0 flex gap-2" aria-hidden="true" inert>

@@ -13,7 +13,7 @@
 	import { previewUrl } from '#lib/drive-url.js';
 	import { formatDate, kindLabel } from '#lib/format.js';
 	import { complianceLabels } from '#lib/components/program/recommendation-matrix.svelte';
-	import { fresh } from '#lib/fresh-link.js';
+	import { pageBar } from '#lib/page-bar.svelte.js';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -29,6 +29,16 @@
 	);
 	const unpublished = $derived(data.documents.filter((document) => document.workflow !== 'published').length);
 	const linked = $derived(data.documents.filter((document) => document.status === 'linked').length);
+
+	// Submit, Publish and the public page sit in the program's sticky bar.
+	$effect(() => {
+		pageBar.actions = [
+			{ id: 'public', label: 'Public page', icon: ArrowUpRight, href: publicUrl, external: true },
+			...(data.canEdit && ['draft', 'approved'].includes(data.section.status) ? [{ id: 'submit', label: 'Submit section', submit: '?/submitSection' }] : []),
+			...(data.canManage && data.section.status !== 'published' ? [{ id: 'publish', label: 'Publish section', submit: '?/publishSection', primary: true }] : [])
+		];
+		return () => (pageBar.actions = []);
+	});
 
 	let editing = $state<string | null>(null);
 	let adding = $state<'one' | 'bulk' | null>(null);
@@ -112,15 +122,6 @@
 	>
 		{#snippet actions()}
 			<StatusBadge status={data.section.status} />
-			{#if data.canEdit && ['draft', 'approved'].includes(data.section.status)}
-				<form method="POST" action="?/submitSection" use:enhance><button class="h-10 border border-ink px-4 text-[13px] font-medium hover:bg-ink hover:text-paper">Submit section</button></form>
-			{/if}
-			{#if data.canManage && data.section.status !== 'published'}
-				<form method="POST" action="?/publishSection" use:enhance><button class="h-10 bg-ink px-4 text-[13px] font-medium text-paper hover:bg-ink-soft">Publish section</button></form>
-			{/if}
-			<a href={publicUrl} use:fresh target="_blank" rel="noopener noreferrer" class="inline-flex h-10 items-center gap-2 border border-rule bg-paper px-4 text-[13px] font-medium hover:border-ink/30">
-				Public page <ArrowUpRight class="size-4" />
-			</a>
 		{/snippet}
 	</PageHeader>
 </div>

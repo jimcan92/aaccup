@@ -9,6 +9,8 @@ export type BarAction = {
 	href?: string;
 	external?: boolean;
 	onclick?: () => void;
+	/** A form action to post, e.g. `?/publishSection` (enhanced: spinner and toast). */
+	submit?: string;
 	/** The page's main action: filled, and the last to move into More. */
 	primary?: boolean;
 	/** A toggle that is on (the open preview). */

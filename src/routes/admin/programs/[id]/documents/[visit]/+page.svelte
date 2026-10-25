@@ -8,7 +8,7 @@
 	import StatusBadge from '#lib/components/admin/status-badge.svelte';
 	import { pad2 } from '#lib/format.js';
 	import { sectionHref } from '#lib/admin-links.js';
-	import { fresh } from '#lib/fresh-link.js';
+	import { pageBar } from '#lib/page-bar.svelte.js';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -24,6 +24,15 @@
 		}))
 	);
 
+	// Make active and the public page sit in the program's sticky bar.
+	$effect(() => {
+		pageBar.actions = [
+			{ id: 'public', label: 'Public page', icon: ArrowUpRight, href: publicUrl, external: true },
+			...(data.visit.status !== 'active' && data.canManage ? [{ id: 'activate', label: 'Make this the active visit', submit: '?/activate', primary: true }] : [])
+		];
+		return () => (pageBar.actions = []);
+	});
+
 	let newKind = $state('current');
 	const field = 'h-11 w-full border border-rule bg-salt px-3 text-[14px] text-ink outline-none focus:border-ink';
 </script>
@@ -37,15 +46,9 @@
 		{#snippet actions()}
 			{#if data.visit.status === 'active'}
 				<span class="inline-flex h-10 items-center border border-ink/30 px-3 text-[13px] font-medium">Active visit</span>
-			{:else if data.canManage}
-				<form method="POST" action="?/activate" use:enhance>
-					<button class="h-10 border border-ink bg-paper px-4 text-[13px] font-medium hover:bg-ink hover:text-paper">Make this the active visit</button>
-				</form>
+			{:else}
+				<span class="inline-flex h-10 items-center border border-rule px-3 text-[13px] text-ink-soft">Archived visit</span>
 			{/if}
-			<a href={publicUrl} use:fresh target="_blank" rel="noopener noreferrer" class="inline-flex h-10 items-center gap-2 border border-rule bg-paper px-4 text-[13px] font-medium hover:border-ink/30">
-				Public page
-				<ArrowUpRight class="size-4" />
-			</a>
 		{/snippet}
 	</PageHeader>
 </div>
