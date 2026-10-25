@@ -52,4 +52,4 @@ export const campusUpdates = [
 ] as const;
 
 /** Content block keys the public site still reads. The rest stay in the database, unused. */
-export const ACTIVE_CONTENT_KEYS = ['site.title', 'site.description', 'site.contact_note', 'home.hero.title', 'home.hero.intro'] as const;
+export const ACTIVE_CONTENT_KEYS = ['site.title', 'site.description', 'site.contact_note', 'home.hero.title', 'home.hero.intro', 'home.hero.image'] as const;

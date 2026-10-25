@@ -18,9 +18,6 @@
 />
 
 <div class="mt-8">
-	<SiteTextsCard texts={data.texts} canManage={data.canManage} />
-</div>
-
 <LandingPageEditor
 	label="Home"
 	publicHref="/"
@@ -31,4 +28,9 @@
 	canManage={data.canManage}
 	empty="No blocks yet. The home page shows the title and the program cards until you add some."
 	previewSrc="/admin/home/preview"
-/>
+>
+	{#snippet top()}
+		<SiteTextsCard texts={data.texts} canManage={data.canManage} />
+	{/snippet}
+</LandingPageEditor>
+</div>

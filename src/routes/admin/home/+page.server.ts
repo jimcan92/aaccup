@@ -1,5 +1,5 @@
 import { fail } from '@sveltejs/kit';
-import { canManage, dbFail, requireStaff } from '#lib/server/admin.js';
+import { canManage, dbFail, isHttpUrl, requireStaff } from '#lib/server/admin.js';
 import { canEditBlocks, landingActions, loadBlocks } from '#lib/server/landing-blocks.js';
 import { ACTIVE_CONTENT_KEYS } from '#lib/data/site.js';
 import type { Actions, PageServerLoad } from './$types';
@@ -31,6 +31,7 @@ async function saveTexts(locals: App.Locals, form: FormData) {
 		ids.push(row.id);
 		const value = String(form.get(row.key) ?? '').trim().slice(0, 2000);
 		if (row.key === 'home.hero.title' && !value) return { failure: fail(400, { message: 'The heading cannot be empty.' }) };
+		if (row.key === 'home.hero.image' && value && !isHttpUrl(value)) return { failure: fail(400, { message: 'The hero photo needs an https:// link or an uploaded image.' }) };
 		if (value === (row.draft_value ?? '')) continue;
 		const { error: updateError } = await supabase.from('content_blocks').update({ draft_value: value, status: 'draft' }).eq('id', row.id);
 		if (updateError) return { failure: dbFail(updateError) };
