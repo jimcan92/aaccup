@@ -13,7 +13,7 @@
 
 <span
 	class={cn(
-		'inline-flex h-9 min-w-11 items-center justify-center border border-rule bg-salt px-2 font-mono text-[10px] font-medium tracking-[0.08em] text-ink-soft',
+		'inline-flex h-9 min-w-11 items-center justify-center border border-rule bg-salt px-2 font-mono text-[11px] font-medium tracking-[0.08em] text-ink-soft',
 		className
 	)}
 	aria-hidden="true"

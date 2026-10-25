@@ -1,4 +1,4 @@
-import { statementSizes, videoEmbed, type StatementSize } from '#lib/landing.js';
+import { statementFonts, statementSizes, videoEmbed, type StatementFont, type StatementSize } from '#lib/landing.js';
 import { isHttpUrl } from './admin';
 
 /** Cleaners for the newer landing block kinds; each returns clean content or an error message. */
@@ -35,12 +35,15 @@ export const cleaners: Record<string, (value: Raw, title: string) => object | st
 	vmgo(value, title) {
 		const lines = (raw: unknown) => (Array.isArray(raw) ? raw : []).map((line) => str(line, 600)).filter(Boolean).slice(0, 20);
 		const size = (raw: unknown): StatementSize => (statementSizes.includes(raw as StatementSize) ? (raw as StatementSize) : 'md');
+		const font = (raw: unknown): StatementFont => (statementFonts.includes(raw as StatementFont) ? (raw as StatementFont) : 'body');
 		return {
 			title,
 			vision: str(value.vision, 2000),
 			mission: str(value.mission, 2000),
 			visionSize: size(value.visionSize),
 			missionSize: size(value.missionSize),
+			visionFont: font(value.visionFont),
+			missionFont: font(value.missionFont),
 			goals: lines(value.goals),
 			objectives: lines(value.objectives)
 		};

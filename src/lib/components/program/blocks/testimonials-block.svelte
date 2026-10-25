@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { imageSrc } from '#lib/image-url.js';
+	import Photo from '#lib/components/site/photo.svelte';
 	import type { TestimonialsContent } from '#lib/landing.js';
 	import Initials from './initials.svelte';
 	import Section from './section.svelte';
@@ -16,7 +16,7 @@
 					<blockquote class="mt-3 flex-1 text-pretty text-[16px] leading-relaxed text-ink">{item.quote}</blockquote>
 					<figcaption class="mt-6 flex items-center gap-3 border-t border-rule pt-4">
 						{#if item.photo}
-							<img src={imageSrc(item.photo, 200)} alt="" loading="lazy" class="size-11 shrink-0 bg-rule object-cover" />
+							<Photo src={item.photo} width={200} class="size-11 shrink-0" iconClass="size-4" />
 						{:else}
 							<Initials name={item.name} class="size-11 shrink-0 text-[15px]" />
 						{/if}

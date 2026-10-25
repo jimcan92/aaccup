@@ -1,4 +1,5 @@
 <script lang="ts">
+	import RichText from '#lib/components/site/rich-text.svelte';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import X from '@lucide/svelte/icons/x';
@@ -16,8 +17,10 @@
 	import VmgoBlock from './blocks/vmgo-block.svelte';
 	import EventsBlock from './blocks/events-block.svelte';
 	import OrgBlock from './blocks/org-block.svelte';
-	import { imageSrc, paragraphs } from '#lib/image-url.js';
+	import { imageSrc } from '#lib/image-url.js';
 	import { hasContent, type GalleryItem, type LandingBlock } from '#lib/landing.js';
+	import Photo from '#lib/components/site/photo.svelte';
+	import { reveal, stagger } from '#lib/motion.js';
 
 	// Landing blocks in the order set in the admin, for a program page or the home page.
 	// In the admin preview (editable) each block is a click target, and blocks not yet live are tagged.
@@ -40,7 +43,8 @@
 </script>
 
 {#each visible as block, index (block.id)}
-<div data-block-id={editable ? block.id : undefined} class={editable ? 'relative cursor-pointer hover:outline-[3px] hover:outline-solid hover:outline-program hover:[outline-offset:-3px]' : 'contents'}>
+<!-- Each block is a snap point, and its content rises in the first time it scrolls into view. -->
+<div data-block-id={editable ? block.id : undefined} class={editable ? 'relative cursor-pointer hover:outline-[3px] hover:outline-solid hover:outline-program hover:[outline-offset:-3px]' : ''} data-snap use:reveal={{ inner: true, disabled: editable }}>
 	{#if editable && drafts.includes(block.id)}<span class="pointer-events-none absolute right-3 top-3 z-10 bg-ink px-2 py-1 font-mono text-[11px] text-paper">Not live yet</span>{/if}
 	{#if block.kind === 'stats'}
 		<section class="border-b border-rule {background[tone(index)]}">
@@ -48,7 +52,7 @@
 				{#if block.content.title}<h2 class="font-display text-[clamp(1.4rem,2.6vw,1.9rem)] font-semibold tracking-[-0.035em]">{block.content.title}</h2>{/if}
 				<dl class="mt-6 grid grid-cols-2 gap-px border border-rule bg-rule md:grid-cols-4">
 					{#each block.content.items as item, index (index)}
-						<div class="bg-paper p-5">
+						<div class="bg-paper p-5" use:reveal={{ delay: stagger(index), disabled: editable }}>
 							<dd class="font-display text-[clamp(2rem,4vw,3rem)] font-semibold leading-none tracking-[-0.05em] text-program">{item.value}</dd>
 							<dt class="mt-2 text-[13px] leading-snug text-ink-soft">{item.label}</dt>
 						</div>
@@ -63,7 +67,7 @@
 					<h2 class="text-balance font-display text-[clamp(1.6rem,3.2vw,2.6rem)] font-semibold leading-[1.02] tracking-[-0.04em] text-ink">{block.content.title}</h2>
 				{/if}
 				<div class="max-w-[68ch] space-y-4 text-[15px] leading-relaxed text-ink-soft sm:text-[16px] {block.content.title ? '' : 'lg:col-start-2'}">
-					{#each paragraphs(block.content.body) as paragraph, index (index)}<p>{paragraph}</p>{/each}
+					<RichText text={block.content.body} />
 				</div>
 			</div>
 		</section>
@@ -99,7 +103,7 @@
 				{#if block.content.title}<h2 class="font-display text-[clamp(1.4rem,2.6vw,1.9rem)] font-semibold tracking-[-0.035em]">{block.content.title}</h2>{/if}
 				<ul class="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3">
 					{#each block.content.items as item, index (index)}
-						<li class={index === 0 && block.content.items.length > 2 ? 'col-span-2 row-span-2' : ''}>
+						<li class={index === 0 && block.content.items.length > 2 ? 'col-span-2 row-span-2' : ''} use:reveal={{ delay: stagger(index), disabled: editable }}>
 							<figure class="h-full">
 								<button
 									type="button"
@@ -107,7 +111,7 @@
 									class="group block aspect-[4/3] h-auto w-full overflow-hidden bg-salt {index === 0 && block.content.items.length > 2 ? 'md:aspect-auto md:h-[calc(100%-1.75rem)]' : ''}"
 									aria-label={`View photo: ${item.caption || item.alt}`}
 								>
-									<img src={imageSrc(item.src, 1200)} alt={item.alt} loading="lazy" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
+									<Photo src={item.src} alt={item.alt} class="h-full w-full" imgClass="group-hover:scale-[1.03]" />
 								</button>
 								{#if item.caption}<figcaption class="mt-2 truncate text-[13px] text-ink-soft">{item.caption}</figcaption>{/if}
 							</figure>

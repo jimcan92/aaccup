@@ -9,6 +9,7 @@
 	import type { Program, Visit } from '#lib/data/types.js';
 	import { imageSrc } from '#lib/image-url.js';
 	import { hasContent, type LandingBlock } from '#lib/landing.js';
+	import { photo, snapPage } from '#lib/motion.js';
 
 	let {
 		program,
@@ -19,6 +20,9 @@
 	}: { program: Program; visit: Visit; blocks: LandingBlock[]; editable?: boolean; drafts?: string[] } = $props();
 
 	const dossier = $derived(dossierPath(program, visit));
+
+	// Sections snap into place on wide screens; not inside the admin preview frame.
+	$effect(() => snapPage(!editable));
 
 	// Program credentials (COPC, BOR, certification…): shown only once they are linked in Drive.
 	const credentials = $derived(sectionsOf(visit, 'common').flatMap((section) => section.documents).filter(isLinked));
@@ -41,9 +45,9 @@
 
 <!-- Hero -->
 <!-- Fills the first screen below the header's tall size (two rows on phones and tablets, one on desktop). -->
-<section class="on-program relative isolate flex min-h-[calc(100svh-7rem)] flex-col justify-center overflow-hidden bg-program text-program-contrast lg:min-h-[calc(100svh-7rem)]" aria-labelledby="program-title">
+<section class="on-program relative isolate flex min-h-[calc(100svh-7rem)] flex-col justify-center overflow-hidden bg-program text-program-contrast lg:min-h-[calc(100svh-7rem)]" aria-labelledby="program-title" data-snap>
 	{#if banner}
-		<img src={imageSrc(banner.src)} alt={banner.alt} class="absolute inset-0 -z-20 h-full w-full object-cover" fetchpriority="high" />
+		<img src={imageSrc(banner.src)} alt={banner.alt} class="settle absolute inset-0 -z-20 h-full w-full object-cover" fetchpriority="high" use:photo />
 		<div
 			class="absolute inset-0 -z-10"
 			style="background-image: linear-gradient(90deg, var(--program) 0%, color-mix(in srgb, var(--program) 88%, transparent) 42%, color-mix(in srgb, var(--program) 35%, transparent) 100%), linear-gradient(0deg, color-mix(in srgb, var(--program-ink) 55%, transparent), transparent 55%)"
@@ -56,13 +60,13 @@
 	<div class="mx-auto w-full max-w-[1280px] px-5 py-16 sm:px-8 lg:py-20">
 		<div class="min-w-0 max-w-5xl">
 			{#if program.logo}
-				<img src={imageSrc(program.logo, 400)} alt={`${program.code} logo`} class="mb-6 size-20 bg-program-contrast object-contain p-2 shadow-[0_10px_30px_-12px_rgb(0_0_0/0.5)] sm:size-24" />
+				<img src={imageSrc(program.logo, 400)} alt={`${program.code} logo`} class="rise mb-6 size-20 bg-program-contrast object-contain p-2 shadow-[0_10px_30px_-12px_rgb(0_0_0/0.5)] sm:size-24" />
 			{/if}
-			<p class="font-mono text-[13px] opacity-85 sm:text-[14px]">AACCUP · {visit.year} · {visit.label}</p>
-			<h1 id="program-title" class="mt-4 font-display text-[clamp(5rem,17vw,13rem)] font-semibold leading-[0.78] tracking-[-0.075em]">
+			<p class="rise font-mono text-[13px] opacity-85 sm:text-[14px]">AACCUP · {visit.year} · {visit.label}</p>
+			<h1 id="program-title" class="rise mt-4 font-display text-[clamp(5rem,17vw,13rem)] font-semibold leading-[0.78] tracking-[-0.075em]">
 				{program.code}
 			</h1>
-			<p class="mt-6 text-balance font-display text-[clamp(1.6rem,3.6vw,3rem)] font-medium leading-[1.05] tracking-[-0.035em]">
+			<p class="rise rise-2 mt-6 text-balance font-display text-[clamp(1.6rem,3.6vw,3rem)] font-medium leading-[1.05] tracking-[-0.035em]">
 				{program.name}
 			</p>
 			{#if program.tagline}
@@ -71,7 +75,7 @@
 			{#if program.summary}
 				<p class="mt-5 max-w-3xl text-pretty text-[17px] leading-relaxed opacity-90 sm:text-[19px]">{program.summary}</p>
 			{/if}
-			<div class="mt-10 flex flex-wrap gap-3">
+			<div class="rise rise-3 mt-10 flex flex-wrap gap-3">
 				<a href={dossier} class="inline-flex h-14 items-center gap-2 bg-program-contrast px-7 text-[15px] font-semibold text-program transition-opacity hover:opacity-90">
 					Open the documents
 					<ArrowRight class="size-4" />
@@ -91,7 +95,7 @@
 <LandingBlocks {blocks} {editable} {drafts} />
 
 {#if credentials.length}
-	<section class="border-b border-rule {shown % 2 === 0 ? 'bg-paper' : 'bg-salt'}" aria-labelledby="credentials-heading">
+	<section class="border-b border-rule {shown % 2 === 0 ? 'bg-paper' : 'bg-salt'}" aria-labelledby="credentials-heading" data-snap>
 		<div class="mx-auto max-w-[1280px] px-5 py-12 sm:px-8">
 			<h2 id="credentials-heading" class="font-display text-[clamp(1.4rem,2.6vw,1.9rem)] font-semibold tracking-[-0.035em]">Credentials</h2>
 			<div class="mt-5 border-t border-rule">

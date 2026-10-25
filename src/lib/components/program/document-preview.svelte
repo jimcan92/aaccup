@@ -1,4 +1,5 @@
 <script lang="ts">
+	import DocumentSkeleton from '#lib/components/site/document-skeleton.svelte';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
@@ -105,7 +106,7 @@
 				{#if embed}
 					{#key embed}
 						{#if loading}
-							<p class="absolute inset-0 grid place-items-center text-[13px] text-ink-soft" aria-live="polite">Loading preview…</p>
+							<DocumentSkeleton />
 						{/if}
 						<iframe
 							src={embed}

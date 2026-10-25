@@ -7,12 +7,16 @@
   import { themeStyle } from "#lib/theme.js";
   import ArrowDown from "@lucide/svelte/icons/arrow-down";
   import ArrowRight from "@lucide/svelte/icons/arrow-right";
+  import GraduationCap from "@lucide/svelte/icons/graduation-cap";
+  import { photo, reveal, snapPage } from "#lib/motion.js";
   import type { PageProps } from "./$types";
 
   let { data }: PageProps = $props();
 
   const content = $derived(data.content);
 
+  // Sections snap into place on wide screens; not inside the admin preview frame.
+  $effect(() => snapPage(!data.editable));
 
   // Grid columns for 1–4 programs; narrower screens get fewer (literal classes so Tailwind keeps them).
   const columns: Record<number, string> = {
@@ -50,13 +54,15 @@
       ? 'hero-photo -mt-16 flex min-h-svh flex-col pt-16 text-[#f8faf5] lg:-mt-28 lg:pt-28'
       : 'grid-hero'}"
     aria-labelledby="home-heading"
+    data-snap
   >
     {#if content.heroImage}
       <img
         src={imageSrc(content.heroImage, 2400)}
         alt=""
-        class="absolute inset-0 -z-20 h-full w-full object-cover"
+        class="settle absolute inset-0 -z-20 h-full w-full object-cover"
         fetchpriority="high"
+        use:photo
       />
       <div
         class="absolute inset-0 -z-10"
@@ -78,14 +84,14 @@
         <div>
           <h1
             id="home-heading"
-            class="text-balance font-display text-[clamp(2.4rem,7vw,4.75rem)] font-semibold leading-[0.9] tracking-[-0.055em] {content.heroImage
+            class="rise text-balance font-display text-[clamp(2.4rem,7vw,4.75rem)] font-semibold leading-[0.9] tracking-[-0.055em] {content.heroImage
               ? ''
               : 'text-ink'}"
           >
             {content.heading}
           </h1>
           {#if content.intro}<p
-              class="mt-3 max-w-2xl text-pretty text-[15px] leading-relaxed sm:text-[16px] {content.heroImage
+              class="rise rise-2 mt-3 max-w-2xl text-pretty text-[15px] leading-relaxed sm:text-[16px] {content.heroImage
                 ? 'opacity-85'
                 : 'text-ink-soft'}"
             >
@@ -93,7 +99,7 @@
             </p>{/if}
         </div>
         <p
-          class="shrink-0 font-mono text-[11px] sm:pb-2 {content.heroImage
+          class="rise rise-3 shrink-0 font-mono text-[11px] sm:pb-2 {content.heroImage
             ? 'opacity-80'
             : 'text-ink-soft'}"
         >
@@ -105,7 +111,7 @@
       {#if content.heroImage}
         <a
           href="#programs"
-          class="mt-6 inline-flex items-center gap-1.5 self-start text-[13px] font-medium opacity-85 hover:opacity-100"
+          class="rise rise-3 mt-6 inline-flex items-center gap-1.5 self-start text-[13px] font-medium opacity-85 hover:opacity-100"
         >
           View the programs <ArrowDown class="size-4 motion-safe:animate-bounce" />
         </a>
@@ -120,11 +126,12 @@
       ? 'min-h-svh pt-24'
       : 'pt-2'}"
     aria-label="Programs"
+    data-snap
   >
     <!-- With a hero photo the cards get the second screen to themselves (pt-24 clears the compact header). -->
     <ul class="grid flex-1 auto-rows-fr gap-5 {columns[Math.min(data.programs.length, 4)]}">
-      {#each data.programs as program (program.slug)}
-        <li style={themeStyle(program.theme)} class="program-scope">
+      {#each data.programs as program, index (program.slug)}
+        <li style={themeStyle(program.theme)} class="program-scope" use:reveal={{ delay: index * 90, disabled: data.editable }}>
           <a
             href={`/${program.slug}`}
             class="group on-program relative isolate flex h-full min-h-[22rem] flex-col overflow-hidden bg-program text-program-contrast transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-[0_24px_40px_-24px_rgb(8_42_44/0.6)]"
@@ -135,6 +142,7 @@
                 alt=""
                 class="absolute inset-0 -z-20 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
                 loading={content.heroImage ? "lazy" : "eager"}
+                use:photo
               />
             {/if}
             <!-- Program-colour tint: light at the top, solid behind the text at the bottom. -->
@@ -143,17 +151,37 @@
               style="background-image: linear-gradient(180deg, color-mix(in srgb, var(--program) 55%, transparent) 0%, color-mix(in srgb, var(--program) 78%, transparent) 45%, var(--program) 82%)"
               aria-hidden="true"
             ></div>
+            {#if program.cover}
+              <!-- The same photo, lighter, clipped to the corner badge; it opens to the whole card on hover. -->
+              <div class="card-morph absolute inset-0 -z-10" aria-hidden="true">
+                <img src={imageSrc(program.cover, 1400)} alt="" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" loading="lazy" />
+                <div
+                  class="absolute inset-0"
+                  style="background-image: linear-gradient(180deg, color-mix(in srgb, var(--program) 45%, transparent) 0%, color-mix(in srgb, var(--program) 30%, transparent) 30%, color-mix(in srgb, var(--program) 45%, transparent) 55%, var(--program) 88%)"
+                ></div>
+              </div>
+            {/if}
 
             <div class="flex items-start justify-between gap-4 p-5 sm:p-6">
               <p class="font-mono text-[11px] opacity-90">
                 {program.visit.year} · {program.visit.label}
               </p>
+              <!-- The badge (logo, or a cap when there is none) gives way to the photo on hover. -->
               {#if program.logo}
                 <img
                   src={imageSrc(program.logo, 300)}
                   alt={`${program.code} logo`}
-                  class="size-14 shrink-0 bg-program-contrast object-contain p-1.5 shadow-[0_8px_20px_-10px_rgb(0_0_0/0.6)] sm:size-16"
+                  class="card-badge size-14 shrink-0 bg-program-contrast object-contain p-1.5 shadow-[0_8px_20px_-10px_rgb(0_0_0/0.6)] sm:size-16"
+                  data-morphs={program.cover ? "" : undefined}
                 />
+              {:else}
+                <span
+                  class="card-badge grid size-14 shrink-0 place-items-center bg-program-contrast text-program shadow-[0_8px_20px_-10px_rgb(0_0_0/0.6)] sm:size-16"
+                  data-morphs={program.cover ? "" : undefined}
+                  aria-hidden="true"
+                >
+                  <GraduationCap class="size-6 sm:size-7" />
+                </span>
               {/if}
             </div>
 

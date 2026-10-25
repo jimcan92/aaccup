@@ -1,6 +1,6 @@
 <script lang="ts">
+	import RichText from '#lib/components/site/rich-text.svelte';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
-	import { paragraphs } from '#lib/image-url.js';
 	import { formatDate, type NewsContent } from '#lib/landing.js';
 	import Section from './section.svelte';
 
@@ -26,7 +26,7 @@
 					</h3>
 					{#if item.body}
 						<div class="mt-1.5 max-w-[68ch] space-y-3 text-[15px] leading-relaxed text-ink-soft">
-							{#each paragraphs(item.body) as paragraph, p (p)}<p>{paragraph}</p>{/each}
+							<RichText text={item.body} />
 						</div>
 					{/if}
 				</div>

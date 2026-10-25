@@ -25,7 +25,7 @@
 	<ProgramHero program={data.program} visit={data.visit} compact={!isHome} />
 
 	<div class="grid-texture flex-1 bg-salt">
-		<div class="mx-auto grid max-w-[1280px] gap-8 px-5 pb-16 pt-6 sm:px-8 lg:grid-cols-[16.5rem_minmax(0,1fr)] lg:gap-12 lg:pt-10 print:block print:p-0">
+		<div class="mx-auto grid max-w-[1280px] gap-8 px-5 pb-16 pt-6 sm:px-8 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-12 lg:pt-10 print:block print:p-0">
 			<aside class="hidden lg:block print:hidden" aria-label={`${data.program.code} sections`}>
 				<div class="sticky top-[5.25rem] max-h-[calc(100dvh-6.5rem)] overflow-y-auto pb-6 pr-1">
 					<SectionNav program={data.program} visit={data.visit} base={data.base} />

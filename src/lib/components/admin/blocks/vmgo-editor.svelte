@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { StatementSize, VmgoContent } from '#lib/landing.js';
+	import type { StatementFont, StatementSize, VmgoContent } from '#lib/landing.js';
 	import { area, hint, label } from './ui';
 
 	let { value = $bindable() }: { value: VmgoContent } = $props();
@@ -16,7 +16,16 @@
 		{ value: 'xl', label: 'Extra large' }
 	];
 
-	// Older drafts have no sizes yet.
+	const fonts: { value: StatementFont; label: string; class: string }[] = [
+		{ value: 'body', label: 'Reading', class: 'font-sans' },
+		{ value: 'display', label: 'Heading', class: 'font-display' }
+	];
+
+	// Older drafts have no sizes or fonts yet.
+	// svelte-ignore state_referenced_locally
+	value.visionFont ??= 'body';
+	// svelte-ignore state_referenced_locally
+	value.missionFont ??= 'body';
 	// svelte-ignore state_referenced_locally
 	value.visionSize ??= 'md';
 	// svelte-ignore state_referenced_locally
@@ -28,6 +37,18 @@
 		value.objectives = lines(objectives);
 	});
 </script>
+
+{#snippet fontPicker(name: string, key: 'visionFont' | 'missionFont')}
+	<fieldset class="flex flex-wrap items-center gap-2">
+		<legend class="sr-only">{name} font</legend>
+		<span class="text-[12px] text-ink-soft">Font</span>
+		{#each fonts as option (option.value)}
+			<label class="flex cursor-pointer items-center gap-2 border px-2.5 py-1.5 text-[13px] {option.class} {value[key] === option.value ? 'border-ink bg-salt' : 'border-rule'}">
+				<input type="radio" bind:group={value[key]} value={option.value} class="size-3.5" /> {option.label}
+			</label>
+		{/each}
+	</fieldset>
+{/snippet}
 
 {#snippet sizePicker(name: string, key: 'visionSize' | 'missionSize')}
 	<fieldset class="flex flex-wrap items-center gap-2">
@@ -45,10 +66,12 @@
 	<div class="grid gap-4 md:grid-cols-2">
 		<div class="grid content-start gap-2">
 			<label class={label}>Vision<textarea bind:value={value.vision} rows="4" class={area}></textarea></label>
+			{@render fontPicker('Vision', 'visionFont')}
 			{@render sizePicker('Vision', 'visionSize')}
 		</div>
 		<div class="grid content-start gap-2">
 			<label class={label}>Mission<textarea bind:value={value.mission} rows="4" class={area}></textarea></label>
+			{@render fontPicker('Mission', 'missionFont')}
 			{@render sizePicker('Mission', 'missionSize')}
 		</div>
 	</div>

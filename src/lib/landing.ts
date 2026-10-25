@@ -23,12 +23,17 @@ export type PeopleContent = { title?: string; items: PersonItem[] };
 /** Text size of a vision or mission statement; md is the default. */
 export type StatementSize = 'md' | 'lg' | 'xl';
 export const statementSizes: StatementSize[] = ['md', 'lg', 'xl'];
+/** body: the reading font (Inter, the default); display: the heading font (Bricolage). */
+export type StatementFont = 'body' | 'display';
+export const statementFonts: StatementFont[] = ['body', 'display'];
 export type VmgoContent = {
 	title?: string;
 	vision?: string;
 	mission?: string;
 	visionSize?: StatementSize;
 	missionSize?: StatementSize;
+	visionFont?: StatementFont;
+	missionFont?: StatementFont;
 	goals: string[];
 	objectives: string[];
 };

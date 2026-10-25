@@ -1,7 +1,8 @@
 <script lang="ts">
+	import RichText from '#lib/components/site/rich-text.svelte';
+	import Photo from '#lib/components/site/photo.svelte';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ImageIcon from '@lucide/svelte/icons/image';
-	import { imageSrc, paragraphs } from '#lib/image-url.js';
 	import type { MediaContent } from '#lib/landing.js';
 
 	let { content, tone }: { content: MediaContent; tone: 'paper' | 'salt' } = $props();
@@ -14,7 +15,7 @@
 	<div class="mx-auto grid max-w-[1280px] items-center gap-8 px-5 py-14 sm:px-8 md:grid-cols-2 md:gap-14">
 		<div class={content.side === 'right' ? 'md:order-2' : ''}>
 			{#if content.src}
-				<img src={imageSrc(content.src, 1400)} alt={content.alt ?? ''} loading="lazy" class="aspect-[4/3] w-full bg-rule object-cover" />
+				<Photo src={content.src} alt={content.alt ?? ''} width={1400} class="aspect-[4/3] w-full" iconClass="size-10" />
 			{:else}
 				<div class="grid aspect-[4/3] w-full place-items-center bg-program/10 text-program/50" aria-hidden="true"><ImageIcon class="size-10" /></div>
 			{/if}
@@ -24,7 +25,7 @@
 				<h2 class="text-balance font-display text-[clamp(1.6rem,3.2vw,2.6rem)] font-semibold leading-[1.02] tracking-[-0.04em] text-ink">{content.title}</h2>
 			{/if}
 			<div class="mt-4 max-w-[60ch] space-y-4 text-[15px] leading-relaxed text-ink-soft sm:text-[16px]">
-				{#each paragraphs(content.body) as paragraph, index (index)}<p>{paragraph}</p>{/each}
+				<RichText text={content.body} />
 			</div>
 			{#if content.button?.label && content.button.href}
 				<a

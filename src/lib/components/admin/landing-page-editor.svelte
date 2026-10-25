@@ -30,6 +30,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import { tick } from 'svelte';
 	import LandingBlockEditor from '#lib/components/admin/landing-block-editor.svelte';
+	import PreviewSkeleton from '#lib/components/admin/preview-skeleton.svelte';
 	import * as Dialog from '#lib/components/ui/dialog/index.js';
 	import { blockLabel } from '#lib/landing.js';
 	import { fresh } from '#lib/fresh-link.js';
@@ -72,10 +73,21 @@
 	let device = $state<'desktop' | 'phone'>('desktop');
 	let sideFrame = $state<HTMLIFrameElement>();
 	let dialogFrame = $state<HTMLIFrameElement>();
+	// Each frame shows a skeleton until its page has loaded (again, when it is reopened).
+	let sideLoading = $state(true);
+	let dialogLoading = $state(true);
 	let paneWidth = $state(0);
 	let paneHeight = $state(0);
 	let selected = $state<string | null>(null);
 	const showSide = $derived(wide.current && sideOpen);
+
+	// A reopened frame loads again, so it gets the skeleton again.
+	$effect(() => {
+		if (!showSide) sideLoading = true;
+	});
+	$effect(() => {
+		if (!dialogOpen) dialogLoading = true;
+	});
 
 	// The sidebar shrinks to icons only while the side preview is open; leaving the page restores it.
 	$effect(() => {
@@ -193,9 +205,9 @@
 
 {#snippet frame(bind: 'side' | 'dialog')}
 	{#if bind === 'side'}
-		<iframe bind:this={sideFrame} src={previewSrc} title="Page preview" class="border-0 bg-salt" style={device === 'desktop' ? `width: 1280px; height: ${paneHeight / scale}px; transform: scale(${scale}); transform-origin: top left;` : 'width: 390px; height: 100%;'}></iframe>
+		<iframe bind:this={sideFrame} src={previewSrc} title="Page preview" onload={() => (sideLoading = false)} class="border-0 bg-salt" style={device === 'desktop' ? `width: 1280px; height: ${paneHeight / scale}px; transform: scale(${scale}); transform-origin: top left;` : 'width: 390px; height: 100%;'}></iframe>
 	{:else}
-		<iframe bind:this={dialogFrame} src={previewSrc} title="Page preview" class="h-full w-full border-0 bg-salt"></iframe>
+		<iframe bind:this={dialogFrame} src={previewSrc} title="Page preview" onload={() => (dialogLoading = false)} class="h-full w-full border-0 bg-salt"></iframe>
 	{/if}
 {/snippet}
 
@@ -262,6 +274,7 @@
 		</div>
 		<div bind:clientWidth={paneWidth} bind:clientHeight={paneHeight} class="relative min-h-0 flex-1 overflow-hidden {device === 'phone' ? 'flex justify-center bg-salt' : ''}">
 			{@render frame('side')}
+			{#if sideLoading}<PreviewSkeleton />{/if}
 		</div>
 	</aside>
 {/if}
@@ -276,7 +289,10 @@
 			</div>
 			<Dialog.Close class="grid size-10 shrink-0 cursor-pointer place-items-center text-ink-soft hover:bg-salt hover:text-ink" aria-label="Close preview"><X class="size-5" /></Dialog.Close>
 		</div>
-		<div class="min-h-0 flex-1">{#if dialogOpen}{@render frame('dialog')}{/if}</div>
+		<div class="relative min-h-0 flex-1">
+			{#if dialogOpen}{@render frame('dialog')}{/if}
+			{#if dialogLoading}<PreviewSkeleton />{/if}
+		</div>
 	</Dialog.Content>
 </Dialog.Root>
 

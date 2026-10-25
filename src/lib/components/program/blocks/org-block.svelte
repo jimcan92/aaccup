@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { imageSrc } from '#lib/image-url.js';
+	import Photo from '#lib/components/site/photo.svelte';
 	import type { OrgContent, OrgItem } from '#lib/landing.js';
 	import Initials from './initials.svelte';
 	import Section from './section.svelte';
@@ -15,7 +15,7 @@
 {#snippet card(person: OrgItem, top: boolean)}
 	<li class="flex w-[calc(50%-0.375rem)] flex-col items-center border bg-paper p-3 text-center sm:w-48 sm:p-4 {top ? 'border-program border-t-4' : 'border-rule'}">
 		{#if person.photo}
-			<img src={imageSrc(person.photo, 300)} alt={person.name} loading="lazy" class="size-16 bg-rule object-cover {top ? 'sm:size-20' : ''}" />
+			<Photo src={person.photo} alt={person.name} width={300} class="size-16 {top ? 'sm:size-20' : ''}" iconClass="size-5" />
 		{:else}
 			<Initials name={person.name} class="size-16 text-[20px] {top ? 'sm:size-20 sm:text-[24px]' : ''}" />
 		{/if}

@@ -1,6 +1,6 @@
 <script lang="ts">
+	import RichText from '#lib/components/site/rich-text.svelte';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
-	import { paragraphs } from '#lib/image-url.js';
 	import type { FaqContent } from '#lib/landing.js';
 	import Section from './section.svelte';
 
@@ -16,7 +16,7 @@
 					<ChevronDown class="mt-1 size-5 shrink-0 text-ink-soft transition-transform group-open:rotate-180" aria-hidden="true" />
 				</summary>
 				<div class="max-w-[68ch] space-y-3 pb-5 text-[15px] leading-relaxed text-ink-soft">
-					{#each paragraphs(item.answer) as paragraph, p (p)}<p>{paragraph}</p>{/each}
+					<RichText text={item.answer} />
 				</div>
 			</details>
 		{/each}

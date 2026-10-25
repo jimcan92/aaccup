@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { ModeWatcher } from 'mode-watcher';
+	import NavProgress from '#lib/components/site/nav-progress.svelte';
 	import SiteHeader from '#lib/components/site/site-header.svelte';
 	import '../app.css';
 
@@ -13,6 +14,8 @@
 		document.documentElement.classList.toggle('admin-light', isAdmin);
 	});
 </script>
+
+<NavProgress />
 
 {#if isAdmin}
 	{@render children()}
