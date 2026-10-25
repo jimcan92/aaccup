@@ -20,17 +20,15 @@
 	import Plus from '@lucide/svelte/icons/plus';
 	import Eye from '@lucide/svelte/icons/eye';
 	import EyeOff from '@lucide/svelte/icons/eye-off';
-	import Monitor from '@lucide/svelte/icons/monitor';
-	import Smartphone from '@lucide/svelte/icons/smartphone';
-	import { onMount, type Snippet } from 'svelte';
-	import { MediaQuery } from 'svelte/reactivity';
+	import type { Snippet } from 'svelte';
 	import { readMessage, type PreviewMessage } from '#lib/block-preview.js';
-	import { adminUi } from '#lib/admin-ui.svelte.js';
+	import { PreviewToggle } from '#lib/preview-toggle.svelte.js';
 	import type { LandingBlock } from '#lib/landing.js';
 	import X from '@lucide/svelte/icons/x';
 	import { tick } from 'svelte';
 	import LandingBlockEditor from '#lib/components/admin/landing-block-editor.svelte';
-	import PreviewSkeleton from '#lib/components/admin/preview-skeleton.svelte';
+	import PreviewDialog from '#lib/components/admin/preview-dialog.svelte';
+	import PreviewPane from '#lib/components/admin/preview-pane.svelte';
 	import * as Dialog from '#lib/components/ui/dialog/index.js';
 	import { blockLabel } from '#lib/landing.js';
 	import { fresh } from '#lib/fresh-link.js';
@@ -66,55 +64,11 @@
 		top?: Snippet;
 	} = $props();
 
-	// Preview: beside the editors on wide screens (open by default, remembered); a fullscreen dialog otherwise.
-	const wide = new MediaQuery('min-width: 1280px', false);
-	let sideOpen = $state(true);
-	let dialogOpen = $state(false);
-	let device = $state<'desktop' | 'phone'>('desktop');
+	const preview = new PreviewToggle();
+	const showSide = $derived(preview.side);
 	let sideFrame = $state<HTMLIFrameElement>();
 	let dialogFrame = $state<HTMLIFrameElement>();
-	// Each frame shows a skeleton until its page has loaded (again, when it is reopened).
-	let sideLoading = $state(true);
-	let dialogLoading = $state(true);
-	let paneWidth = $state(0);
-	let paneHeight = $state(0);
 	let selected = $state<string | null>(null);
-	const showSide = $derived(wide.current && sideOpen);
-
-	// A reopened frame loads again, so it gets the skeleton again.
-	$effect(() => {
-		if (!showSide) sideLoading = true;
-	});
-	$effect(() => {
-		if (!dialogOpen) dialogLoading = true;
-	});
-
-	// The sidebar shrinks to icons only while the side preview is open; leaving the page restores it.
-	$effect(() => {
-		adminUi.compact = showSide;
-		return () => (adminUi.compact = false);
-	});
-
-	onMount(() => {
-		try {
-			sideOpen = localStorage.getItem('aaccup:preview-side') !== 'closed';
-		} catch {
-			// Private windows may refuse storage; the preview just starts open.
-		}
-	});
-
-	function togglePreview() {
-		if (!wide.current) {
-			dialogOpen = true;
-			return;
-		}
-		sideOpen = !sideOpen;
-		try {
-			localStorage.setItem('aaccup:preview-side', sideOpen ? 'open' : 'closed');
-		} catch {
-			// Not remembered; fine.
-		}
-	}
 
 	// What each editor holds right now, saved or not; the preview shows these.
 	let current = $state<Record<string, string>>({});
@@ -146,7 +100,7 @@
 
 	// A click on a block in the preview opens that block's editor.
 	async function select(id: string) {
-		dialogOpen = false;
+		preview.dialogOpen = false;
 		selected = id;
 		await tick();
 		document.getElementById(`block-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -166,9 +120,6 @@
 	function follow(id: string) {
 		if (showSide) post({ type: 'aaccup:scroll', id }, sideFrame);
 	}
-
-	// Desktop preview: a 1280px-wide page scaled down to fit the pane.
-	const scale = $derived(device === 'desktop' && paneWidth ? Math.min(1, paneWidth / 1280) : 1);
 
 	let removing = $state<{ id: string; label: string } | null>(null);
 	let adding = $state(false);
@@ -203,14 +154,6 @@
 
 <svelte:window onmessage={onMessage} />
 
-{#snippet frame(bind: 'side' | 'dialog')}
-	{#if bind === 'side'}
-		<iframe bind:this={sideFrame} src={previewSrc} title="Page preview" onload={() => (sideLoading = false)} class="border-0 bg-salt" style={device === 'desktop' ? `width: 1280px; height: ${paneHeight / scale}px; transform: scale(${scale}); transform-origin: top left;` : 'width: 390px; height: 100%;'}></iframe>
-	{:else}
-		<iframe bind:this={dialogFrame} src={previewSrc} title="Page preview" onload={() => (dialogLoading = false)} class="h-full w-full border-0 bg-salt"></iframe>
-	{/if}
-{/snippet}
-
 <div class={showSide ? 'grid grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] gap-8' : ''}>
 <div class="min-w-0">
 <!-- Stays in view while scrolling, so adding a block never means scrolling to the bottom. -->
@@ -219,7 +162,7 @@
 		<span class="font-medium text-ink">{label}</span> · {blocks.length}
 		{blocks.length === 1 ? 'block' : 'blocks'} · {live} live
 	</p>
-	<button type="button" onclick={togglePreview} class="inline-flex h-10 cursor-pointer items-center gap-2 border px-4 text-[13px] font-medium {showSide ? 'border-ink bg-paper' : 'border-rule bg-paper hover:border-ink/30'}" aria-pressed={wide.current ? showSide : undefined}>
+	<button type="button" onclick={() => preview.toggle()} class="inline-flex h-10 cursor-pointer items-center gap-2 border px-4 text-[13px] font-medium {showSide ? 'border-ink bg-paper' : 'border-rule bg-paper hover:border-ink/30'}" aria-pressed={preview.wide ? showSide : undefined}>
 		{#if showSide}<EyeOff class="size-4" /> Hide preview{:else}<Eye class="size-4" /> Preview{/if}
 	</button>
 	<a href={publicHref} use:fresh target="_blank" rel="noopener noreferrer" class="inline-flex h-10 items-center gap-2 border border-rule bg-paper px-4 text-[13px] font-medium hover:border-ink/30">
@@ -262,39 +205,11 @@
 
 {#if showSide}
 	<!-- The preview pane stays in view beside the editors. -->
-	<aside class="sticky top-4 flex h-[calc(100dvh-2rem)] flex-col self-start border border-rule bg-paper" aria-label="Page preview">
-		<div class="flex items-center gap-2 border-b border-rule px-3 py-2">
-			<p class="mr-auto text-[12px] text-ink-soft">Preview · drafts included · click a block to edit it</p>
-			{#each [{ value: 'desktop', label: 'Desktop', icon: Monitor }, { value: 'phone', label: 'Phone', icon: Smartphone }] as option (option.value)}
-				{@const Icon = option.icon}
-				<button type="button" onclick={() => (device = option.value as 'desktop' | 'phone')} class="grid size-8 cursor-pointer place-items-center {device === option.value ? 'bg-ink text-paper' : 'text-ink-soft hover:bg-salt hover:text-ink'}" aria-pressed={device === option.value} title={option.label}>
-					<Icon class="size-4" /><span class="sr-only">{option.label}</span>
-				</button>
-			{/each}
-		</div>
-		<div bind:clientWidth={paneWidth} bind:clientHeight={paneHeight} class="relative min-h-0 flex-1 overflow-hidden {device === 'phone' ? 'flex justify-center bg-salt' : ''}">
-			{@render frame('side')}
-			{#if sideLoading}<PreviewSkeleton />{/if}
-		</div>
-	</aside>
+	<PreviewPane src={previewSrc} hint="Preview · drafts included · click a block to edit it" bind:frame={sideFrame} />
 {/if}
 </div>
 
-<Dialog.Root bind:open={dialogOpen}>
-	<Dialog.Content class="flex h-dvh max-h-dvh w-screen max-w-none flex-col gap-0 rounded-none border-none p-0 sm:max-w-none" showCloseButton={false}>
-		<div class="flex items-center gap-3 border-b border-rule bg-paper px-4 py-3">
-			<div class="mr-auto min-w-0">
-				<Dialog.Title class="font-display text-[17px] font-semibold tracking-[-0.02em]">Preview</Dialog.Title>
-				<Dialog.Description class="text-[12px] text-ink-soft">Drafts included. Tap a block to edit it.</Dialog.Description>
-			</div>
-			<Dialog.Close class="grid size-10 shrink-0 cursor-pointer place-items-center text-ink-soft hover:bg-salt hover:text-ink" aria-label="Close preview"><X class="size-5" /></Dialog.Close>
-		</div>
-		<div class="relative min-h-0 flex-1">
-			{#if dialogOpen}{@render frame('dialog')}{/if}
-			{#if dialogLoading}<PreviewSkeleton />{/if}
-		</div>
-	</Dialog.Content>
-</Dialog.Root>
+<PreviewDialog src={previewSrc} hint="Drafts included. Tap a block to edit it." bind:open={preview.dialogOpen} bind:frame={dialogFrame} />
 
 <Dialog.Root bind:open={adding}>
 	<Dialog.Content class="max-h-[90dvh] max-w-3xl gap-0 overflow-y-auto rounded-none p-0 sm:max-w-3xl" showCloseButton={false}>
