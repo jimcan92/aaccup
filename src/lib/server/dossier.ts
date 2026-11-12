@@ -165,6 +165,10 @@ export async function loadProgramCards(): Promise<ProgramCard[]> {
 	}
 }
 
+function withoutPlaceholders<T extends { drive_url?: string | null }>(documents: T[]): T[] {
+	return documents.some((document) => document.drive_url) ? documents.filter((document) => document.drive_url) : documents;
+}
+
 function fromJson(json: DossierJson): { program: Program; visit: Visit } {
 	// The program code in section and document text follows the saved code ("BSFI" reads "BSFi").
 	const follow = (value: string) => followCodes(value, [json.program.code]);
@@ -178,7 +182,9 @@ function fromJson(json: DossierJson): { program: Program; visit: Visit } {
 		focus: section.focus ? follow(section.focus) : undefined,
 		chair: section.chair || undefined,
 		updatedAt: section.updated_at || undefined,
-		documents: section.documents.map((document) => ({
+		// Once a section has Drive items, the site shows what is in Drive: placeholder rows with
+		// no link are hidden. A section with no Drive items keeps its placeholders.
+		documents: withoutPlaceholders(section.documents).map((document) => ({
 			id: document.id,
 			title: follow(document.title),
 			kind: document.kind,
