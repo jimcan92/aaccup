@@ -12,6 +12,7 @@
 	import { formatDate } from '#lib/format.js';
 	import { cn } from '#lib/utils.js';
 	import DocumentFormat from './document-format.svelte';
+	import FolderBrowser from './folder-browser.svelte';
 
 	let {
 		document,
@@ -149,6 +150,9 @@
 					</button>
 				</div>
 				<div class="relative h-[min(75vh,56rem)] overflow-hidden border border-rule bg-paper">
+					{#if document.format === 'folder'}
+						<FolderBrowser documentId={document.id} title={document.title} />
+					{:else}
 					{#if loading}
 						<DocumentSkeleton />
 					{/if}
@@ -160,6 +164,7 @@
 						allow="autoplay; fullscreen"
 						referrerpolicy="no-referrer"
 					></iframe>
+					{/if}
 				</div>
 				<p class="mt-2 text-[13px] text-ink-soft">
 					If the preview asks for access, the file is not shared as “Anyone with the link”. Use Open in Drive or contact the task force.

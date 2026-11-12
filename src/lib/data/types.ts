@@ -113,3 +113,15 @@ export interface IndexedDocument extends EvidenceDocument {
 	section: Section;
 	sectionLabel: string;
 }
+
+/** One item in a Drive folder, as the in-page folder browser lists it. */
+export type FolderEntry = {
+	id: string;
+	name: string;
+	folder: boolean;
+	mimeType: string;
+	modified: string;
+	url: string;
+	/** false = not shared as "Anyone with the link", so an evaluator cannot open it. */
+	shared: boolean | null;
+};

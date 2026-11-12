@@ -15,6 +15,8 @@ export type DriveItem = {
 	webViewLink: string;
 	/** true = "Anyone with the link" can view; false = restricted; null = could not tell. */
 	isPublic: boolean | null;
+	/** For a shortcut: the file or folder it points to. */
+	targetId?: string;
 };
 
 type ServiceAccount = { client_email: string; private_key: string };
@@ -170,7 +172,8 @@ export async function listFolder(folderId: string, options: { checkAccess?: bool
 			mimeType,
 			modifiedTime: file.modifiedTime,
 			webViewLink: file.webViewLink,
-			isPublic: options.checkAccess ? await publicAccess(file) : null
+			isPublic: options.checkAccess ? await publicAccess(file) : null,
+			...(file.shortcutDetails?.targetId ? { targetId: file.shortcutDetails.targetId } : {})
 		};
 		})
 	);
@@ -198,6 +201,22 @@ export async function folderHasFiles(folderId: string, depth = 3): Promise<boole
 	});
 	for (const sub of subfolders.files) {
 		if (await folderHasFiles(sub.id, depth - 1)) return true;
+	}
+	return false;
+}
+
+/**
+ * True when `folderId` is `rootId` or sits inside it, at most `maxDepth` levels down.
+ * Walks up the parent chain, so it costs one call per level.
+ */
+export async function isInsideFolder(folderId: string, rootId: string, maxDepth = 8): Promise<boolean> {
+	let current = folderId;
+	for (let level = 0; level <= maxDepth; level++) {
+		if (current === rootId) return true;
+		const file = await drive<{ parents?: string[] }>(`/files/${current}`, { fields: 'parents' });
+		const parent = file.parents?.[0];
+		if (!parent) return false;
+		current = parent;
 	}
 	return false;
 }

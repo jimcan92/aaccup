@@ -36,3 +36,15 @@ export function previewUrl(url: string | undefined): string | null {
 export function isLinked(document: Pick<EvidenceDocument, 'status' | 'driveUrl'>): boolean {
 	return document.status === 'linked' && previewUrl(document.driveUrl) !== null;
 }
+
+/** The folder id in a Google Drive folder link, or null when the link is not a folder. */
+export function driveFolderId(url: string | undefined): string | null {
+	if (!url) return null;
+	try {
+		const parsed = new URL(url);
+		if (parsed.hostname !== 'drive.google.com') return null;
+		return parsed.pathname.match(/\/folders\/([\w-]{10,})/)?.[1] ?? null;
+	} catch {
+		return null;
+	}
+}

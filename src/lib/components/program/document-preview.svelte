@@ -1,5 +1,6 @@
 <script lang="ts">
 	import DocumentSkeleton from '#lib/components/site/document-skeleton.svelte';
+	import FolderBrowser from '#lib/components/site/folder-browser.svelte';
 	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
@@ -103,7 +104,9 @@
 			</header>
 
 			<div class="relative min-h-0 flex-1 bg-paper">
-				{#if embed}
+				{#if found.document.format === 'folder' && embed}
+					<FolderBrowser documentId={found.document.id} title={found.document.title} />
+				{:else if embed}
 					{#key embed}
 						{#if loading}
 							<DocumentSkeleton />
