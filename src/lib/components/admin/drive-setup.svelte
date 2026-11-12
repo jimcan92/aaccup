@@ -1,6 +1,9 @@
 <script lang="ts">
 	import type { SubmitFunction } from '$app/forms';
 	import { enhance } from '#lib/admin-enhance.js';
+	import { invalidateAll } from '$app/navigation';
+	import { toast } from 'svelte-sonner';
+	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import Check from '@lucide/svelte/icons/check';
 	import CircleDashed from '@lucide/svelte/icons/circle-dashed';
 	import Copy from '@lucide/svelte/icons/copy';
@@ -40,6 +43,70 @@
 		}
 	}
 
+	// Sync now runs in steps (match folders, then one section at a time) so the admin sees progress.
+	type StepTotals = { added: number; updated: number; missing: number; notPublic: number; emptyFolders: number; errors: string[] };
+	type Step = { id: string; label: string; hasFolder: boolean; state: 'waiting' | 'running' | 'done' | 'skipped'; totals?: StepTotals };
+	let syncing = $state(false);
+	let phase = $state('');
+	let steps = $state<Step[]>([]);
+	const finished = $derived(steps.filter((step) => step.state === 'done' || step.state === 'skipped').length);
+
+	async function call<T>(body: object): Promise<T> {
+		const response = await fetch(`${visitHref(visit.programId, visit.id)}/sync`, {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify(body)
+		});
+		if (!response.ok) throw new Error((await response.json().catch(() => null))?.message ?? `Sync failed (${response.status})`);
+		return response.json() as Promise<T>;
+	}
+
+	function stepNote(totals: StepTotals): string {
+		const parts = [
+			totals.added && `${totals.added} new`,
+			`${totals.updated} checked`,
+			totals.emptyFolders && `${totals.emptyFolders} empty`,
+			totals.missing && `${totals.missing} missing`,
+			totals.notPublic && `${totals.notPublic} not shared`,
+			totals.errors.length && `${totals.errors.length} ${totals.errors.length === 1 ? 'problem' : 'problems'}`
+		].filter(Boolean);
+		return parts.join(' · ');
+	}
+
+	async function syncNow() {
+		if (syncing) return;
+		syncing = true;
+		steps = [];
+		const started = new Date().toISOString();
+		try {
+			phase = 'Matching Drive folders to sections…';
+			const start = await call<{ steps: Omit<Step, 'state'>[]; totals: StepTotals }>({ step: 'start' });
+			const all: StepTotals = { ...start.totals, errors: [...start.totals.errors] };
+			steps = start.steps.map((step) => ({ ...step, state: step.hasFolder ? 'waiting' : 'skipped' }));
+
+			for (const step of steps) {
+				if (step.state === 'skipped') continue;
+				step.state = 'running';
+				phase = `Syncing ${step.label}…`;
+				const totals = await call<StepTotals>({ step: 'section', area: step.id });
+				step.totals = totals;
+				step.state = 'done';
+				for (const key of ['added', 'updated', 'missing', 'notPublic', 'emptyFolders'] as const) all[key] += totals[key];
+				all.errors.push(...totals.errors);
+			}
+
+			phase = 'Saving the sync log…';
+			const { message } = await call<{ message: string }>({ step: 'finish', started, totals: all });
+			if (all.errors.length) toast.error(message, { duration: 9000 }); else toast.success(message);
+			await invalidateAll();
+		} catch (err) {
+			toast.error((err as Error).message, { duration: 9000 });
+		} finally {
+			syncing = false;
+			phase = '';
+		}
+	}
+
 	const field = 'h-10 w-full border border-rule bg-salt px-3 font-mono text-[12px] text-ink outline-none focus:border-ink';
 </script>
 
@@ -54,14 +121,64 @@
 			</p>
 		</div>
 		{#if canSync && setup.configured && (visit.rootFolderId || matched)}
-			<form method="POST" action={`${visitHref(visit.programId, visit.id)}?/syncDrive`} use:enhance={submit}>
-				<button class="inline-flex h-10 items-center gap-2 bg-ink px-4 text-[13px] font-medium text-paper hover:bg-ink-soft">
+			<button
+				type="button"
+				onclick={syncNow}
+				disabled={syncing}
+				class="inline-flex h-10 items-center gap-2 bg-ink px-4 text-[13px] font-medium text-paper hover:bg-ink-soft disabled:opacity-70"
+			>
+				{#if syncing}
+					<LoaderCircle class="size-4 animate-spin" />
+					Syncing {finished} of {steps.length || '…'}
+				{:else}
 					<FolderSync class="size-4" />
 					Sync now
-				</button>
-			</form>
+				{/if}
+			</button>
 		{/if}
 	</header>
+
+	{#if syncing || steps.length}
+		<div class="border-b border-rule bg-salt p-5" aria-live="polite">
+			<div class="flex items-center justify-between gap-3">
+				<p class="text-[13px] font-medium text-ink">{syncing ? phase : 'Last sync from this page'}</p>
+				{#if !syncing}
+					<button type="button" class="text-[12px] text-ink-soft underline" onclick={() => (steps = [])}>Hide</button>
+				{/if}
+			</div>
+			{#if steps.length}
+				<div class="mt-2 h-1 bg-rule">
+					<div class="h-1 bg-ink transition-[width]" style:width={`${(finished / steps.length) * 100}%`}></div>
+				</div>
+				<ol class="mt-3 grid gap-x-6 gap-y-1 text-[12.5px] sm:grid-cols-2">
+					{#each steps as step (step.id)}
+						<li class="flex items-start gap-2">
+							{#if step.state === 'running'}
+								<LoaderCircle class="mt-0.5 size-3.5 shrink-0 animate-spin text-ink" />
+							{:else if step.state === 'done' && step.totals?.errors.length}
+								<TriangleAlert class="mt-0.5 size-3.5 shrink-0 text-destructive" />
+							{:else if step.state === 'done'}
+								<Check class="mt-0.5 size-3.5 shrink-0 text-ink" />
+							{:else}
+								<CircleDashed class="mt-0.5 size-3.5 shrink-0 text-ink-soft" />
+							{/if}
+							<span class="min-w-0">
+								<span class={step.state === 'waiting' || step.state === 'skipped' ? 'text-ink-soft' : 'text-ink'}>{step.label}</span>
+								{#if step.state === 'skipped'}
+									<span class="text-ink-soft"> — no Drive folder</span>
+								{:else if step.totals}
+									<span class="text-ink-soft"> — {stepNote(step.totals)}</span>
+									{#if step.totals.errors.length}
+										<span class="block text-destructive">{step.totals.errors.slice(0, 2).join('; ')}</span>
+									{/if}
+								{/if}
+							</span>
+						</li>
+					{/each}
+				</ol>
+			{/if}
+		</div>
+	{/if}
 
 
 	<div class="grid gap-6 p-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">

@@ -16,7 +16,15 @@ import { supabaseService } from './sso';
  * Manual documents are never touched.
  */
 
-export type SyncTotals = { added: number; updated: number; missing: number; notPublic: number; errors: string[] };
+export type SyncTotals = {
+	added: number;
+	updated: number;
+	missing: number;
+	notPublic: number;
+	/** Folders with no files in them yet (kept as "In preparation"). */
+	emptyFolders: number;
+	errors: string[];
+};
 
 type AreaRow = MatchSection & {
 	slug: string;
@@ -35,7 +43,25 @@ type DriveDoc = {
 	sort_order: number;
 };
 
-const empty = (): SyncTotals => ({ added: 0, updated: 0, missing: 0, notPublic: 0, errors: [] });
+const empty = (): SyncTotals => ({ added: 0, updated: 0, missing: 0, notPublic: 0, emptyFolders: 0, errors: [] });
+
+export function addTotals(into: SyncTotals, from: SyncTotals) {
+	into.added += from.added;
+	into.updated += from.updated;
+	into.missing += from.missing;
+	into.notPublic += from.notPublic;
+	into.emptyFolders += from.emptyFolders;
+	into.errors.push(...from.errors);
+}
+
+/** Runs `task` over `items` with at most `limit` running at once. */
+async function eachLimit<T>(items: T[], limit: number, task: (item: T) => Promise<void>) {
+	let next = 0;
+	const worker = async () => {
+		while (next < items.length) await task(items[next++]);
+	};
+	await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+}
 
 function service(): SupabaseClient {
 	const client = supabaseService();
@@ -72,21 +98,24 @@ async function syncAreaFolder(db: SupabaseClient, area: AreaRow, totals: SyncTot
 		.order('sort_order', { ascending: false })
 		.limit(1);
 	let nextSort = (last?.[0]?.sort_order ?? -1) + 1;
-	const seen = new Set<string>();
+	const seen = new Set(items.map((item) => item.id));
 
-	for (const item of items) {
-		seen.add(item.id);
-		if (item.isPublic === false) totals.notPublic += 1;
-
-		// An empty placeholder folder keeps its link but stays "In preparation" until files land in it.
-		let hasContent = true;
-		if (isFolder(item)) {
-			try {
-				hasContent = await folderHasFiles(item.id);
-			} catch (err) {
-				totals.errors.push(`${item.name}: ${(err as Error).message}`);
-			}
+	// An empty placeholder folder keeps its link but stays "In preparation" until files land in it.
+	// Folder checks and row writes run a few at a time: one after another is too slow for big areas.
+	const hasFiles = new Map<string, boolean>();
+	await eachLimit(items.filter(isFolder), 8, async (item) => {
+		try {
+			const filled = await folderHasFiles(item.targetId ?? item.id);
+			hasFiles.set(item.id, filled);
+			if (!filled) totals.emptyFolders += 1;
+		} catch (err) {
+			totals.errors.push(`${item.name}: ${(err as Error).message}`);
 		}
+	});
+
+	await eachLimit(items, 8, async (item) => {
+		if (item.isPublic === false) totals.notPublic += 1;
+		const hasContent = hasFiles.get(item.id) ?? true;
 
 		const shared = {
 			drive_url: item.webViewLink,
@@ -112,7 +141,7 @@ async function syncAreaFolder(db: SupabaseClient, area: AreaRow, totals: SyncTot
 			});
 			if (insertError) totals.errors.push(`${item.name}: ${insertError.message}`);
 			else totals.added += 1;
-			continue;
+			return;
 		}
 
 		const titleUntouched = doc.drive_name !== null && doc.title === titleFromName(doc.drive_name);
@@ -128,7 +157,7 @@ async function syncAreaFolder(db: SupabaseClient, area: AreaRow, totals: SyncTot
 			.eq('id', doc.id);
 		if (updateError) totals.errors.push(`${item.name}: ${updateError.message}`);
 		else totals.updated += 1;
-	}
+	});
 
 	const gone = (existing as DriveDoc[]).filter((doc) => !seen.has(doc.drive_file_id) && !doc.drive_missing);
 	if (gone.length) {
@@ -165,12 +194,8 @@ async function logRun(
 
 const AREA_FIELDS = 'id, visit_id, kind, number, slug, title, short_title, drive_folder_id, drive_folder_source';
 
-/** Re-match subfolders of the visit's root folder, then sync every section folder. */
-export async function syncVisit(visitId: string, trigger: 'manual' | 'schedule', actor: string | null): Promise<SyncTotals> {
-	const db = service();
-	const totals = empty();
-	const started = new Date().toISOString();
-
+/** Re-match subfolders of the visit's root folder to its sections. Returns the sections in order. */
+async function matchVisitFolders(db: SupabaseClient, visitId: string, totals: SyncTotals): Promise<AreaRow[]> {
 	const { data: visit } = await db.from('visits').select('id, drive_root_folder_id').eq('id', visitId).single();
 	const { data: areaRows } = await db.from('areas').select(AREA_FIELDS).eq('visit_id', visitId).order('sort_order');
 	const areas = (areaRows ?? []) as AreaRow[];
@@ -209,6 +234,47 @@ export async function syncVisit(visitId: string, trigger: 'manual' | 'schedule',
 		}
 	}
 
+	return areas;
+}
+
+export type SyncStep = { id: string; label: string; hasFolder: boolean };
+
+const stepLabel = (area: AreaRow) =>
+	area.kind === 'previous' && area.number ? `Area ${area.number} · ${area.short_title || area.title}` : area.short_title || area.title;
+
+/**
+ * Step 1 of a manual visit sync shown with progress: match folders and list the sections to sync.
+ * The browser then calls syncVisitSection for each section and finishVisitSync at the end, so
+ * every request stays short and the admin sees which section is running.
+ */
+export async function startVisitSync(visitId: string): Promise<{ steps: SyncStep[]; totals: SyncTotals }> {
+	const totals = empty();
+	const areas = await matchVisitFolders(service(), visitId, totals);
+	return { steps: areas.map((area) => ({ id: area.id, label: stepLabel(area), hasFolder: !!area.drive_folder_id })), totals };
+}
+
+/** Step 2: sync one section of the visit, without logging a run of its own. */
+export async function syncVisitSection(visitId: string, areaId: string): Promise<SyncTotals> {
+	const db = service();
+	const totals = empty();
+	const { data: area } = await db.from('areas').select(AREA_FIELDS).eq('id', areaId).eq('visit_id', visitId).single();
+	if (!area) return { ...totals, errors: ['Section not found.'] };
+	await syncAreaFolder(db, area as AreaRow, totals);
+	return totals;
+}
+
+/** Step 3: record the whole run once, like the one-shot sync does. */
+export async function finishVisitSync(visitId: string, actor: string | null, started: string, totals: SyncTotals) {
+	await logRun(service(), { visit_id: visitId, area_id: null, trigger: 'manual', actor, started }, totals);
+}
+
+/** Re-match subfolders of the visit's root folder, then sync every section folder (scheduled runs). */
+export async function syncVisit(visitId: string, trigger: 'manual' | 'schedule', actor: string | null): Promise<SyncTotals> {
+	const db = service();
+	const totals = empty();
+	const started = new Date().toISOString();
+
+	const areas = await matchVisitFolders(db, visitId, totals);
 	for (const area of areas) await syncAreaFolder(db, area, totals);
 
 	await logRun(db, { visit_id: visitId, area_id: null, trigger, actor, started }, totals);
@@ -245,6 +311,7 @@ export function summary(totals: SyncTotals): string {
 	const parts = [
 		`${totals.added} new`,
 		`${totals.updated} checked`,
+		totals.emptyFolders ? `${totals.emptyFolders} empty ${totals.emptyFolders === 1 ? 'folder' : 'folders'}` : null,
 		totals.missing ? `${totals.missing} missing in Drive` : null,
 		totals.notPublic ? `${totals.notPublic} not shared publicly` : null
 	].filter(Boolean);
