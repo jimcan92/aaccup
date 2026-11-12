@@ -1,6 +1,9 @@
 <script lang="ts">
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import Pause from '@lucide/svelte/icons/pause';
+	import Play from '@lucide/svelte/icons/play';
 	import Search from '@lucide/svelte/icons/search';
+	import { MediaQuery } from 'svelte/reactivity';
 	import DocumentRow from '#lib/components/site/document-row.svelte';
 	import LandingBlocks from './landing-blocks.svelte';
 	import ProgramContact from './program-contact.svelte';
@@ -27,10 +30,26 @@
 	// Program credentials (COPC, BOR, certification…): shown only once they are linked in Drive.
 	const credentials = $derived(sectionsOf(visit, 'common').flatMap((section) => section.documents).filter(isLinked));
 
-	// Credentials continue the paper/salt alternation after the blocks that show.
-	const shown = $derived(blocks.filter(hasContent).length);
+	// The first photo carousel becomes the hero's background slideshow instead of a section of its own.
+	const heroCarousel = $derived(blocks.find((block) => block.kind === 'gallery' && block.content.layout === 'carousel' && block.content.items?.some((item) => item.src)));
+	const slides = $derived(heroCarousel?.kind === 'gallery' ? heroCarousel.content.items.filter((item) => item.src) : []);
+	const rest = $derived(heroCarousel ? blocks.filter((block) => block !== heroCarousel) : blocks);
 
-	// The banner behind the hero: the program's cover image, else the first photo of the first gallery or carousel.
+	// Credentials continue the paper/salt alternation after the blocks that show.
+	const shown = $derived(rest.filter(hasContent).length);
+
+	const reducedMotion = new MediaQuery('prefers-reduced-motion: reduce', false);
+	let slide = $state(0);
+	let paused = $state(false);
+	const playing = $derived(slides.length > 1 && !paused && !reducedMotion.current);
+
+	$effect(() => {
+		if (!playing) return;
+		const timer = setInterval(() => (slide = (slide + 1) % slides.length), 6000);
+		return () => clearInterval(timer);
+	});
+
+	// The banner behind the hero when there is no carousel, and the share image: the cover, else the first gallery photo.
 	const banner = $derived.by(() => {
 		if (program.cover) return { src: program.cover, alt: program.name };
 		for (const block of blocks) if (block.kind === 'gallery' && block.content.items?.[0]?.src) return block.content.items[0];
@@ -47,8 +66,23 @@
 <!-- Hero -->
 <!-- Fills the first screen below the header's tall size (two rows on phones and tablets, one on desktop). -->
 <section class="on-program relative isolate flex min-h-[calc(100svh-7rem)] flex-col justify-center overflow-hidden bg-program text-program-contrast lg:min-h-[calc(100svh-7rem)]" aria-labelledby="program-title" data-snap>
-	{#if banner}
+	{#if slides.length}
+		{#each slides as item, i (i)}
+			<img
+				src={imageSrc(item.src)}
+				alt={i === slide ? item.alt : ''}
+				aria-hidden={i !== slide}
+				class="{i === 0 ? 'settle' : ''} absolute inset-0 -z-20 h-full w-full object-cover {i === slide ? 'opacity-100' : 'opacity-0'}"
+				style="transition: opacity 1.5s ease-in-out, filter 0.8s ease-out, scale 1.6s var(--ease-out-soft)"
+				fetchpriority={i === 0 ? 'high' : undefined}
+				loading={i === 0 ? 'eager' : 'lazy'}
+				use:photo
+			/>
+		{/each}
+	{:else if banner}
 		<img src={imageSrc(banner.src)} alt={banner.alt} class="settle absolute inset-0 -z-20 h-full w-full object-cover" fetchpriority="high" use:photo />
+	{/if}
+	{#if slides.length || banner}
 		<div
 			class="absolute inset-0 -z-10"
 			style="background-image: linear-gradient(90deg, var(--program) 0%, color-mix(in srgb, var(--program) 88%, transparent) 42%, color-mix(in srgb, var(--program) 35%, transparent) 100%), linear-gradient(0deg, color-mix(in srgb, var(--program-ink) 55%, transparent), transparent 55%)"
@@ -56,6 +90,27 @@
 		></div>
 		<!-- On narrow screens the text runs across the whole photo, so tint all of it. -->
 		<div class="absolute inset-0 -z-10 bg-program/80 md:hidden" aria-hidden="true"></div>
+	{/if}
+
+	{#if slides.length > 1}
+		<div class="absolute bottom-5 right-5 flex items-center gap-3 sm:right-8">
+			<div class="flex gap-1.5">
+				{#each slides as _, i (i)}
+					<button
+						type="button"
+						onclick={() => (slide = i)}
+						class="h-1.5 transition-all {i === slide ? 'w-6 bg-program-contrast' : 'w-1.5 bg-program-contrast/45 hover:bg-program-contrast/75'}"
+						aria-label={`Show photo ${i + 1}`}
+						aria-current={i === slide ? 'true' : undefined}
+					></button>
+				{/each}
+			</div>
+			{#if !reducedMotion.current}
+				<button type="button" onclick={() => (paused = !paused)} class="grid size-8 place-items-center border border-program-contrast/40 hover:bg-program-contrast/10" aria-label={paused ? 'Play background slideshow' : 'Pause background slideshow'}>
+					{#if paused}<Play class="size-3.5" />{:else}<Pause class="size-3.5" />{/if}
+				</button>
+			{/if}
+		</div>
 	{/if}
 
 	<div class="mx-auto w-full max-w-[1280px] px-5 py-16 sm:px-8 lg:py-20">
@@ -93,7 +148,7 @@
 </section>
 
 <!-- Landing blocks, in the order set in the admin -->
-<LandingBlocks {blocks} {editable} {drafts} />
+<LandingBlocks blocks={rest} {editable} {drafts} />
 
 {#if credentials.length}
 	<section class="border-b border-rule {shown % 2 === 0 ? 'bg-paper' : 'bg-salt'}" aria-labelledby="credentials-heading" data-snap>
