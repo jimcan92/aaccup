@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { formatFromMime, isFolder, listFolder, type DriveItem } from './drive';
+import { folderHasFiles, formatFromMime, isFolder, listFolder, type DriveItem } from './drive';
 import { groupScope, kindFromName, matchFolders, titleFromName, type MatchFolder, type MatchSection } from './drive-match';
 import { supabaseService } from './sso';
 
@@ -9,6 +9,7 @@ import { supabaseService } from './sso';
  *
  * Per section folder:
  *  - a new file becomes a draft document (source 'drive');
+ *  - a folder with no files in it (an empty placeholder) is kept as "pending", not linked;
  *  - a known file updates its link, format, date, and access flag; its title follows
  *    a rename only while nobody has edited the title;
  *  - a file that left the folder is archived and flagged; if it comes back, it returns as a draft.
@@ -77,6 +78,16 @@ async function syncAreaFolder(db: SupabaseClient, area: AreaRow, totals: SyncTot
 		seen.add(item.id);
 		if (item.isPublic === false) totals.notPublic += 1;
 
+		// An empty placeholder folder keeps its link but stays "In preparation" until files land in it.
+		let hasContent = true;
+		if (isFolder(item)) {
+			try {
+				hasContent = await folderHasFiles(item.id);
+			} catch (err) {
+				totals.errors.push(`${item.name}: ${(err as Error).message}`);
+			}
+		}
+
 		const shared = {
 			drive_url: item.webViewLink,
 			format: formatFromMime(item.mimeType),
@@ -84,7 +95,7 @@ async function syncAreaFolder(db: SupabaseClient, area: AreaRow, totals: SyncTot
 			drive_public: item.isPublic,
 			drive_name: item.name,
 			drive_missing: false,
-			status: 'linked'
+			status: hasContent ? 'linked' : 'pending'
 		};
 		const doc = known.get(item.id);
 
