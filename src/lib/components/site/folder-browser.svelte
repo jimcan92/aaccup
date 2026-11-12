@@ -26,13 +26,17 @@
 	let selected = $state<FolderEntry | null>(null);
 	let frameLoading = $state(true);
 
+	// Folder id → its chain of folder ids below the document's folder (the server checks it).
+	const paths = new Map<string, string[]>([[ROOT, []]]);
+
 	async function load(folder: string) {
 		const current = listings.get(folder);
 		if (current && current !== 'error') return;
 		listings.set(folder, 'loading');
 		try {
 			const params = new URLSearchParams({ doc: documentId });
-			if (folder) params.set('folder', folder);
+			const path = paths.get(folder) ?? [];
+			if (path.length) params.set('path', path.join(','));
 			const response = await fetch(`/api/drive-folder?${params}`);
 			if (!response.ok) throw new Error(String(response.status));
 			listings.set(folder, (await response.json()) as FolderEntry[]);
@@ -48,14 +52,17 @@
 		untrack(() => {
 			listings.clear();
 			open.clear();
+			paths.clear();
+			paths.set(ROOT, []);
 			selected = null;
 			load(ROOT);
 		});
 	});
 
-	function toggle(entry: FolderEntry) {
+	function toggle(entry: FolderEntry, parent: string) {
 		if (open.has(entry.id)) open.delete(entry.id);
 		else {
+			paths.set(entry.id, [...(paths.get(parent) ?? []), entry.id]);
 			open.add(entry.id);
 			load(entry.id);
 		}
@@ -87,7 +94,7 @@
 				<li role="treeitem" aria-expanded={entry.folder ? open.has(entry.id) : undefined} aria-selected={selected?.id === entry.id}>
 					<button
 						type="button"
-						onclick={() => (entry.folder ? toggle(entry) : choose(entry))}
+						onclick={() => (entry.folder ? toggle(entry, folder) : choose(entry))}
 						class={cn(
 							'flex w-full items-center gap-1.5 py-1.5 pr-2 text-left text-[13px] leading-snug transition-colors hover:bg-program-soft',
 							selected?.id === entry.id && 'bg-program-soft font-medium text-program-ink'

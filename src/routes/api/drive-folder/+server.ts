@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { driveFolderId } from '#lib/drive-url.js';
-import { driveConfigured, isFolder, isInsideFolder, listFolder } from '#lib/server/drive.js';
+import { driveConfigured, isFolder, isFolderPath, listFolder } from '#lib/server/drive.js';
 import { supabaseAnon } from '#lib/server/sso.js';
 import type { FolderEntry } from '#lib/data/types.js';
 import type { RequestHandler } from './$types';
@@ -12,14 +12,15 @@ const ID = /^[\w-]{10,}$/;
 
 /**
  * Contents of a published folder document, one level at a time, for the in-page folder browser.
- * ?doc=<document id> names the published document; ?folder=<id> (optional) is a subfolder inside it.
+ * ?doc=<document id> names the published document; ?path= (optional) leads to a subfolder inside it.
  * Only folders inside a published document can be listed, so this never exposes the rest of the
  * service account's Drive.
  */
 export const GET: RequestHandler = async ({ url }) => {
 	const doc = url.searchParams.get('doc') ?? '';
-	const requested = url.searchParams.get('folder');
-	if (!/^[0-9a-f-]{36}$/i.test(doc) || (requested !== null && !ID.test(requested))) error(400, 'Bad request');
+	// ?path=<id>,<id>,… : the subfolder chain from the document's folder down to the one to list.
+	const path = (url.searchParams.get('path') ?? '').split(',').filter(Boolean);
+	if (!/^[0-9a-f-]{36}$/i.test(doc) || path.length > 8 || !path.every((id) => ID.test(id))) error(400, 'Bad request');
 
 	const db = supabaseAnon();
 	if (!db || !driveConfigured()) error(503, 'Drive is not configured');
@@ -29,9 +30,9 @@ export const GET: RequestHandler = async ({ url }) => {
 	const root = driveFolderId(row?.drive_url ?? undefined);
 	if (!root) error(404, 'Folder not found');
 
-	const folder = requested ?? root;
+	const folder = path.at(-1) ?? root;
 	try {
-		if (folder !== root && !(await isInsideFolder(folder, root))) error(404, 'Folder not found');
+		if (path.length && !(await isFolderPath(root, path))) error(404, 'Folder not found');
 		const items = await listFolder(folder, { checkAccess: true });
 		const entries: FolderEntry[] = items.map((item) => ({
 			id: item.targetId ?? item.id,
