@@ -192,7 +192,7 @@
 			{:else if block.kind === 'org'}
 				<OrgEditor bind:value={extra} {programId} />
 			{:else if block.kind === 'events'}
-				<EventsEditor bind:value={extra} />
+				<EventsEditor bind:value={extra} {programId} />
 			{:else if block.kind === 'text'}
 				<div class="grid gap-1.5 text-[13px] font-medium">
 					<span>Text</span>

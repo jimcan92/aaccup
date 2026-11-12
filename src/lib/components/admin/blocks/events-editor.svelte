@@ -2,16 +2,17 @@
 	import RichTextarea from '#lib/components/admin/blocks/rich-textarea.svelte';
 	import Plus from '@lucide/svelte/icons/plus';
 	import type { EventsContent } from '#lib/landing.js';
+	import ImageField from './image-field.svelte';
 	import ItemControls from './item-controls.svelte';
 	import { addButton, field, hint, move } from './ui';
 
-	let { value = $bindable() }: { value: EventsContent } = $props();
+	let { value = $bindable(), programId }: { value: EventsContent; programId: string } = $props();
 
 	const today = () => new Date().toISOString().slice(0, 10);
 </script>
 
 <div class="grid gap-3">
-	<button type="button" onclick={() => (value.items = [{ date: today(), end: '', time: '', title: '', place: '', body: '', href: '' }, ...value.items])} class={addButton}><Plus class="size-4" /> Add event</button>
+	<button type="button" onclick={() => (value.items = [{ date: today(), end: '', time: '', title: '', place: '', body: '', href: '', photo: '' }, ...value.items])} class={addButton}><Plus class="size-4" /> Add event</button>
 	{#each value.items as item, index (index)}
 		<div class="grid gap-3 border border-rule p-3 sm:grid-cols-[minmax(0,1fr)_auto]">
 			<div class="grid gap-2">
@@ -21,6 +22,7 @@
 					<label class="grid gap-1 text-[12px] text-ink-soft">Ends (optional)<input type="date" bind:value={item.end} min={item.date} class={field} /></label>
 					<label class="grid gap-1 text-[12px] text-ink-soft">Time (optional)<input bind:value={item.time} placeholder="8:00 AM – 5:00 PM" class={field} /></label>
 				</div>
+				<ImageField bind:value={item.photo} {programId} label="Poster or photo" />
 				<input bind:value={item.place} aria-label="Place" placeholder="Place (optional), e.g. Campus gym" class={field} />
 				<RichTextarea bind:value={item.body} ariaLabel="Details" rows={2} placeholder="Details (optional)" />
 				<input bind:value={item.href} aria-label="Link" placeholder="Link for more (optional), https://…" class="{field} font-mono text-[12px]" />
@@ -28,5 +30,5 @@
 			<ItemControls {index} count={value.items.length} noun="event" onmove={(delta) => (value.items = move(value.items, index, delta))} onremove={() => (value.items = value.items.filter((_, i) => i !== index))} />
 		</div>
 	{/each}
-	<p class={hint}>Events are sorted by date when saved. After its last day an event moves to “Past events”; the four most recent are shown.</p>
+	<p class={hint}>Events are sorted by date when saved. After its last day an event moves to “Past events”; the four most recent are shown. The next event (or, if none, the latest) is shown large with its poster; posters are shown whole, never cropped.</p>
 </div>
