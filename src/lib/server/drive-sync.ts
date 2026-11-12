@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { formatFromMime, isFolder, listFolder, type DriveItem } from './drive';
+import { folderHasFiles, formatFromMime, isFolder, listFolder, type DriveItem } from './drive';
 import { groupScope, kindFromName, matchFolders, titleFromName, type MatchFolder, type MatchSection } from './drive-match';
 import { supabaseService } from './sso';
 
@@ -8,10 +8,11 @@ import { supabaseService } from './sso';
  * permissions first (admin/focal for a visit, the section's editors for a section).
  *
  * Per section folder:
- *  - a new file becomes a draft document (source 'drive');
+ *  - a new file is published straight away (source 'drive'): what is in Drive is on the site;
+ *  - a folder with no files in it (an empty placeholder) is kept as "pending", not linked;
  *  - a known file updates its link, format, date, and access flag; its title follows
  *    a rename only while nobody has edited the title;
- *  - a file that left the folder is archived and flagged; if it comes back, it returns as a draft.
+ *  - a file that left the folder is archived and flagged; if it comes back, it is published again.
  * Manual documents are never touched.
  */
 
@@ -77,6 +78,16 @@ async function syncAreaFolder(db: SupabaseClient, area: AreaRow, totals: SyncTot
 		seen.add(item.id);
 		if (item.isPublic === false) totals.notPublic += 1;
 
+		// An empty placeholder folder keeps its link but stays "In preparation" until files land in it.
+		let hasContent = true;
+		if (isFolder(item)) {
+			try {
+				hasContent = await folderHasFiles(item.id);
+			} catch (err) {
+				totals.errors.push(`${item.name}: ${(err as Error).message}`);
+			}
+		}
+
 		const shared = {
 			drive_url: item.webViewLink,
 			format: formatFromMime(item.mimeType),
@@ -84,7 +95,7 @@ async function syncAreaFolder(db: SupabaseClient, area: AreaRow, totals: SyncTot
 			drive_public: item.isPublic,
 			drive_name: item.name,
 			drive_missing: false,
-			status: 'linked'
+			status: hasContent ? 'linked' : 'pending'
 		};
 		const doc = known.get(item.id);
 
@@ -97,7 +108,7 @@ async function syncAreaFolder(db: SupabaseClient, area: AreaRow, totals: SyncTot
 				title: isFolder(item) ? item.name : titleFromName(item.name),
 				kind: kindFromName(item.name, area.kind),
 				sort_order: nextSort++,
-				workflow: 'draft'
+				workflow: 'published'
 			});
 			if (insertError) totals.errors.push(`${item.name}: ${insertError.message}`);
 			else totals.added += 1;
@@ -110,8 +121,9 @@ async function syncAreaFolder(db: SupabaseClient, area: AreaRow, totals: SyncTot
 			.update({
 				...shared,
 				...(titleUntouched ? { title: isFolder(item) ? item.name : titleFromName(item.name) } : {}),
-				// A file that came back needs another look before it is public again.
-				...(doc.drive_missing ? { workflow: 'draft' } : {})
+				// Drive is the source of truth: drafts and files that came back are published.
+				// Items a reviewer has in review, approved, or archived by hand are left alone.
+				...(doc.drive_missing || doc.workflow === 'draft' ? { workflow: 'published' } : {})
 			})
 			.eq('id', doc.id);
 		if (updateError) totals.errors.push(`${item.name}: ${updateError.message}`);

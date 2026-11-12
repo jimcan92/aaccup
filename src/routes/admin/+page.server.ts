@@ -17,7 +17,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	let query = locals.supabase
 		? locals.supabase
 				.from('programs')
-				.select('id, slug, code, name, sort_order, theme_program, theme_ink, theme_soft, theme_contrast, visits(year, label, status, areas(kind, documents(status, workflow)))')
+				.select('id, slug, code, name, sort_order, theme_program, theme_ink, theme_soft, theme_contrast, visits(year, label, status, areas(kind, documents(status, workflow, drive_url)))')
 				.order('sort_order')
 		: null;
 	if (query && locals.staff?.role === 'area_chair' && locals.staff.program_id) query = query.eq('id', locals.staff.program_id);
@@ -26,11 +26,18 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const programSummaries = (rows ?? []).map((program) => {
 		const visit = program.visits.find((item) => item.status === 'active');
 		const areas = visit?.areas ?? [];
+		// Progress counts what is in Drive: per area, once it has Drive items, only those count
+		// (filled folders over all folders); link-less placeholders count only where Drive has nothing
+		// yet. Archived rows (gone from Drive) never count.
+		const counted = (area: (typeof areas)[number]) => {
+			const live = area.documents.filter((d) => d.workflow !== 'archived');
+			return live.some((d) => d.drive_url) ? live.filter((d) => d.drive_url) : live;
+		};
 		const groups = (['common', 'current', 'previous'] as const).map((kind) => {
-			const documents = areas.filter((area) => area.kind === kind).flatMap((area) => area.documents);
+			const documents = areas.filter((area) => area.kind === kind).flatMap(counted);
 			return { kind, linked: documents.filter((d) => d.status === 'linked').length, total: documents.length };
 		});
-		const documents = areas.flatMap((area) => area.documents);
+		const documents = areas.flatMap(counted);
 
 		return {
 			id: program.id,

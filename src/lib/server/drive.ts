@@ -176,6 +176,32 @@ export async function listFolder(folderId: string, options: { checkAccess?: bool
 	);
 }
 
+/**
+ * True when a folder holds at least one file, directly or in its subfolders (up to `depth`
+ * levels down). Empty placeholder folders return false.
+ */
+export async function folderHasFiles(folderId: string, depth = 3): Promise<boolean> {
+	const files = await drive<{ files: { id: string }[] }>('/files', {
+		q: `'${folderId}' in parents and trashed = false and mimeType != '${FOLDER}'`,
+		fields: 'files(id)',
+		includeItemsFromAllDrives: 'true',
+		pageSize: '1'
+	});
+	if (files.files.length) return true;
+	if (depth <= 0) return false;
+
+	const subfolders = await drive<{ files: { id: string }[] }>('/files', {
+		q: `'${folderId}' in parents and trashed = false and mimeType = '${FOLDER}'`,
+		fields: 'files(id)',
+		includeItemsFromAllDrives: 'true',
+		pageSize: '100'
+	});
+	for (const sub of subfolders.files) {
+		if (await folderHasFiles(sub.id, depth - 1)) return true;
+	}
+	return false;
+}
+
 export async function folderName(folderId: string): Promise<string> {
 	const file = await drive<{ name: string; mimeType: string }>(`/files/${folderId}`, { fields: 'name, mimeType' });
 	if (file.mimeType !== FOLDER) throw new Error('That link is a file, not a folder.');
