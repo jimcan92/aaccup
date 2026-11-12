@@ -206,19 +206,23 @@ export async function folderHasFiles(folderId: string, depth = 3): Promise<boole
 }
 
 /**
- * True when `folderId` is `rootId` or sits inside it, at most `maxDepth` levels down.
- * Walks up the parent chain, so it costs one call per level.
+ * True when `path` (folder ids from a child of `rootId` down to the target) is a real chain of
+ * subfolders under `rootId`. Each step is checked by listing the parent's subfolders, because
+ * Drive hides `parents` on folders a service account reaches only through link sharing.
  */
-export async function isInsideFolder(folderId: string, rootId: string, maxDepth = 8): Promise<boolean> {
-	let current = folderId;
-	for (let level = 0; level <= maxDepth; level++) {
-		if (current === rootId) return true;
-		const file = await drive<{ parents?: string[] }>(`/files/${current}`, { fields: 'parents' });
-		const parent = file.parents?.[0];
-		if (!parent) return false;
-		current = parent;
+export async function isFolderPath(rootId: string, path: string[]): Promise<boolean> {
+	let parent = rootId;
+	for (const id of path) {
+		const children = await drive<{ files: { id: string; shortcutDetails?: { targetId: string } }[] }>('/files', {
+			q: `'${parent}' in parents and trashed = false and (mimeType = '${FOLDER}' or mimeType = '${SHORTCUT}')`,
+			fields: 'files(id, shortcutDetails)',
+			includeItemsFromAllDrives: 'true',
+			pageSize: '1000'
+		});
+		if (!children.files.some((child) => (child.shortcutDetails?.targetId ?? child.id) === id)) return false;
+		parent = id;
 	}
-	return false;
+	return true;
 }
 
 export async function folderName(folderId: string): Promise<string> {
