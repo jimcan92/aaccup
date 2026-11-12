@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Folder from '@lucide/svelte/icons/folder';
 	import { formatLabel } from '#lib/format.js';
 	import { cn } from '#lib/utils.js';
 
@@ -18,5 +19,9 @@
 	)}
 	aria-hidden="true"
 >
-	{formatLabel(format)}
+	{#if format === 'folder'}
+		<Folder class="size-5 text-program" />
+	{:else}
+		{formatLabel(format)}
+	{/if}
 </span>

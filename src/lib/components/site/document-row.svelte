@@ -12,7 +12,7 @@
 	import { formatDate } from '#lib/format.js';
 	import { cn } from '#lib/utils.js';
 	import DocumentFormat from './document-format.svelte';
-	import FolderBrowser from './folder-browser.svelte';
+	import FolderContents from './folder-contents.svelte';
 
 	let {
 		document,
@@ -29,11 +29,11 @@
 	const date = $derived(formatDate(document.updated));
 	// Drive and Docs files open in the in-page preview; other links open in a new tab.
 	const canPreview = $derived(linked && previewUrl(document.driveUrl) !== null);
+	// A Drive folder lists its files under the row instead of opening a preview of its own.
+	const isFolder = $derived(canPreview && document.format === 'folder');
 	const actionLabel = $derived(
 		canPreview
-			? document.format === 'folder'
-				? 'View folder'
-				: 'Preview'
+			? 'Preview'
 			: document.format === 'link'
 				? 'Open record'
 				: 'Open in Drive'
@@ -41,7 +41,7 @@
 
 	const embed = $derived(canPreview ? previewUrl(document.driveUrl) : null);
 	// Wide screens expand the preview in place; narrow screens use the full-screen panel.
-	const expanded = $derived(browser && canPreview && wideScreen.current && currentPreviewId() === document.id);
+	const expanded = $derived(browser && canPreview && !isFolder && wideScreen.current && currentPreviewId() === document.id);
 	let row = $state<HTMLAnchorElement | null>(null);
 	let loading = $state(true);
 
@@ -97,7 +97,17 @@
 			{#if date}
 				<span class="font-mono text-[12px] text-ink-soft">{date}</span>
 			{/if}
-			{#if linked}
+			{#if isFolder}
+				<a
+					href={document.driveUrl}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="inline-flex items-center gap-1 text-[13px] font-medium text-program hover:underline"
+				>
+					Open in Drive
+					<ArrowUpRight class="size-3.5" />
+				</a>
+			{:else if linked}
 				<span class="inline-flex items-center gap-1 text-[13px] font-medium text-program">
 					{expanded ? 'Hide preview' : actionLabel}
 					{#if expanded}
@@ -113,7 +123,16 @@
 	</div>
 {/snippet}
 
-{#if linked}
+{#if isFolder}
+	<div class={cn('border-b border-rule', className)}>
+		<div class="px-2 pb-2 pt-4 sm:px-3">
+			{@render body()}
+		</div>
+		{#key document.id}
+			<FolderContents documentId={document.id} title={document.title} />
+		{/key}
+	</div>
+{:else if linked}
 	<div class={cn(expanded && 'border-b border-program/40 bg-program-soft/40')}>
 		<a
 			bind:this={row}
@@ -150,9 +169,6 @@
 					</button>
 				</div>
 				<div class="relative h-[min(75vh,56rem)] overflow-hidden border border-rule bg-paper">
-					{#if document.format === 'folder'}
-						<FolderBrowser documentId={document.id} title={document.title} />
-					{:else}
 					{#if loading}
 						<DocumentSkeleton />
 					{/if}
@@ -164,7 +180,6 @@
 						allow="autoplay; fullscreen"
 						referrerpolicy="no-referrer"
 					></iframe>
-					{/if}
 				</div>
 				<p class="mt-2 text-[13px] text-ink-soft">
 					If the preview asks for access, the file is not shared as “Anyone with the link”. Use Open in Drive or contact the task force.

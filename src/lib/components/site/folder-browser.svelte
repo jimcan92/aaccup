@@ -3,13 +3,13 @@
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
-	import FileText from '@lucide/svelte/icons/file-text';
 	import Folder from '@lucide/svelte/icons/folder';
 	import FolderOpen from '@lucide/svelte/icons/folder-open';
-	import Image from '@lucide/svelte/icons/image';
 	import { untrack } from 'svelte';
-	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { previewUrl } from '#lib/drive-url.js';
+	import { fileIcon, fileIconTone } from '#lib/file-icon.js';
+	import { FolderListing, ROOT } from '#lib/folder-listing.svelte.js';
 	import { cn } from '#lib/utils.js';
 	import type { FolderEntry } from '#lib/data/types.js';
 
@@ -19,33 +19,16 @@
 	 */
 	let { documentId, title }: { documentId: string; title: string } = $props();
 
-	type Listing = FolderEntry[] | 'loading' | 'error';
-	const ROOT = '';
-	const listings = new SvelteMap<string, Listing>();
+	let folder = $state(untrack(() => new FolderListing(documentId)));
+	const listings = $derived(folder.listings);
 	const open = new SvelteSet<string>();
 	let selected = $state<FolderEntry | null>(null);
 	let frameLoading = $state(true);
 
-	// Folder id → its chain of folder ids below the document's folder (the server checks it).
-	const paths = new Map<string, string[]>([[ROOT, []]]);
-
-	async function load(folder: string) {
-		const current = listings.get(folder);
-		if (current && current !== 'error') return;
-		listings.set(folder, 'loading');
-		try {
-			const params = new URLSearchParams({ doc: documentId });
-			const path = paths.get(folder) ?? [];
-			if (path.length) params.set('path', path.join(','));
-			const response = await fetch(`/api/drive-folder?${params}`);
-			if (!response.ok) throw new Error(String(response.status));
-			const entries = (await response.json()) as FolderEntry[];
-			listings.set(folder, entries);
-			// A folder holding just one file opens straight to it.
-			if (folder === ROOT && entries.length === 1 && !entries[0].folder) choose(entries[0]);
-		} catch {
-			listings.set(folder, 'error');
-		}
+	async function load(id: string) {
+		const entries = await folder.load(id);
+		// A folder holding just one file opens straight to it.
+		if (id === ROOT && entries?.length === 1 && !entries[0].folder) choose(entries[0]);
 	}
 
 	$effect(() => {
@@ -53,10 +36,8 @@
 		// reads and writes `listings`, which would otherwise re-run this effect in a loop.
 		void documentId;
 		untrack(() => {
-			listings.clear();
+			if (folder.documentId !== documentId) folder = new FolderListing(documentId);
 			open.clear();
-			paths.clear();
-			paths.set(ROOT, []);
 			selected = null;
 			load(ROOT);
 		});
@@ -65,7 +46,7 @@
 	function toggle(entry: FolderEntry, parent: string) {
 		if (open.has(entry.id)) open.delete(entry.id);
 		else {
-			paths.set(entry.id, [...(paths.get(parent) ?? []), entry.id]);
+			folder.enter(entry.id, parent);
 			open.add(entry.id);
 			load(entry.id);
 		}
@@ -83,7 +64,6 @@
 	const single = $derived(flat && Array.isArray(rootItems) && rootItems.length === 1);
 
 	const embed = $derived(selected ? previewUrl(selected.url) : null);
-	const isImage = (entry: FolderEntry) => entry.mimeType.startsWith('image/');
 </script>
 
 {#snippet listing(folder: string, depth: number)}
@@ -119,11 +99,8 @@
 							{/if}
 						{:else}
 							<span class="size-3.5 shrink-0"></span>
-							{#if isImage(entry)}
-								<Image class="size-4 shrink-0 text-ink-soft" />
-							{:else}
-								<FileText class="size-4 shrink-0 text-ink-soft" />
-							{/if}
+							{@const Icon = fileIcon(entry.mimeType)}
+							<Icon class={cn('size-4 shrink-0', fileIconTone(entry.mimeType))} />
 						{/if}
 						<span class="min-w-0 flex-1 break-words">{entry.name}</span>
 						{#if entry.shared === false}
