@@ -7,6 +7,7 @@
 	import Folder from '@lucide/svelte/icons/folder';
 	import FolderOpen from '@lucide/svelte/icons/folder-open';
 	import Image from '@lucide/svelte/icons/image';
+	import { untrack } from 'svelte';
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { previewUrl } from '#lib/drive-url.js';
 	import { cn } from '#lib/utils.js';
@@ -41,12 +42,15 @@
 	}
 
 	$effect(() => {
-		// A different document starts from a fresh root.
+		// A different document starts from a fresh root. Only documentId is tracked: load()
+		// reads and writes `listings`, which would otherwise re-run this effect in a loop.
 		void documentId;
-		listings.clear();
-		open.clear();
-		selected = null;
-		load(ROOT);
+		untrack(() => {
+			listings.clear();
+			open.clear();
+			selected = null;
+			load(ROOT);
+		});
 	});
 
 	function toggle(entry: FolderEntry) {
