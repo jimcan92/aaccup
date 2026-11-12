@@ -17,7 +17,7 @@
 <footer
 	class={cn(
 		'mt-auto print:hidden',
-		themed ? 'on-program bg-program-ink text-program-contrast' : 'border-t border-rule bg-paper text-ink'
+		themed ? 'on-program bg-program-ink text-program-contrast dark:bg-[color-mix(in_srgb,var(--program)_55%,#0b1414)]' : 'border-t border-rule bg-paper text-ink'
 	)}
 >
 	<div class="mx-auto flex max-w-[1280px] flex-col gap-6 px-5 py-8 sm:px-8 md:flex-row md:items-start md:justify-between">
