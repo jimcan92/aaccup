@@ -3,13 +3,13 @@
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
-	import FileText from '@lucide/svelte/icons/file-text';
 	import Folder from '@lucide/svelte/icons/folder';
 	import FolderOpen from '@lucide/svelte/icons/folder-open';
-	import Image from '@lucide/svelte/icons/image';
 	import { untrack } from 'svelte';
-	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { previewUrl } from '#lib/drive-url.js';
+	import { fileIcon, fileIconTone } from '#lib/file-icon.js';
+	import { FolderListing, ROOT } from '#lib/folder-listing.svelte.js';
 	import { cn } from '#lib/utils.js';
 	import type { FolderEntry } from '#lib/data/types.js';
 
@@ -19,30 +19,16 @@
 	 */
 	let { documentId, title }: { documentId: string; title: string } = $props();
 
-	type Listing = FolderEntry[] | 'loading' | 'error';
-	const ROOT = '';
-	const listings = new SvelteMap<string, Listing>();
+	let folder = $state(untrack(() => new FolderListing(documentId)));
+	const listings = $derived(folder.listings);
 	const open = new SvelteSet<string>();
 	let selected = $state<FolderEntry | null>(null);
 	let frameLoading = $state(true);
 
-	// Folder id → its chain of folder ids below the document's folder (the server checks it).
-	const paths = new Map<string, string[]>([[ROOT, []]]);
-
-	async function load(folder: string) {
-		const current = listings.get(folder);
-		if (current && current !== 'error') return;
-		listings.set(folder, 'loading');
-		try {
-			const params = new URLSearchParams({ doc: documentId });
-			const path = paths.get(folder) ?? [];
-			if (path.length) params.set('path', path.join(','));
-			const response = await fetch(`/api/drive-folder?${params}`);
-			if (!response.ok) throw new Error(String(response.status));
-			listings.set(folder, (await response.json()) as FolderEntry[]);
-		} catch {
-			listings.set(folder, 'error');
-		}
+	async function load(id: string) {
+		const entries = await folder.load(id);
+		// A folder holding just one file opens straight to it.
+		if (id === ROOT && entries?.length === 1 && !entries[0].folder) choose(entries[0]);
 	}
 
 	$effect(() => {
@@ -50,10 +36,8 @@
 		// reads and writes `listings`, which would otherwise re-run this effect in a loop.
 		void documentId;
 		untrack(() => {
-			listings.clear();
+			if (folder.documentId !== documentId) folder = new FolderListing(documentId);
 			open.clear();
-			paths.clear();
-			paths.set(ROOT, []);
 			selected = null;
 			load(ROOT);
 		});
@@ -62,7 +46,7 @@
 	function toggle(entry: FolderEntry, parent: string) {
 		if (open.has(entry.id)) open.delete(entry.id);
 		else {
-			paths.set(entry.id, [...(paths.get(parent) ?? []), entry.id]);
+			folder.enter(entry.id, parent);
 			open.add(entry.id);
 			load(entry.id);
 		}
@@ -73,8 +57,13 @@
 		frameLoading = true;
 	}
 
+	// A folder with no subfolders needs no tree: show its files full width, then the chosen file
+	// full width with a way back, on every screen size (what the narrow layout already does).
+	const rootItems = $derived(listings.get(ROOT));
+	const flat = $derived(Array.isArray(rootItems) && !rootItems.some((entry) => entry.folder));
+	const single = $derived(flat && Array.isArray(rootItems) && rootItems.length === 1);
+
 	const embed = $derived(selected ? previewUrl(selected.url) : null);
-	const isImage = (entry: FolderEntry) => entry.mimeType.startsWith('image/');
 </script>
 
 {#snippet listing(folder: string, depth: number)}
@@ -110,11 +99,8 @@
 							{/if}
 						{:else}
 							<span class="size-3.5 shrink-0"></span>
-							{#if isImage(entry)}
-								<Image class="size-4 shrink-0 text-ink-soft" />
-							{:else}
-								<FileText class="size-4 shrink-0 text-ink-soft" />
-							{/if}
+							{@const Icon = fileIcon(entry.mimeType)}
+							<Icon class={cn('size-4 shrink-0', fileIconTone(entry.mimeType))} />
 						{/if}
 						<span class="min-w-0 flex-1 break-words">{entry.name}</span>
 						{#if entry.shared === false}
@@ -131,17 +117,29 @@
 {/snippet}
 
 <div class="flex h-full min-h-0 flex-col md:flex-row">
-	<!-- Narrow screens show the tree or the file, not both. -->
-	<nav class={cn('min-h-0 overflow-y-auto border-rule py-2 md:w-80 md:shrink-0 md:border-r', selected ? 'hidden md:block' : 'flex-1 md:flex-none')}>
+	<!-- Narrow screens (and folders without subfolders) show the list or the file, not both. -->
+	<nav
+		class={cn(
+			'min-h-0 overflow-y-auto border-rule py-2',
+			flat ? (selected ? 'hidden' : 'flex-1') : ['md:w-80 md:shrink-0 md:border-r', selected ? 'hidden md:block' : 'flex-1 md:flex-none']
+		)}
+	>
 		{@render listing(ROOT, 0)}
 	</nav>
 
-	<div class={cn('relative min-h-0 flex-1 flex-col', selected ? 'flex' : 'hidden md:flex')}>
+	<div class={cn('relative min-h-0 flex-1 flex-col', selected ? 'flex' : flat ? 'hidden' : 'hidden md:flex')}>
 		{#if selected}
 			<div class="flex items-center gap-2 border-b border-rule px-3 py-2">
-				<button type="button" onclick={() => (selected = null)} class="grid size-8 place-items-center hover:bg-salt md:hidden" aria-label="Back to files">
-					<ArrowLeft class="size-4" />
-				</button>
+				{#if !single}
+					<button
+						type="button"
+						onclick={() => (selected = null)}
+						class={cn('grid size-8 place-items-center hover:bg-salt', !flat && 'md:hidden')}
+						aria-label="Back to files"
+					>
+						<ArrowLeft class="size-4" />
+					</button>
+				{/if}
 				<p class="min-w-0 flex-1 truncate text-[13px] font-medium text-ink">{selected.name}</p>
 				<a
 					href={selected.url}
