@@ -39,7 +39,10 @@
 			if (path.length) params.set('path', path.join(','));
 			const response = await fetch(`/api/drive-folder?${params}`);
 			if (!response.ok) throw new Error(String(response.status));
-			listings.set(folder, (await response.json()) as FolderEntry[]);
+			const entries = (await response.json()) as FolderEntry[];
+			listings.set(folder, entries);
+			// A folder holding just one file opens straight to it.
+			if (folder === ROOT && entries.length === 1 && !entries[0].folder) choose(entries[0]);
 		} catch {
 			listings.set(folder, 'error');
 		}
@@ -72,6 +75,12 @@
 		selected = entry;
 		frameLoading = true;
 	}
+
+	// A folder with no subfolders needs no tree: show its files full width, then the chosen file
+	// full width with a way back, on every screen size (what the narrow layout already does).
+	const rootItems = $derived(listings.get(ROOT));
+	const flat = $derived(Array.isArray(rootItems) && !rootItems.some((entry) => entry.folder));
+	const single = $derived(flat && Array.isArray(rootItems) && rootItems.length === 1);
 
 	const embed = $derived(selected ? previewUrl(selected.url) : null);
 	const isImage = (entry: FolderEntry) => entry.mimeType.startsWith('image/');
@@ -131,17 +140,29 @@
 {/snippet}
 
 <div class="flex h-full min-h-0 flex-col md:flex-row">
-	<!-- Narrow screens show the tree or the file, not both. -->
-	<nav class={cn('min-h-0 overflow-y-auto border-rule py-2 md:w-80 md:shrink-0 md:border-r', selected ? 'hidden md:block' : 'flex-1 md:flex-none')}>
+	<!-- Narrow screens (and folders without subfolders) show the list or the file, not both. -->
+	<nav
+		class={cn(
+			'min-h-0 overflow-y-auto border-rule py-2',
+			flat ? (selected ? 'hidden' : 'flex-1') : ['md:w-80 md:shrink-0 md:border-r', selected ? 'hidden md:block' : 'flex-1 md:flex-none']
+		)}
+	>
 		{@render listing(ROOT, 0)}
 	</nav>
 
-	<div class={cn('relative min-h-0 flex-1 flex-col', selected ? 'flex' : 'hidden md:flex')}>
+	<div class={cn('relative min-h-0 flex-1 flex-col', selected ? 'flex' : flat ? 'hidden' : 'hidden md:flex')}>
 		{#if selected}
 			<div class="flex items-center gap-2 border-b border-rule px-3 py-2">
-				<button type="button" onclick={() => (selected = null)} class="grid size-8 place-items-center hover:bg-salt md:hidden" aria-label="Back to files">
-					<ArrowLeft class="size-4" />
-				</button>
+				{#if !single}
+					<button
+						type="button"
+						onclick={() => (selected = null)}
+						class={cn('grid size-8 place-items-center hover:bg-salt', !flat && 'md:hidden')}
+						aria-label="Back to files"
+					>
+						<ArrowLeft class="size-4" />
+					</button>
+				{/if}
 				<p class="min-w-0 flex-1 truncate text-[13px] font-medium text-ink">{selected.name}</p>
 				<a
 					href={selected.url}
