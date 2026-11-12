@@ -128,12 +128,14 @@ export const cleaners: Record<string, (value: Raw, title: string) => object | st
 				title: str(item.title, 200),
 				place: str(item.place, 160),
 				body: str(item.body, 2000),
-				href: str(item.href, 500)
+				href: str(item.href, 500),
+				photo: str(item.photo, 500)
 			}))
-			.filter((item) => item.title || item.body || item.place);
+			.filter((item) => item.title || item.body || item.place || item.photo);
 		if (items.some((item) => !item.title || !date.test(item.date))) return 'Each event needs a title and a date.';
 		if (items.some((item) => item.end && (!date.test(item.end) || item.end < item.date))) return 'An end date must come after the start date.';
 		if (items.some((item) => item.href && !isLink(item.href))) return 'Event links must start with https:// or /.';
+		if (items.some((item) => badImage(item.photo))) return 'Each poster needs an https:// link or an uploaded image.';
 		// Kept in date order, so the page and the editor agree.
 		return { title, items: items.sort((a, b) => a.date.localeCompare(b.date)).slice(0, 60) };
 	},
