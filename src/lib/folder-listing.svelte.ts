@@ -9,14 +9,18 @@ export const ROOT = '';
 /**
  * Contents of a published folder document, fetched one level at a time through
  * /api/drive-folder. Subfolders are named to the server by their chain of ids below the
- * document's folder, which it checks before listing.
+ * document's folder, which it checks before listing. With `preview`, a signed-in staff
+ * member can also list an unpublished folder document (review before publishing).
  */
 export class FolderListing {
 	readonly listings = new SvelteMap<string, Listing>();
 	// Folder id → its chain of folder ids below the document's folder.
 	readonly #paths = new Map<string, string[]>([[ROOT, []]]);
 
-	constructor(readonly documentId: string) {}
+	constructor(
+		readonly documentId: string,
+		readonly preview = false
+	) {}
 
 	/** Remembers where a subfolder sits, so it can be listed later. */
 	enter(folder: string, parent: string) {
@@ -32,6 +36,7 @@ export class FolderListing {
 			const params = new URLSearchParams({ doc: this.documentId });
 			const path = this.#paths.get(folder) ?? [];
 			if (path.length) params.set('path', path.join(','));
+			if (this.preview) params.set('preview', '1');
 			const response = await fetch(`/api/drive-folder?${params}`);
 			if (!response.ok) throw new Error(String(response.status));
 			const entries = (await response.json()) as FolderEntry[];

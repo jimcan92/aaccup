@@ -327,7 +327,7 @@ export const actions: Actions = {
 
 	publishAll: async ({ locals, params }) => {
 		const { supabase } = requireStaff(locals, ['admin', 'focal']);
-		const { data: pending } = await supabase.from('documents').select('id').eq('area_id', params.section).neq('workflow', 'published');
+		const { data: pending } = await supabase.from('documents').select('id').eq('area_id', params.section).not('workflow', 'in', '(published,archived)');
 		for (const document of pending ?? []) {
 			const { error: rpcError } = await supabase.rpc('publish_document', { p_id: document.id });
 			if (rpcError) return dbFail(rpcError);

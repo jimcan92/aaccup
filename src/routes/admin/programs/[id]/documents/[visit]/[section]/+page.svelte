@@ -14,6 +14,7 @@
 	import { formatDate, kindLabel } from '#lib/format.js';
 	import { complianceLabels } from '#lib/components/program/recommendation-matrix.svelte';
 	import PublicPreview from '#lib/components/admin/public-preview.svelte';
+	import PublishReview from '#lib/components/admin/publish-review.svelte';
 	import type { BarAction } from '#lib/page-bar.svelte.js';
 	import type { PageProps } from './$types';
 
@@ -28,7 +29,9 @@
 	const publicUrl = $derived(
 		`/${program.slug}${visit.status === 'active' ? '' : `/${visit.slug}`}/${data.section.slug}`
 	);
-	const unpublished = $derived(data.documents.filter((document) => document.workflow !== 'published').length);
+	// Archived rows (removed by hand or gone from Drive) are not waiting to be published.
+	const pending = $derived(data.documents.filter((document) => !['published', 'archived'].includes(document.workflow)));
+	const unpublished = $derived(pending.length);
 	const linked = $derived(data.documents.filter((document) => document.status === 'linked').length);
 
 	// Submit, Publish and the public page sit in the program's sticky bar, beside Preview.
@@ -45,6 +48,8 @@
 	let addingRec = $state(false);
 	let removingRec = $state<{ id: string; number: number } | null>(null);
 	let removingSection = $state(false);
+	// Documents waiting in the review-before-publish dialog.
+	let reviewing = $state<string[] | null>(null);
 	let bulk = $state('');
 	const bulkCount = $derived(bulk.split(/\r?\n/).filter((line) => /https?:\/\//.test(line)).length);
 
@@ -145,7 +150,7 @@
 					</button>
 				{/if}
 				{#if data.canManage && unpublished > 0}
-					<form method="POST" action="?/publishAll" use:enhance><button class="h-9 bg-ink px-3 text-[13px] font-medium text-paper hover:bg-ink-soft">Publish all ({unpublished})</button></form>
+					<button type="button" onclick={() => (reviewing = pending.map((document) => document.id))} class="h-9 bg-ink px-3 text-[13px] font-medium text-paper hover:bg-ink-soft">Review &amp; publish ({unpublished})</button>
 				{/if}
 			</div>
 		</div>
@@ -225,10 +230,7 @@
 								</form>
 							{/if}
 							{#if data.canManage && document.workflow !== 'published'}
-								<form method="POST" action="?/publishDocument" use:enhance>
-									<input type="hidden" name="id" value={document.id} />
-									<button class="h-9 px-2 text-[12px] font-medium underline-offset-4 hover:underline">Publish</button>
-								</form>
+								<button type="button" onclick={() => (reviewing = [document.id])} class="h-9 px-2 text-[12px] font-medium underline-offset-4 hover:underline">Publish…</button>
 							{/if}
 							{#if data.canManage}
 								<button type="button" onclick={() => (removing = { id: document.id, title: document.title })} class="grid size-9 place-items-center text-ink-soft hover:bg-destructive/10 hover:text-destructive" aria-label={`Delete ${document.title}`}>
@@ -390,6 +392,14 @@
 </div>
 {/snippet}
 </PublicPreview>
+
+<PublishReview
+	bind:ids={reviewing}
+	documents={data.documents}
+	trail={[program.code, visit.label, data.section.title]}
+	sectionKind={data.section.kind}
+	{publicUrl}
+/>
 
 <Dialog.Root open={removing !== null} onOpenChange={(open) => !open && (removing = null)}>
 	<Dialog.Content class="max-w-md rounded-none">

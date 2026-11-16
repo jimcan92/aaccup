@@ -8,11 +8,12 @@ import { supabaseService } from './sso';
  * permissions first (admin/focal for a visit, the section's editors for a section).
  *
  * Per section folder:
- *  - a new file is published straight away (source 'drive'): what is in Drive is on the site;
+ *  - a new file becomes a draft document (source 'drive'): Drive folders hold temp files too,
+ *    so an admin, area chair, or task force member publishes what belongs on the site;
  *  - a folder with no files in it (an empty placeholder) is kept as "pending", not linked;
  *  - a known file updates its link, format, date, and access flag; its title follows
  *    a rename only while nobody has edited the title;
- *  - a file that left the folder is archived and flagged; if it comes back, it is published again.
+ *  - a file that left the folder is archived and flagged; if it comes back, it returns as a draft.
  * Manual documents are never touched.
  */
 
@@ -137,7 +138,7 @@ async function syncAreaFolder(db: SupabaseClient, area: AreaRow, totals: SyncTot
 				title: isFolder(item) ? item.name : titleFromName(item.name),
 				kind: kindFromName(item.name, area.kind),
 				sort_order: nextSort++,
-				workflow: 'published'
+				workflow: 'draft'
 			});
 			if (insertError) totals.errors.push(`${item.name}: ${insertError.message}`);
 			else totals.added += 1;
@@ -150,9 +151,8 @@ async function syncAreaFolder(db: SupabaseClient, area: AreaRow, totals: SyncTot
 			.update({
 				...shared,
 				...(titleUntouched ? { title: isFolder(item) ? item.name : titleFromName(item.name) } : {}),
-				// Drive is the source of truth: drafts and files that came back are published.
-				// Items a reviewer has in review, approved, or archived by hand are left alone.
-				...(doc.drive_missing || doc.workflow === 'draft' ? { workflow: 'published' } : {})
+				// A file that came back needs another look before it is public again.
+				...(doc.drive_missing ? { workflow: 'draft' } : {})
 			})
 			.eq('id', doc.id);
 		if (updateError) totals.errors.push(`${item.name}: ${updateError.message}`);

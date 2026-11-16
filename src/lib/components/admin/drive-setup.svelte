@@ -63,7 +63,7 @@
 
 	function stepNote(totals: StepTotals): string {
 		const parts = [
-			totals.added && `${totals.added} new`,
+			totals.added && `${totals.added} new drafts`,
 			`${totals.updated} checked`,
 			totals.emptyFolders && `${totals.emptyFolders} empty`,
 			totals.missing && `${totals.missing} missing`,
