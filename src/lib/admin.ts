@@ -3,7 +3,8 @@ export const roleInfo: Record<string, { label: string; description: string }> = 
 	admin: { label: 'Admin', description: 'Manages people, roles, and every program.' },
 	focal: { label: 'Focal person', description: 'Edits and publishes content for every program.' },
 	reviewer: { label: 'Reviewer', description: 'Reads drafts and approves or returns them.' },
-	area_chair: { label: 'Area chair', description: 'Drafts content for an assigned program and submits it for review.' }
+	area_chair: { label: 'Area chair', description: 'Drafts content for an assigned program and submits it for review.' },
+	task_force: { label: 'Task force', description: 'Adds, edits, and publishes documents in the sections assigned to them, across programs.' }
 };
 
 export const statusInfo: Record<string, { label: string; tone: 'neutral' | 'progress' | 'good' | 'muted' }> = {

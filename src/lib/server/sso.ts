@@ -19,7 +19,7 @@ import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$app/env/public';
  *    workflow RPCs and area-chair limits apply unchanged.
  */
 
-export const STAFF_ROLES = ['admin', 'focal', 'reviewer', 'area_chair'] as const;
+export const STAFF_ROLES = ['admin', 'focal', 'reviewer', 'area_chair', 'task_force'] as const;
 export type StaffRole = (typeof STAFF_ROLES)[number];
 
 export type SsoUser = { id: string; email: string; name: string; image: string | null };
@@ -31,6 +31,8 @@ export type StaffProfile = {
 	role: StaffRole;
 	program_id: string | null;
 	area_id: string | null;
+	/** Task force only: the sections (areas) assigned to them, across programs. */
+	areas: { id: string; program_id: string }[];
 };
 
 export function accountsUrl(): string {
@@ -234,7 +236,15 @@ export async function findStaffProfile(email: string): Promise<StaffProfile | nu
 	const { data } = await service.from('profiles').select('id, email, full_name, role, program_id, area_id').// Exact match on the lowercased email. Never ilike: `_` and `%` would act as wildcards.
 	eq('email', email.toLowerCase()).maybeSingle();
 
-	return data && STAFF_ROLES.includes(data.role) ? data as StaffProfile : null;
+	if (!data || !STAFF_ROLES.includes(data.role)) return null;
+
+	// Only task force members have area assignments; nobody else pays for the extra query.
+	let areas: StaffProfile['areas'] = [];
+	if (data.role === 'task_force') {
+		const { data: rows } = await service.from('area_members').select('areas(id, program_id)').eq('profile_id', data.id);
+		areas = (rows ?? []).flatMap((row) => (row.areas ? [row.areas as unknown as { id: string; program_id: string }] : []));
+	}
+	return { ...(data as Omit<StaffProfile, 'areas'>), areas };
 }
 
 /**

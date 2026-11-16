@@ -3,6 +3,8 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { RESERVED_SECTION_SLUGS } from '#lib/data/accreditation.js';
 import {
 	canManage,
+	canPublishArea,
+	isAreaMember,
 	dbFail,
 	formatFromUrl,
 	integer,
@@ -29,7 +31,7 @@ const COMPLIANCE = ['complied', 'partial', 'not_yet'];
 type Area = { id: string; program_id: string };
 
 function canEditArea(staff: StaffProfile, area: Area): boolean {
-	if (canManage(staff)) return true;
+	if (canManage(staff) || isAreaMember(staff, area.id)) return true;
 	return (
 		staff.role === 'area_chair' &&
 		staff.program_id === area.program_id &&
@@ -38,10 +40,17 @@ function canEditArea(staff: StaffProfile, area: Area): boolean {
 }
 
 async function editableArea(locals: App.Locals, id: string) {
-	const { staff, supabase } = requireStaff(locals, ['admin', 'focal', 'area_chair']);
+	const { staff, supabase } = requireStaff(locals, ['admin', 'focal', 'area_chair', 'task_force']);
 	const { data: area } = await supabase.from('areas').select('id, program_id').eq('id', id).maybeSingle();
 	if (!area || !canEditArea(staff, area)) error(403, 'You cannot edit this section.');
 	return { staff, supabase, area };
+}
+
+/** Admin, focal, or a task force member assigned to this section. */
+async function publishableArea(locals: App.Locals, id: string) {
+	const found = await editableArea(locals, id);
+	if (!canPublishArea(found.staff, found.area.id)) error(403, 'You cannot publish in this section.');
+	return found;
 }
 
 function readDocument(form: FormData) {
@@ -155,6 +164,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		canEdit: canEditArea(staff, section),
 		driveConfigured: driveConfigured(),
 		canManage: canManage(staff),
+		canPublish: canPublishArea(staff, section.id),
 		kinds: KINDS,
 		formats: FORMATS
 	};
@@ -195,7 +205,7 @@ export const actions: Actions = {
 	},
 
 	publishSection: async ({ locals, params }) => {
-		const { supabase } = requireStaff(locals, ['admin', 'focal']);
+		const { supabase } = await publishableArea(locals, params.section);
 		const { error: rpcError } = await supabase.rpc('publish_area', { p_id: params.section });
 		return dbFail(rpcError) ?? { message: 'Section published. It appears on the public site within a minute.' };
 	},
@@ -270,7 +280,7 @@ export const actions: Actions = {
 		if (typeof parsed === 'string') return fail(400, { message: parsed, links: text(form, 'links') });
 
 		const kind = KINDS.includes(text(form, 'kind')) ? text(form, 'kind') : 'supporting';
-		const publish = canManage(staff) && form.get('publish') === 'on';
+		const publish = canPublishArea(staff, params.section) && form.get('publish') === 'on';
 		const start = await nextSort(supabase, params.section);
 
 		const { error: insertError } = await supabase.from('documents').insert(
@@ -319,15 +329,15 @@ export const actions: Actions = {
 		return dbFail(rpcError) ?? { message: 'Submitted for review.' };
 	},
 
-	publishDocument: async ({ request, locals }) => {
-		const { supabase } = requireStaff(locals, ['admin', 'focal']);
+	publishDocument: async ({ request, locals, params }) => {
+		const { supabase } = await publishableArea(locals, params.section);
 		const { error: rpcError } = await supabase.rpc('publish_document', { p_id: text(await request.formData(), 'id') });
 		return dbFail(rpcError) ?? { message: 'Published. It appears on the public site within a minute.' };
 	},
 
 	publishAll: async ({ locals, params }) => {
-		const { supabase } = requireStaff(locals, ['admin', 'focal']);
-		const { data: pending } = await supabase.from('documents').select('id').eq('area_id', params.section).neq('workflow', 'published');
+		const { supabase } = await publishableArea(locals, params.section);
+		const { data: pending } = await supabase.from('documents').select('id').eq('area_id', params.section).not('workflow', 'in', '(published,archived)');
 		for (const document of pending ?? []) {
 			const { error: rpcError } = await supabase.rpc('publish_document', { p_id: document.id });
 			if (rpcError) return dbFail(rpcError);

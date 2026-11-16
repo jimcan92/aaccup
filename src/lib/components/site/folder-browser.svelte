@@ -17,9 +17,10 @@
 	 * Browses a published folder document in the page: folders expand in place (one level is
 	 * fetched at a time), files open in the preview pane. Listing goes through /api/drive-folder.
 	 */
-	let { documentId, title }: { documentId: string; title: string } = $props();
+	// preview: the staff review-before-publish dialog, where the document may still be a draft.
+	let { documentId, title, preview = false }: { documentId: string; title: string; preview?: boolean } = $props();
 
-	let folder = $state(untrack(() => new FolderListing(documentId)));
+	let folder = $state(untrack(() => new FolderListing(documentId, preview)));
 	const listings = $derived(folder.listings);
 	const open = new SvelteSet<string>();
 	let selected = $state<FolderEntry | null>(null);
@@ -36,7 +37,7 @@
 		// reads and writes `listings`, which would otherwise re-run this effect in a loop.
 		void documentId;
 		untrack(() => {
-			if (folder.documentId !== documentId) folder = new FolderListing(documentId);
+			if (folder.documentId !== documentId) folder = new FolderListing(documentId, preview);
 			open.clear();
 			selected = null;
 			load(ROOT);

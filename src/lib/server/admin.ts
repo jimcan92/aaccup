@@ -6,7 +6,7 @@ import type { StaffProfile, StaffRole } from './sso';
 /** The signed-in staff member and their RLS-scoped client. Throws 403 for other roles. */
 export function requireStaff(
 	locals: App.Locals,
-	roles: StaffRole[] = ['admin', 'focal', 'reviewer', 'area_chair']
+	roles: StaffRole[] = ['admin', 'focal', 'reviewer', 'area_chair', 'task_force']
 ): { staff: StaffProfile; supabase: SupabaseClient } {
 	if (!locals.staff || !locals.supabase) error(401, 'Sign in first.');
 	if (!roles.includes(locals.staff.role)) error(403, 'Your role cannot do this.');
@@ -15,6 +15,23 @@ export function requireStaff(
 
 export const canManage = (staff: StaffProfile | null) => staff?.role === 'admin' || staff?.role === 'focal';
 export const canEdit = (staff: StaffProfile | null) => canManage(staff) || staff?.role === 'area_chair';
+
+/** A task force member assigned to this section (area). */
+export const isAreaMember = (staff: StaffProfile | null, areaId: string) =>
+	staff?.role === 'task_force' && staff.areas.some((area) => area.id === areaId);
+
+/** Who may publish this section's documents (and the section): admin, focal, or its task force. */
+export const canPublishArea = (staff: StaffProfile | null, areaId: string) => canManage(staff) || isAreaMember(staff, areaId);
+
+/**
+ * The programs a staff member works in, or null for every program: an area chair's one
+ * program, or the programs of a task force member's sections.
+ */
+export function staffProgramIds(staff: StaffProfile | null): string[] | null {
+	if (staff?.role === 'area_chair' && staff.program_id) return [staff.program_id];
+	if (staff?.role === 'task_force') return [...new Set(staff.areas.map((area) => area.program_id))];
+	return null;
+}
 
 export function text(form: FormData, name: string): string {
 	return String(form.get(name) ?? '').trim();

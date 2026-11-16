@@ -14,6 +14,7 @@
 	import { formatDate, kindLabel } from '#lib/format.js';
 	import { complianceLabels } from '#lib/components/program/recommendation-matrix.svelte';
 	import PublicPreview from '#lib/components/admin/public-preview.svelte';
+	import PublishReview from '#lib/components/admin/publish-review.svelte';
 	import type { BarAction } from '#lib/page-bar.svelte.js';
 	import type { PageProps } from './$types';
 
@@ -28,14 +29,16 @@
 	const publicUrl = $derived(
 		`/${program.slug}${visit.status === 'active' ? '' : `/${visit.slug}`}/${data.section.slug}`
 	);
-	const unpublished = $derived(data.documents.filter((document) => document.workflow !== 'published').length);
+	// Archived rows (removed by hand or gone from Drive) are not waiting to be published.
+	const pending = $derived(data.documents.filter((document) => !['published', 'archived'].includes(document.workflow)));
+	const unpublished = $derived(pending.length);
 	const linked = $derived(data.documents.filter((document) => document.status === 'linked').length);
 
 	// Submit, Publish and the public page sit in the program's sticky bar, beside Preview.
 	const actions = $derived<BarAction[]>([
 		{ id: 'public', label: 'Public page', icon: ArrowUpRight, href: publicUrl, external: true },
 		...(data.canEdit && ['draft', 'approved'].includes(data.section.status) ? [{ id: 'submit', label: 'Submit section', submit: '?/submitSection' }] : []),
-		...(data.canManage && data.section.status !== 'published' ? [{ id: 'publish', label: 'Publish section', submit: '?/publishSection', primary: true }] : [])
+		...(data.canPublish && data.section.status !== 'published' ? [{ id: 'publish', label: 'Publish section', submit: '?/publishSection', primary: true }] : [])
 	]);
 
 	let editing = $state<string | null>(null);
@@ -45,6 +48,8 @@
 	let addingRec = $state(false);
 	let removingRec = $state<{ id: string; number: number } | null>(null);
 	let removingSection = $state(false);
+	// Documents waiting in the review-before-publish dialog.
+	let reviewing = $state<string[] | null>(null);
 	let bulk = $state('');
 	const bulkCount = $derived(bulk.split(/\r?\n/).filter((line) => /https?:\/\//.test(line)).length);
 
@@ -128,7 +133,7 @@
 
 
 {#if !data.canEdit}
-	<p class="mt-6 border border-dashed border-ink/30 bg-paper p-4 text-[13px] text-ink-soft">You can read this section. Editing is for admins, focal persons, and the assigned area chair.</p>
+	<p class="mt-6 border border-dashed border-ink/30 bg-paper p-4 text-[13px] text-ink-soft">You can read this section. Editing is for admins, focal persons, the assigned area chair, and the section’s task force.</p>
 {/if}
 
 <div class="mt-8 grid gap-10 {side ? '' : 'xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]'}">
@@ -144,8 +149,8 @@
 						<ClipboardPaste class="size-4" /> Paste links
 					</button>
 				{/if}
-				{#if data.canManage && unpublished > 0}
-					<form method="POST" action="?/publishAll" use:enhance><button class="h-9 bg-ink px-3 text-[13px] font-medium text-paper hover:bg-ink-soft">Publish all ({unpublished})</button></form>
+				{#if data.canPublish && unpublished > 0}
+					<button type="button" onclick={() => (reviewing = pending.map((document) => document.id))} class="h-9 bg-ink px-3 text-[13px] font-medium text-paper hover:bg-ink-soft">Review &amp; publish ({unpublished})</button>
 				{/if}
 			</div>
 		</div>
@@ -171,7 +176,7 @@
 							{#each data.kinds as kind (kind)}<option value={kind} selected={kind === 'supporting'}>{kindLabel(kind)}</option>{/each}
 						</select>
 					</label>
-					{#if data.canManage}
+					{#if data.canPublish}
 						<label class="flex h-11 items-center gap-2 text-[13px]"><input type="checkbox" name="publish" class="size-4" /> Publish now</label>
 					{/if}
 					<button class="h-11 bg-ink px-5 text-[14px] font-medium text-paper hover:bg-ink-soft" disabled={bulkCount === 0}>
@@ -224,11 +229,8 @@
 									<button class="h-9 px-2 text-[12px] font-medium underline-offset-4 hover:underline">Submit</button>
 								</form>
 							{/if}
-							{#if data.canManage && document.workflow !== 'published'}
-								<form method="POST" action="?/publishDocument" use:enhance>
-									<input type="hidden" name="id" value={document.id} />
-									<button class="h-9 px-2 text-[12px] font-medium underline-offset-4 hover:underline">Publish</button>
-								</form>
+							{#if data.canPublish && document.workflow !== 'published'}
+								<button type="button" onclick={() => (reviewing = [document.id])} class="h-9 px-2 text-[12px] font-medium underline-offset-4 hover:underline">Publish…</button>
 							{/if}
 							{#if data.canManage}
 								<button type="button" onclick={() => (removing = { id: document.id, title: document.title })} class="grid size-9 place-items-center text-ink-soft hover:bg-destructive/10 hover:text-destructive" aria-label={`Delete ${document.title}`}>
@@ -379,7 +381,7 @@
 		</section>
 
 		{#if !data.canManage && data.canEdit}
-			<p class="text-[12px] text-ink-soft">Section details are edited by a focal person or admin. You can add, edit, and submit documents.</p>
+			<p class="text-[12px] text-ink-soft">Section details are edited by a focal person or admin. You can add, edit, {data.canPublish ? 'and publish' : 'and submit'} documents.</p>
 		{/if}
 		{#if data.canManage}
 			<button type="button" onclick={() => (removingSection = true)} class="inline-flex h-10 items-center gap-2 border border-destructive/40 px-4 text-[13px] font-medium text-destructive hover:bg-destructive/10">
@@ -390,6 +392,14 @@
 </div>
 {/snippet}
 </PublicPreview>
+
+<PublishReview
+	bind:ids={reviewing}
+	documents={data.documents}
+	trail={[program.code, visit.label, data.section.title]}
+	sectionKind={data.section.kind}
+	{publicUrl}
+/>
 
 <Dialog.Root open={removing !== null} onOpenChange={(open) => !open && (removing = null)}>
 	<Dialog.Content class="max-w-md rounded-none">
