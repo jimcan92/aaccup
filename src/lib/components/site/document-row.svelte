@@ -92,7 +92,7 @@
 		</div>
 
 		<div
-			class="col-start-2 flex items-center justify-between gap-4 sm:col-start-3 sm:flex-col sm:items-end sm:justify-start"
+			class="col-start-2 flex items-center justify-between gap-4 sm:col-start-3 sm:justify-end sm:pt-0.5"
 		>
 			{#if date}
 				<span class="font-mono text-[12px] text-ink-soft">{date}</span>
