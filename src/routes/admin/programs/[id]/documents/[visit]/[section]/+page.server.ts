@@ -335,6 +335,25 @@ export const actions: Actions = {
 		return dbFail(rpcError) ?? { message: 'Published. It appears on the public site within a minute.' };
 	},
 
+	// Takes a published document off the public site; it stays here as a draft.
+	unpublishDocument: async ({ request, locals, params }) => {
+		const { staff, supabase } = await publishableArea(locals, params.section);
+		const id = text(await request.formData(), 'id');
+		const { data: document, error: updateError } = await supabase
+			.from('documents')
+			.update({ workflow: 'draft' })
+			.eq('id', id)
+			.eq('area_id', params.section)
+			.eq('workflow', 'published')
+			.select()
+			.maybeSingle();
+		const failed = dbFail(updateError);
+		if (failed) return failed;
+		if (!document) return fail(404, { message: 'That document is not published.' });
+		await supabase.from('revisions').insert({ entity: 'document', entity_id: id, snapshot: document, action: 'unpublished', actor: staff.id });
+		return { message: `“${document.title}” is off the public site and back to draft.` };
+	},
+
 	publishAll: async ({ locals, params }) => {
 		const { supabase } = await publishableArea(locals, params.section);
 		const { data: pending } = await supabase.from('documents').select('id').eq('area_id', params.section).not('workflow', 'in', '(published,archived)');
