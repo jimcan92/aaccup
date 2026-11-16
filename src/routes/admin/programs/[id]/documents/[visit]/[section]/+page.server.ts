@@ -17,7 +17,7 @@ import {
 } from '#lib/server/admin.js';
 import { previewUrl } from '#lib/drive-url.js';
 import { driveConfigured, folderIdFrom, folderName } from '#lib/server/drive.js';
-import { summary, syncArea } from '#lib/server/drive-sync.js';
+import { relinkFilledFolders, summary, syncArea } from '#lib/server/drive-sync.js';
 import type { StaffProfile } from '#lib/server/sso.js';
 import { documentsHref, visitHref } from '#lib/admin-links.js';
 import type { Actions, PageServerLoad } from './$types';
@@ -331,7 +331,9 @@ export const actions: Actions = {
 
 	publishDocument: async ({ request, locals, params }) => {
 		const { supabase } = await publishableArea(locals, params.section);
-		const { error: rpcError } = await supabase.rpc('publish_document', { p_id: text(await request.formData(), 'id') });
+		const id = text(await request.formData(), 'id');
+		await relinkFilledFolders(params.section, [id]);
+		const { error: rpcError } = await supabase.rpc('publish_document', { p_id: id });
 		return dbFail(rpcError) ?? { message: 'Published. It appears on the public site within a minute.' };
 	},
 
@@ -357,6 +359,7 @@ export const actions: Actions = {
 	publishAll: async ({ locals, params }) => {
 		const { supabase } = await publishableArea(locals, params.section);
 		const { data: pending } = await supabase.from('documents').select('id').eq('area_id', params.section).not('workflow', 'in', '(published,archived)');
+		await relinkFilledFolders(params.section, (pending ?? []).map((document) => document.id));
 		for (const document of pending ?? []) {
 			const { error: rpcError } = await supabase.rpc('publish_document', { p_id: document.id });
 			if (rpcError) return dbFail(rpcError);

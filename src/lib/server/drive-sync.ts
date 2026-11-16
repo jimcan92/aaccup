@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { folderHasFiles, formatFromMime, isFolder, listFolder, type DriveItem } from './drive';
+import { driveFolderId } from '#lib/drive-url.js';
+import { driveConfigured, folderHasFiles, formatFromMime, isFolder, listFolder, type DriveItem } from './drive';
 import { groupScope, kindFromName, matchFolders, titleFromName, type MatchFolder, type MatchSection } from './drive-match';
 import { supabaseService } from './sso';
 
@@ -317,4 +318,32 @@ export function summary(totals: SyncTotals): string {
 	].filter(Boolean);
 	const errors = totals.errors.length ? ` Problems: ${totals.errors.slice(0, 3).join('; ')}${totals.errors.length > 3 ? '…' : ''}` : '';
 	return `Sync done: ${parts.join(', ')}.${errors}`;
+}
+
+/**
+ * Before documents go live: a Drive folder left "pending" by an earlier sync (it was empty then)
+ * becomes linked when files have landed in it since. Otherwise a published folder would keep
+ * showing "In preparation" until the next sync. Drive errors are skipped, so publishing never fails here.
+ */
+export async function relinkFilledFolders(areaId: string, documentIds: string[]): Promise<void> {
+	if (!documentIds.length || !driveConfigured()) return;
+	const db = service();
+	const { data } = await db
+		.from('documents')
+		.select('id, drive_url, drive_file_id')
+		.eq('area_id', areaId)
+		.in('id', documentIds)
+		.eq('format', 'folder')
+		.eq('status', 'pending')
+		.not('drive_url', 'is', null);
+
+	await eachLimit(data ?? [], 8, async (doc) => {
+		const folderId = driveFolderId(doc.drive_url ?? undefined) ?? doc.drive_file_id;
+		if (!folderId) return;
+		try {
+			if (await folderHasFiles(folderId)) await db.from('documents').update({ status: 'linked' }).eq('id', doc.id);
+		} catch {
+			// Drive unreachable or no access: leave it for the next sync.
+		}
+	});
 }
