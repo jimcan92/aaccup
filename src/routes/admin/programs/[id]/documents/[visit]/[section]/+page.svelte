@@ -38,7 +38,7 @@
 	const actions = $derived<BarAction[]>([
 		{ id: 'public', label: 'Public page', icon: ArrowUpRight, href: publicUrl, external: true },
 		...(data.canEdit && ['draft', 'approved'].includes(data.section.status) ? [{ id: 'submit', label: 'Submit section', submit: '?/submitSection' }] : []),
-		...(data.canManage && data.section.status !== 'published' ? [{ id: 'publish', label: 'Publish section', submit: '?/publishSection', primary: true }] : [])
+		...(data.canPublish && data.section.status !== 'published' ? [{ id: 'publish', label: 'Publish section', submit: '?/publishSection', primary: true }] : [])
 	]);
 
 	let editing = $state<string | null>(null);
@@ -133,7 +133,7 @@
 
 
 {#if !data.canEdit}
-	<p class="mt-6 border border-dashed border-ink/30 bg-paper p-4 text-[13px] text-ink-soft">You can read this section. Editing is for admins, focal persons, and the assigned area chair.</p>
+	<p class="mt-6 border border-dashed border-ink/30 bg-paper p-4 text-[13px] text-ink-soft">You can read this section. Editing is for admins, focal persons, the assigned area chair, and the section’s task force.</p>
 {/if}
 
 <div class="mt-8 grid gap-10 {side ? '' : 'xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]'}">
@@ -149,7 +149,7 @@
 						<ClipboardPaste class="size-4" /> Paste links
 					</button>
 				{/if}
-				{#if data.canManage && unpublished > 0}
+				{#if data.canPublish && unpublished > 0}
 					<button type="button" onclick={() => (reviewing = pending.map((document) => document.id))} class="h-9 bg-ink px-3 text-[13px] font-medium text-paper hover:bg-ink-soft">Review &amp; publish ({unpublished})</button>
 				{/if}
 			</div>
@@ -176,7 +176,7 @@
 							{#each data.kinds as kind (kind)}<option value={kind} selected={kind === 'supporting'}>{kindLabel(kind)}</option>{/each}
 						</select>
 					</label>
-					{#if data.canManage}
+					{#if data.canPublish}
 						<label class="flex h-11 items-center gap-2 text-[13px]"><input type="checkbox" name="publish" class="size-4" /> Publish now</label>
 					{/if}
 					<button class="h-11 bg-ink px-5 text-[14px] font-medium text-paper hover:bg-ink-soft" disabled={bulkCount === 0}>
@@ -229,7 +229,7 @@
 									<button class="h-9 px-2 text-[12px] font-medium underline-offset-4 hover:underline">Submit</button>
 								</form>
 							{/if}
-							{#if data.canManage && document.workflow !== 'published'}
+							{#if data.canPublish && document.workflow !== 'published'}
 								<button type="button" onclick={() => (reviewing = [document.id])} class="h-9 px-2 text-[12px] font-medium underline-offset-4 hover:underline">Publish…</button>
 							{/if}
 							{#if data.canManage}
@@ -381,7 +381,7 @@
 		</section>
 
 		{#if !data.canManage && data.canEdit}
-			<p class="text-[12px] text-ink-soft">Section details are edited by a focal person or admin. You can add, edit, and submit documents.</p>
+			<p class="text-[12px] text-ink-soft">Section details are edited by a focal person or admin. You can add, edit, {data.canPublish ? 'and publish' : 'and submit'} documents.</p>
 		{/if}
 		{#if data.canManage}
 			<button type="button" onclick={() => (removingSection = true)} class="inline-flex h-10 items-center gap-2 border border-destructive/40 px-4 text-[13px] font-medium text-destructive hover:bg-destructive/10">

@@ -9,7 +9,7 @@
 
 	let { data, form }: PageProps = $props();
 
-	const roles = ['admin', 'focal', 'reviewer', 'area_chair'] as const;
+	const roles = ['admin', 'focal', 'reviewer', 'area_chair', 'task_force'] as const;
 	let newRole = $state<string>('area_chair');
 	let newProgram = $state<string>('');
 	let editProgram = $state<string>('');
@@ -20,6 +20,17 @@
 	let removing = $state<{ id: string; label: string } | null>(null);
 
 	const programCode = (id: string | null) => data.programs.find((program) => program.id === id)?.code ?? null;
+	// Task force sections, grouped by program (active visit of each).
+	const areaGroups = $derived(
+		data.programs.map((program) => ({ program, areas: areasFor(program.id) })).filter((group) => group.areas.length > 0)
+	);
+	function roleBadge(person: (typeof data.people)[number]): string {
+		if (person.role === 'task_force') {
+			const codes = [...new Set(person.areas.map((id) => programCode(data.areas.find((area) => area.id === id)?.program_id ?? null)).filter(Boolean))];
+			return `${roleInfo.task_force.label} · ${person.areas.length} ${person.areas.length === 1 ? 'section' : 'sections'}${codes.length ? ` (${codes.join(', ')})` : ''}`;
+		}
+		return `${roleInfo[person.role]?.label ?? person.role}${programCode(person.program_id) ? ` · ${programCode(person.program_id)}` : ''}${areaTitle(person.area_id) ? ` · ${areaTitle(person.area_id)}` : ''}`;
+	}
 
 	const fieldClass =
 		'h-11 w-full border border-rule bg-salt px-3 text-[14px] text-ink outline-none transition-colors focus:border-ink';
@@ -30,6 +41,32 @@
 		editProgram = person.program_id ?? '';
 	}
 </script>
+
+{#snippet areaPicker(selected: string[])}
+	<fieldset class="col-span-full grid gap-2">
+		<legend class="text-[13px] font-medium text-ink">Sections (task force)</legend>
+		<p class="text-[12px] text-ink-soft">Tick every section this person works on. They can add, edit, and publish documents there, in any program.</p>
+		<div class="mt-1 grid max-h-80 gap-x-6 gap-y-4 overflow-y-auto border border-rule bg-salt p-3 sm:grid-cols-2 xl:grid-cols-3">
+			{#each areaGroups as group (group.program.id)}
+				<div>
+					<p class="font-mono text-[12px] font-medium text-ink">{group.program.code}</p>
+					<ul class="mt-1 grid gap-0.5">
+						{#each group.areas as area (area.id)}
+							<li>
+								<label class="flex items-start gap-2 py-0.5 text-[13px] text-ink">
+									<input type="checkbox" name="areas" value={area.id} checked={selected.includes(area.id)} class="mt-0.5 size-4 shrink-0" />
+									<span>{area.label}</span>
+								</label>
+							</li>
+						{/each}
+					</ul>
+				</div>
+			{:else}
+				<p class="text-[13px] text-ink-soft">No sections yet. Add a visit and its sections first.</p>
+			{/each}
+		</div>
+	</fieldset>
+{/snippet}
 
 <svelte:head>
 	<title>People · AACCUP Desk</title>
@@ -86,6 +123,7 @@
 		<button type="submit" class="h-11 bg-ink px-5 text-[14px] font-medium text-paper transition-colors hover:bg-ink-soft">
 			Add
 		</button>
+		{#if newRole === 'task_force'}{@render areaPicker([])}{/if}
 	</form>
 	<p class="mt-3 text-[13px] text-ink-soft">{roleInfo[newRole]?.description}</p>
 </section>
@@ -113,7 +151,7 @@
 					</div>
 					<div class="ml-auto flex items-center gap-2">
 						<span class="border border-ink/20 bg-paper px-2 py-0.5 text-[12px] font-medium text-ink">
-							{roleInfo[person.role]?.label ?? person.role}{programCode(person.program_id) ? ` · ${programCode(person.program_id)}` : ''}{areaTitle(person.area_id) ? ` · ${areaTitle(person.area_id)}` : ''}
+							{roleBadge(person)}
 						</span>
 						<button
 							type="button"
@@ -172,6 +210,7 @@
 							</select>
 						</label>
 						<button type="submit" class="h-11 bg-ink px-5 text-[14px] font-medium text-paper hover:bg-ink-soft">Save</button>
+						{#if editRole === 'task_force'}{@render areaPicker(person.areas)}{/if}
 					</form>
 				{/if}
 			</li>

@@ -1,6 +1,7 @@
 import { ACTIVE_CONTENT_KEYS } from '#lib/data/site.js';
 import { sectionHref } from '#lib/admin-links.js';
 import { previewUrl } from '#lib/drive-url.js';
+import { staffProgramIds } from '#lib/server/admin.js';
 import type { PageServerLoad } from './$types';
 
 export const prerender = false;
@@ -20,7 +21,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 				.select('id, slug, code, name, sort_order, theme_program, theme_ink, theme_soft, theme_contrast, visits(year, label, status, areas(kind, documents(status, workflow, drive_url)))')
 				.order('sort_order')
 		: null;
-	if (query && locals.staff?.role === 'area_chair' && locals.staff.program_id) query = query.eq('id', locals.staff.program_id);
+	const programIds = staffProgramIds(locals.staff);
+	if (query && programIds) query = query.in('id', programIds);
 	const { data: rows } = query ? await query : { data: [] };
 
 	const programSummaries = (rows ?? []).map((program) => {

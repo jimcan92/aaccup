@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import { fail } from '@sveltejs/kit';
-import { canManage, dbFail, requireStaff, SLUG, text } from '#lib/server/admin.js';
+import { canManage, dbFail, requireStaff, SLUG, staffProgramIds, text } from '#lib/server/admin.js';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -12,8 +12,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.order('sort_order')
 		.order('code');
 
-	// Area chairs work inside one program.
-	if (staff.role === 'area_chair' && staff.program_id) query = query.eq('id', staff.program_id);
+	// Area chairs work inside one program; task force members in the programs of their sections.
+	const programIds = staffProgramIds(staff);
+	if (programIds) query = query.in('id', programIds);
 
 	const { data, error } = await query;
 	return { programs: data ?? [], error: error?.message ?? null, canManage: canManage(staff) };

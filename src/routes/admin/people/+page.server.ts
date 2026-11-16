@@ -1,4 +1,5 @@
 import { error, fail } from '@sveltejs/kit';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { STAFF_ROLES, supabaseService, type StaffRole } from '#lib/server/sso.js';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -11,36 +12,70 @@ function requireAdmin(locals: App.Locals) {
 	return { staff: locals.staff, supabase: locals.supabase };
 }
 
-function readRole(form: FormData): { role: StaffRole; programId: string | null; areaId: string | null } | string {
+type ParsedRole = { role: StaffRole; programId: string | null; areaId: string | null; areas: string[] };
+
+function readRole(form: FormData): ParsedRole | string {
 	const role = String(form.get('role') ?? '') as StaffRole;
 	const programId = String(form.get('program_id') ?? '') || null;
 	const areaId = String(form.get('area_id') ?? '') || null;
+	const areas = [...new Set(form.getAll('areas').map(String).filter((id) => /^[0-9a-f-]{36}$/i.test(id)))];
 
 	if (!STAFF_ROLES.includes(role)) return 'Choose a role.';
 	if (role === 'area_chair' && !programId) return 'An area chair needs a program.';
-	return role === 'area_chair' ? { role, programId, areaId } : { role, programId: null, areaId: null };
+	if (role === 'task_force' && areas.length === 0) return 'Choose at least one section for a task force member.';
+	if (role === 'area_chair') return { role, programId, areaId, areas: [] };
+	return { role, programId: null, areaId: null, areas: role === 'task_force' ? areas : [] };
+}
+
+/** Makes the person's section assignments exactly `areas` (none unless they are task force). */
+async function setAreas(supabase: SupabaseClient, profileId: string, areas: string[]): Promise<string | null> {
+	// Not task force: clear any old assignments, best effort. Leftover rows grant nothing,
+	// since is_area_member() also requires the task_force role.
+	if (areas.length === 0) {
+		await supabase.from('area_members').delete().eq('profile_id', profileId);
+		return null;
+	}
+	const { data: current, error: readError } = await supabase.from('area_members').select('area_id').eq('profile_id', profileId);
+	if (readError) return readError.message;
+	const have = new Set((current ?? []).map((row) => row.area_id as string));
+	const drop = [...have].filter((id) => !areas.includes(id));
+	const add = areas.filter((id) => !have.has(id));
+	if (drop.length) {
+		const { error } = await supabase.from('area_members').delete().eq('profile_id', profileId).in('area_id', drop);
+		if (error) return error.message;
+	}
+	if (add.length) {
+		const { error } = await supabase.from('area_members').insert(add.map((area_id) => ({ profile_id: profileId, area_id })));
+		if (error) return error.message;
+	}
+	return null;
 }
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const { supabase } = requireAdmin(locals);
 
-	const [people, programs, areas] = await Promise.all([
+	const [people, programs, areas, members] = await Promise.all([
 		supabase
 			.from('profiles')
 			.select('id, email, full_name, role, program_id, area_id, created_at')
 			.order('role')
 			.order('full_name'),
 		supabase.from('programs').select('id, code, name').order('code'),
-		// Area chairs can be limited to one section of their program's active visit.
+		// Area chairs can be limited to one section, and task force members get any number of
+		// sections, of each program's active visit.
 		supabase
 			.from('areas')
 			.select('id, program_id, kind, number, title, visits!inner(status)')
 			.eq('visits.status', 'active')
-			.order('sort_order')
+			.order('sort_order'),
+		supabase.from('area_members').select('profile_id, area_id')
 	]);
 
+	const assigned = new Map<string, string[]>();
+	for (const row of members.data ?? []) assigned.set(row.profile_id, [...(assigned.get(row.profile_id) ?? []), row.area_id]);
+
 	return {
-		people: people.data ?? [],
+		people: (people.data ?? []).map((person) => ({ ...person, areas: assigned.get(person.id) ?? [] })),
 		programs: programs.data ?? [],
 		areas: (areas.data ?? []).map(({ id, program_id, kind, number, title }) => ({
 			id,
@@ -85,6 +120,9 @@ export const actions: Actions = {
 		});
 		if (roleError) return fail(400, { message: roleError.message, email, fullName });
 
+		const areasError = await setAreas(supabase, created.user.id, parsed.areas);
+		if (areasError) return fail(400, { message: areasError, email, fullName });
+
 		if (fullName) {
 			await supabase.from('profiles').update({ full_name: fullName }).eq('id', created.user.id);
 		}
@@ -110,6 +148,9 @@ export const actions: Actions = {
 			p_area_id: parsed.areaId
 		});
 		if (roleError) return fail(400, { message: roleError.message });
+
+		const areasError = await setAreas(supabase, id, parsed.areas);
+		if (areasError) return fail(400, { message: areasError });
 
 		return { message: 'Role updated.' };
 	},
