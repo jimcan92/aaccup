@@ -231,6 +231,11 @@
 							{/if}
 							{#if data.canPublish && document.workflow !== 'published'}
 								<button type="button" onclick={() => (reviewing = [document.id])} class="h-9 px-2 text-[12px] font-medium underline-offset-4 hover:underline">Publish…</button>
+							{:else if data.canPublish}
+								<form method="POST" action="?/unpublishDocument" use:enhance>
+									<input type="hidden" name="id" value={document.id} />
+									<button class="h-9 px-2 text-[12px] font-medium text-ink-soft underline-offset-4 hover:text-ink hover:underline">Unpublish</button>
+								</form>
 							{/if}
 							{#if data.canManage}
 								<button type="button" onclick={() => (removing = { id: document.id, title: document.title })} class="grid size-9 place-items-center text-ink-soft hover:bg-destructive/10 hover:text-destructive" aria-label={`Delete ${document.title}`}>
