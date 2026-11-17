@@ -1,4 +1,5 @@
 import { statementFonts, statementSizes, videoEmbed, type StatementFont, type StatementSize } from '#lib/landing.js';
+import { previewUrl } from '#lib/drive-url.js';
 import { isHttpUrl } from './admin';
 
 /** Cleaners for the newer landing block kinds; each returns clean content or an error message. */
@@ -138,6 +139,15 @@ export const cleaners: Record<string, (value: Raw, title: string) => object | st
 		if (items.some((item) => badImage(item.photo))) return 'Each poster needs an https:// link or an uploaded image.';
 		// Kept in date order, so the page and the editor agree.
 		return { title, items: items.sort((a, b) => a.date.localeCompare(b.date)).slice(0, 60) };
+	},
+
+	documents(value, title) {
+		const items = list(value.items)
+			.map((item) => ({ title: str(item.title, 200), label: str(item.label, 160), url: str(item.url, 500) }))
+			.filter((item) => item.title || item.label || item.url);
+		if (items.some((item) => !item.title)) return 'Each document needs a title.';
+		if (items.some((item) => item.url && !previewUrl(item.url))) return 'Use a Google Drive link for each document, or leave it empty while it is in preparation.';
+		return { title, intro: str(value.intro, 600), items: items.slice(0, 12) };
 	},
 
 	news(value, title) {

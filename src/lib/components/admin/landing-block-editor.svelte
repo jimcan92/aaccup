@@ -23,6 +23,7 @@
 	import TestimonialsEditor from './blocks/testimonials-editor.svelte';
 	import VideoEditor from './blocks/video-editor.svelte';
 	import VmgoEditor from './blocks/vmgo-editor.svelte';
+	import DocumentsEditor from './blocks/documents-editor.svelte';
 
 	type Block = {
 		id: string;
@@ -69,7 +70,7 @@
 	let uploading = $state<number | null>(null);
 
 	// The newer kinds each have their own editor working on a copy of the whole draft; lists start empty when missing.
-	const ownEditor = ['people', 'vmgo', 'media', 'partners', 'testimonials', 'faq', 'video', 'cta', 'news', 'org', 'events'];
+	const ownEditor = ['people', 'vmgo', 'media', 'partners', 'testimonials', 'faq', 'video', 'cta', 'news', 'org', 'events', 'documents'];
 	const lists: Record<string, string[]> = { vmgo: ['goals', 'objectives'], cta: ['buttons'] };
 	// svelte-ignore state_referenced_locally
 	let extra = $state<any>(
@@ -193,6 +194,8 @@
 				<OrgEditor bind:value={extra} {programId} />
 			{:else if block.kind === 'events'}
 				<EventsEditor bind:value={extra} {programId} />
+			{:else if block.kind === 'documents'}
+				<DocumentsEditor bind:value={extra} />
 			{:else if block.kind === 'text'}
 				<div class="grid gap-1.5 text-[13px] font-medium">
 					<span>Text</span>

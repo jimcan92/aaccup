@@ -17,6 +17,7 @@
 	import VmgoBlock from './blocks/vmgo-block.svelte';
 	import EventsBlock from './blocks/events-block.svelte';
 	import OrgBlock from './blocks/org-block.svelte';
+	import DocumentsBlock from './blocks/documents-block.svelte';
 	import { imageSrc } from '#lib/image-url.js';
 	import { hasContent, type GalleryItem, type LandingBlock } from '#lib/landing.js';
 	import Photo from '#lib/components/site/photo.svelte';
@@ -93,6 +94,8 @@
 		<OrgBlock content={block.content} tone={tone(index)} />
 	{:else if block.kind === 'events'}
 		<EventsBlock content={block.content} tone={tone(index)} />
+	{:else if block.kind === 'documents'}
+		<DocumentsBlock content={block.content} tone={tone(index)} />
 	{:else if block.kind === 'timeline'}
 		<ProgramTimeline items={block.content.items} title={block.content.title} tone={tone(index)} />
 	{:else if block.kind === 'gallery' && block.content.layout === 'carousel'}

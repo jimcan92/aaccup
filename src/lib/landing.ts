@@ -18,6 +18,8 @@ export type NewsItem = { date: string; title: string; body?: string; href?: stri
 export type OrgItem = { name: string; role: string; unit?: string; photo?: string; level: 1 | 2 | 3 | 4 };
 /** A campus event; date and end are YYYY-MM-DD, time is free text ("8:00 AM – 5:00 PM"); photo is a poster or event photo. */
 export type EventItem = { date: string; end?: string; time?: string; title: string; place?: string; body?: string; href?: string; photo?: string };
+/** A key record such as the BOR resolution or COPC; url is its Google Drive link, empty while in preparation. */
+export type KeyDocumentItem = { title: string; label?: string; url: string };
 
 export type PeopleContent = { title?: string; items: PersonItem[] };
 /** Text size of a vision or mission statement; md is the default. */
@@ -47,6 +49,7 @@ export type CtaContent = { title?: string; body?: string; buttons: LinkButton[] 
 export type NewsContent = { title?: string; items: NewsItem[] };
 export type OrgContent = { title?: string; items: OrgItem[] };
 export type EventsContent = { title?: string; items: EventItem[] };
+export type DocumentsContent = { title?: string; intro?: string; items: KeyDocumentItem[] };
 
 export type LandingBlock =
 	| { id: string; kind: 'gallery'; content: { title?: string; items: GalleryItem[]; layout?: GalleryLayout } }
@@ -63,7 +66,8 @@ export type LandingBlock =
 	| { id: string; kind: 'cta'; content: CtaContent }
 	| { id: string; kind: 'news'; content: NewsContent }
 	| { id: string; kind: 'org'; content: OrgContent }
-	| { id: string; kind: 'events'; content: EventsContent };
+	| { id: string; kind: 'events'; content: EventsContent }
+	| { id: string; kind: 'documents'; content: DocumentsContent };
 
 export type BlockKind = LandingBlock['kind'];
 
@@ -87,7 +91,8 @@ export const blockLabels: Record<BlockKind, string> = {
 	cta: 'Call to action',
 	news: 'Announcements',
 	org: 'Organization',
-	events: 'Campus events'
+	events: 'Campus events',
+	documents: 'Key documents'
 };
 
 /** Whether a published block has anything to show; empty blocks are skipped on the public page. */
@@ -222,6 +227,16 @@ export const sampleContent: Record<BlockKind, object> = {
 		items: [
 			{ date: '2026-12-01', time: '8:00 AM', title: 'Replace with an upcoming event', place: 'Campus gym', body: 'Replace with one or two sentences.' },
 			{ date: '2026-11-15', end: '2026-11-16', title: 'Replace with a two-day event', place: 'AVR', body: 'Replace with one or two sentences.' }
+		]
+	},
+	documents: {
+		title: 'Program credentials',
+		intro: 'Open a document to read it on this page.',
+		items: [
+			{ title: 'Board Resolution', label: 'BOR approval of the program', url: '' },
+			{ title: 'Certificate of Program Compliance', label: 'COPC', url: '' },
+			{ title: 'AACCUP Results 2022', label: 'Previous survey visit', url: '' },
+			{ title: 'Certificate of Veracity', label: 'Signed certification', url: '' }
 		]
 	},
 	news: {
