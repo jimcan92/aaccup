@@ -2,6 +2,7 @@
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import Pause from '@lucide/svelte/icons/pause';
 	import Play from '@lucide/svelte/icons/play';
+	import FileBadge from '@lucide/svelte/icons/file-badge';
 	import Search from '@lucide/svelte/icons/search';
 	import { MediaQuery } from 'svelte/reactivity';
 	import DocumentRow from '#lib/components/site/document-row.svelte';
@@ -34,6 +35,9 @@
 	const heroCarousel = $derived(blocks.find((block) => block.kind === 'gallery' && block.content.layout === 'carousel' && block.content.items?.some((item) => item.src)));
 	const slides = $derived(heroCarousel?.kind === 'gallery' ? heroCarousel.content.items.filter((item) => item.src) : []);
 	const rest = $derived(heroCarousel ? blocks.filter((block) => block !== heroCarousel) : blocks);
+
+	// The hero's second button jumps to the first Key documents block when the page has one; otherwise it searches.
+	const keyDocuments = $derived(rest.find((block) => block.kind === 'documents' && hasContent(block)));
 
 	// Credentials continue the paper/salt alternation after the blocks that show.
 	const shown = $derived(rest.filter(hasContent).length);
@@ -136,10 +140,17 @@
 					Open the documents
 					<ArrowRight class="size-4" />
 				</a>
-				<a href={`/${program.slug}/documents`} class="inline-flex h-14 items-center gap-2 border border-program-contrast/50 px-7 text-[15px] font-medium transition-colors hover:bg-program-contrast/10">
-					<Search class="size-4" />
-					Search documents
-				</a>
+				{#if keyDocuments}
+					<a href="#key-documents" class="inline-flex h-14 items-center gap-2 border border-program-contrast/50 px-7 text-[15px] font-medium transition-colors hover:bg-program-contrast/10">
+						<FileBadge class="size-4" />
+						{keyDocuments.content.title || 'Key documents'}
+					</a>
+				{:else}
+					<a href={`/${program.slug}/documents`} class="inline-flex h-14 items-center gap-2 border border-program-contrast/50 px-7 text-[15px] font-medium transition-colors hover:bg-program-contrast/10">
+						<Search class="size-4" />
+						Search documents
+					</a>
+				{/if}
 			</div>
 			<ProgramContact {program} variant="chips" />
 		</div>
