@@ -17,6 +17,7 @@
 	import VmgoBlock from './blocks/vmgo-block.svelte';
 	import EventsBlock from './blocks/events-block.svelte';
 	import OrgBlock from './blocks/org-block.svelte';
+	import DocumentsBlock from './blocks/documents-block.svelte';
 	import { imageSrc } from '#lib/image-url.js';
 	import { hasContent, type GalleryItem, type LandingBlock } from '#lib/landing.js';
 	import Photo from '#lib/components/site/photo.svelte';
@@ -28,6 +29,8 @@
 
 	// Only blocks with something to show; backgrounds alternate paper and salt down the page.
 	const visible = $derived(blocks.filter(hasContent));
+	// The first Key documents block is the target of the program hero's second button.
+	const keyDocumentsId = $derived(visible.find((block) => block.kind === 'documents')?.id);
 	const tone = (index: number) => (index % 2 === 0 ? 'paper' : 'salt') as 'paper' | 'salt';
 	const background = { paper: 'bg-paper', salt: 'bg-salt' };
 
@@ -44,7 +47,7 @@
 
 {#each visible as block, index (block.id)}
 <!-- Each block is a snap point, and its content rises in the first time it scrolls into view. -->
-<div data-block-id={editable ? block.id : undefined} class={editable ? 'relative cursor-pointer hover:outline-[3px] hover:outline-solid hover:outline-program hover:[outline-offset:-3px]' : ''} data-snap use:reveal={{ inner: true, disabled: editable }}>
+<div id={block.id === keyDocumentsId ? 'key-documents' : undefined} data-block-id={editable ? block.id : undefined} class={editable ? 'relative scroll-mt-28 md:scroll-mt-0 cursor-pointer hover:outline-[3px] hover:outline-solid hover:outline-program hover:[outline-offset:-3px]' : 'scroll-mt-28 md:scroll-mt-0'} data-snap use:reveal={{ inner: true, disabled: editable }}>
 	{#if editable && drafts.includes(block.id)}<span class="pointer-events-none absolute right-3 top-3 z-10 bg-ink px-2 py-1 font-mono text-[11px] text-paper">Not live yet</span>{/if}
 	{#if block.kind === 'stats'}
 		<section class="border-b border-rule {background[tone(index)]}">
@@ -93,6 +96,8 @@
 		<OrgBlock content={block.content} tone={tone(index)} />
 	{:else if block.kind === 'events'}
 		<EventsBlock content={block.content} tone={tone(index)} />
+	{:else if block.kind === 'documents'}
+		<DocumentsBlock content={block.content} tone={tone(index)} />
 	{:else if block.kind === 'timeline'}
 		<ProgramTimeline items={block.content.items} title={block.content.title} tone={tone(index)} />
 	{:else if block.kind === 'gallery' && block.content.layout === 'carousel'}
