@@ -125,7 +125,8 @@
 					<span class="w-[42px]" aria-hidden="true"></span>
 				</div>
 
-				<div class="relative aspect-[16/10] touch-pan-y bg-white" onpointerdown={swipeStart} onpointerup={swipeEnd} onpointercancel={() => (startX = null)} role="presentation">
+				<!-- The screenshots share one grid cell, so the frame takes their own shape (the tallest one) instead of cropping them. -->
+				<div class="relative grid touch-pan-y bg-white {shots.length ? '' : 'aspect-[16/10]'}" onpointerdown={swipeStart} onpointerup={swipeEnd} onpointercancel={() => (startX = null)} role="presentation">
 					{#if shots.length}
 						{#each shots as shot, i (i)}
 							<img
@@ -133,7 +134,7 @@
 								alt={shot.caption || `Screenshot ${i + 1}`}
 								loading={i === 0 ? 'eager' : 'lazy'}
 								aria-hidden={i !== index}
-								class="absolute inset-0 h-full w-full object-cover object-top transition-[opacity,transform] duration-700 {i === index ? 'scale-100 opacity-100' : 'scale-[1.02] opacity-0'}"
+								class="col-start-1 row-start-1 h-auto w-full self-start transition-[opacity,transform] duration-700 {i === index ? 'scale-100 opacity-100' : 'scale-[1.02] opacity-0'}"
 							/>
 						{/each}
 						<button type="button" onclick={() => (large = true)} class="absolute right-3 top-3 grid size-9 place-items-center rounded-md bg-ink/60 text-paper opacity-80 transition-opacity hover:opacity-100" aria-label="View screenshot larger">

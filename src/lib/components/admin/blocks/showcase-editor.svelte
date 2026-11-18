@@ -78,7 +78,7 @@
 		{#if value.shots.length < 12}
 			<button type="button" onclick={() => (value.shots = [...value.shots, { src: '', caption: '' }])} class={addButton}><Plus class="size-4" /> Add screenshot</button>
 		{/if}
-		<p class={hint}>Wide screenshots of the whole screen look best (16:10). The top of each one shows if it is taller. Uploads up to 5 MB.</p>
+		<p class={hint}>Screenshots of the whole screen, all the same size, look best: the frame takes their shape. Uploads up to 5 MB.</p>
 	</div>
 
 	<fieldset class="grid gap-1.5">
