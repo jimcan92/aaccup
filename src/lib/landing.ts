@@ -27,6 +27,8 @@ export type ShowcaseIcon = (typeof showcaseIcons)[number];
 export type ShowcaseFeature = { icon: ShowcaseIcon; title: string; text?: string };
 /** A screenshot of the system; src is an uploaded image or Drive link. */
 export type ShowcaseShot = { src: string; caption?: string };
+/** An extension project; date and beneficiaries are free text ("June 2025", "120 farmers"); photos are extra pictures shown when the card opens. */
+export type ProjectItem = { title: string; partner?: string; date?: string; beneficiaries?: string; body?: string; photo?: string; photos?: string[]; href?: string };
 
 export type PeopleContent = { title?: string; items: PersonItem[] };
 /** Text size of a vision or mission statement; md is the default. */
@@ -69,6 +71,8 @@ export type ShowcaseContent = {
 	button?: LinkButton;
 	side?: 'left' | 'right';
 };
+/** Extension projects: a featured video with short figures, then a card for each project. */
+export type ProjectsContent = { title?: string; intro?: string; video?: string; videoCaption?: string; stats: StatItem[]; items: ProjectItem[] };
 
 export type LandingBlock =
 	| { id: string; kind: 'gallery'; content: { title?: string; items: GalleryItem[]; layout?: GalleryLayout } }
@@ -87,7 +91,8 @@ export type LandingBlock =
 	| { id: string; kind: 'org'; content: OrgContent }
 	| { id: string; kind: 'events'; content: EventsContent }
 	| { id: string; kind: 'documents'; content: DocumentsContent }
-	| { id: string; kind: 'showcase'; content: ShowcaseContent };
+	| { id: string; kind: 'showcase'; content: ShowcaseContent }
+	| { id: string; kind: 'projects'; content: ProjectsContent };
 
 export type BlockKind = LandingBlock['kind'];
 
@@ -113,7 +118,8 @@ export const blockLabels: Record<BlockKind, string> = {
 	org: 'Organization',
 	events: 'Campus events',
 	documents: 'Key documents',
-	showcase: 'System showcase'
+	showcase: 'System showcase',
+	projects: 'Extension projects'
 };
 
 /** Whether a published block has anything to show; empty blocks are skipped on the public page. */
@@ -132,6 +138,8 @@ export function hasContent(block: LandingBlock): boolean {
 			return Boolean(block.content.title || block.content.buttons?.length);
 		case 'showcase':
 			return Boolean(block.content.title || block.content.shots?.length);
+		case 'projects':
+			return Boolean(videoEmbed(block.content.video) || block.content.items?.length);
 		default:
 			return Array.isArray(content.items) && content.items.length > 0;
 	}
@@ -276,6 +284,21 @@ export const sampleContent: Record<BlockKind, object> = {
 		shots: [],
 		button: { label: 'Open the system', href: 'https://lab.ctu-moalboal.online' },
 		side: 'left'
+	},
+	projects: {
+		title: 'Extension projects',
+		intro: 'Replace with two or three sentences about how the program shares its expertise with partner communities.',
+		video: '',
+		videoCaption: 'Paste the YouTube or Google Drive link of the extension video presentation.',
+		stats: [
+			{ value: '5', label: 'Extension projects' },
+			{ value: '3', label: 'Partner communities' },
+			{ value: '400+', label: 'Beneficiaries' }
+		],
+		items: [
+			{ title: 'Replace with the project title', partner: 'Partner barangay or agency', date: 'June 2025', beneficiaries: '120 beneficiaries', body: 'Replace with one or two sentences: what was done and for whom.', photo: '', photos: [], href: '' },
+			{ title: 'Replace with another project', partner: 'Partner community', date: 'SY 2024–2025', beneficiaries: '45 households', body: 'Replace with one or two sentences.', photo: '', photos: [], href: '' }
+		]
 	},
 	news: {
 		title: 'Announcements',

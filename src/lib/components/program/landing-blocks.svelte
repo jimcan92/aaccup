@@ -19,6 +19,7 @@
 	import OrgBlock from './blocks/org-block.svelte';
 	import DocumentsBlock from './blocks/documents-block.svelte';
 	import ShowcaseBlock from './blocks/showcase-block.svelte';
+	import ProjectsBlock from './blocks/projects-block.svelte';
 	import { imageSrc } from '#lib/image-url.js';
 	import { hasContent, type GalleryItem, type LandingBlock } from '#lib/landing.js';
 	import Photo from '#lib/components/site/photo.svelte';
@@ -101,6 +102,8 @@
 		<DocumentsBlock content={block.content} tone={tone(index)} />
 	{:else if block.kind === 'showcase'}
 		<ShowcaseBlock content={block.content} tone={tone(index)} />
+	{:else if block.kind === 'projects'}
+		<ProjectsBlock content={block.content} tone={tone(index)} />
 	{:else if block.kind === 'timeline'}
 		<ProgramTimeline items={block.content.items} title={block.content.title} tone={tone(index)} />
 	{:else if block.kind === 'gallery' && block.content.layout === 'carousel'}

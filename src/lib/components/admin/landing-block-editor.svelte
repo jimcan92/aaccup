@@ -25,6 +25,7 @@
 	import VmgoEditor from './blocks/vmgo-editor.svelte';
 	import DocumentsEditor from './blocks/documents-editor.svelte';
 	import ShowcaseEditor from './blocks/showcase-editor.svelte';
+	import ProjectsEditor from './blocks/projects-editor.svelte';
 
 	type Block = {
 		id: string;
@@ -71,8 +72,8 @@
 	let uploading = $state<number | null>(null);
 
 	// The newer kinds each have their own editor working on a copy of the whole draft; lists start empty when missing.
-	const ownEditor = ['people', 'vmgo', 'media', 'partners', 'testimonials', 'faq', 'video', 'cta', 'news', 'org', 'events', 'documents', 'showcase'];
-	const lists: Record<string, string[]> = { vmgo: ['goals', 'objectives'], cta: ['buttons'], showcase: ['features', 'shots'] };
+	const ownEditor = ['people', 'vmgo', 'media', 'partners', 'testimonials', 'faq', 'video', 'cta', 'news', 'org', 'events', 'documents', 'showcase', 'projects'];
+	const lists: Record<string, string[]> = { vmgo: ['goals', 'objectives'], cta: ['buttons'], showcase: ['features', 'shots'], projects: ['stats', 'items'] };
 	// svelte-ignore state_referenced_locally
 	let extra = $state<any>(
 		Object.fromEntries([
@@ -199,6 +200,8 @@
 				<DocumentsEditor bind:value={extra} />
 			{:else if block.kind === 'showcase'}
 				<ShowcaseEditor bind:value={extra} {programId} />
+			{:else if block.kind === 'projects'}
+				<ProjectsEditor bind:value={extra} {programId} />
 			{:else if block.kind === 'text'}
 				<div class="grid gap-1.5 text-[13px] font-medium">
 					<span>Text</span>
