@@ -20,6 +20,13 @@ export type OrgItem = { name: string; role: string; unit?: string; photo?: strin
 export type EventItem = { date: string; end?: string; time?: string; title: string; place?: string; body?: string; href?: string; photo?: string };
 /** A key record such as the BOR resolution or COPC; url is its Google Drive link, empty while in preparation. */
 export type KeyDocumentItem = { title: string; label?: string; url: string };
+/** Icons a showcase feature can use; the editor offers these by name. */
+export const showcaseIcons = ['box', 'qr', 'clipboard', 'wrench', 'alert', 'chart', 'users', 'shield'] as const;
+export type ShowcaseIcon = (typeof showcaseIcons)[number];
+/** One thing the system does, shown beside the screenshots. */
+export type ShowcaseFeature = { icon: ShowcaseIcon; title: string; text?: string };
+/** A screenshot of the system; src is an uploaded image or Drive link. */
+export type ShowcaseShot = { src: string; caption?: string };
 
 export type PeopleContent = { title?: string; items: PersonItem[] };
 /** Text size of a vision or mission statement; md is the default. */
@@ -50,6 +57,18 @@ export type NewsContent = { title?: string; items: NewsItem[] };
 export type OrgContent = { title?: string; items: OrgItem[] };
 export type EventsContent = { title?: string; items: EventItem[] };
 export type DocumentsContent = { title?: string; intro?: string; items: KeyDocumentItem[] };
+/** A system or project built by the program: words and features beside a screenshot slideshow in a browser frame. */
+export type ShowcaseContent = {
+	title?: string;
+	eyebrow?: string;
+	body?: string;
+	/** The address shown in the browser frame, e.g. lab.ctu-moalboal.online. */
+	url?: string;
+	features: ShowcaseFeature[];
+	shots: ShowcaseShot[];
+	button?: LinkButton;
+	side?: 'left' | 'right';
+};
 
 export type LandingBlock =
 	| { id: string; kind: 'gallery'; content: { title?: string; items: GalleryItem[]; layout?: GalleryLayout } }
@@ -67,7 +86,8 @@ export type LandingBlock =
 	| { id: string; kind: 'news'; content: NewsContent }
 	| { id: string; kind: 'org'; content: OrgContent }
 	| { id: string; kind: 'events'; content: EventsContent }
-	| { id: string; kind: 'documents'; content: DocumentsContent };
+	| { id: string; kind: 'documents'; content: DocumentsContent }
+	| { id: string; kind: 'showcase'; content: ShowcaseContent };
 
 export type BlockKind = LandingBlock['kind'];
 
@@ -92,7 +112,8 @@ export const blockLabels: Record<BlockKind, string> = {
 	news: 'Announcements',
 	org: 'Organization',
 	events: 'Campus events',
-	documents: 'Key documents'
+	documents: 'Key documents',
+	showcase: 'System showcase'
 };
 
 /** Whether a published block has anything to show; empty blocks are skipped on the public page. */
@@ -109,6 +130,8 @@ export function hasContent(block: LandingBlock): boolean {
 			return Boolean(videoEmbed(block.content.url));
 		case 'cta':
 			return Boolean(block.content.title || block.content.buttons?.length);
+		case 'showcase':
+			return Boolean(block.content.title || block.content.shots?.length);
 		default:
 			return Array.isArray(content.items) && content.items.length > 0;
 	}
@@ -238,6 +261,21 @@ export const sampleContent: Record<BlockKind, object> = {
 			{ title: 'AACCUP Results 2022', label: 'Previous survey visit', url: '' },
 			{ title: 'Certificate of Veracity', label: 'Signed certification', url: '' }
 		]
+	},
+	showcase: {
+		title: 'Laboratory Equipment Management System',
+		eyebrow: 'Built by BSIE',
+		body: 'Replace with two or three sentences: what the system does, who uses it, and why the program built it.',
+		url: 'lab.ctu-moalboal.online',
+		features: [
+			{ icon: 'box', title: 'Equipment inventory', text: 'Every item with its laboratory, condition and history.' },
+			{ icon: 'qr', title: 'QR code labels', text: 'Scan a label to open the item record.' },
+			{ icon: 'clipboard', title: 'Borrowing', text: 'Requests, approvals and returns in one place.' },
+			{ icon: 'wrench', title: 'Calibration and maintenance', text: 'Schedules and records for each item.' }
+		],
+		shots: [],
+		button: { label: 'Open the system', href: 'https://lab.ctu-moalboal.online' },
+		side: 'left'
 	},
 	news: {
 		title: 'Announcements',

@@ -1,4 +1,4 @@
-import { statementFonts, statementSizes, videoEmbed, type StatementFont, type StatementSize } from '#lib/landing.js';
+import { showcaseIcons, statementFonts, statementSizes, videoEmbed, type ShowcaseIcon, type StatementFont, type StatementSize } from '#lib/landing.js';
 import { previewUrl } from '#lib/drive-url.js';
 import { isHttpUrl } from './admin';
 
@@ -148,6 +148,31 @@ export const cleaners: Record<string, (value: Raw, title: string) => object | st
 		if (items.some((item) => !item.title)) return 'Each document needs a title.';
 		if (items.some((item) => item.url && !previewUrl(item.url))) return 'Use a Google Drive link for each document, or leave it empty while it is in preparation.';
 		return { title, intro: str(value.intro, 600), items: items.slice(0, 12) };
+	},
+
+	showcase(value, title) {
+		const icon = (raw: unknown): ShowcaseIcon => (showcaseIcons.includes(raw as ShowcaseIcon) ? (raw as ShowcaseIcon) : 'box');
+		const features = list(value.features)
+			.map((item) => ({ icon: icon(item.icon), title: str(item.title, 120), text: str(item.text, 300) }))
+			.filter((item) => item.title || item.text);
+		const shots = list(value.shots)
+			.map((item) => ({ src: str(item.src, 500), caption: str(item.caption, 160) }))
+			.filter((item) => item.src || item.caption);
+		const content = {
+			title,
+			eyebrow: str(value.eyebrow, 80),
+			body: str(value.body, 2000),
+			url: str(value.url, 120).replace(/^https?:\/\//, '').replace(/\/+$/, ''),
+			features: features.slice(0, 8),
+			shots: shots.slice(0, 12),
+			button: button(value.button),
+			side: value.side === 'right' ? 'right' : 'left'
+		};
+		if (features.some((item) => !item.title)) return 'Each feature needs a title.';
+		if (shots.some((item) => !item.src)) return 'Each screenshot needs an image: upload one or paste a link.';
+		if (shots.some((item) => badImage(item.src))) return 'Each screenshot needs an https:// link or an uploaded image.';
+		if (content.button.href && !isLink(content.button.href)) return 'The button link must start with https:// or /.';
+		return content;
 	},
 
 	news(value, title) {

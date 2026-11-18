@@ -18,6 +18,7 @@
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
 	import Network from '@lucide/svelte/icons/network';
 	import FileBadge from '@lucide/svelte/icons/file-badge';
+	import MonitorSmartphone from '@lucide/svelte/icons/monitor-smartphone';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Eye from '@lucide/svelte/icons/eye';
 	import EyeOff from '@lucide/svelte/icons/eye-off';
@@ -196,6 +197,7 @@
 
 	const add = [
 		{ kind: 'documents', label: 'Key documents', icon: FileBadge, hint: 'PDF cards with a preview: BOR, COPC, results, certificates' },
+		{ kind: 'showcase', label: 'System showcase', icon: MonitorSmartphone, hint: 'A system the program built: features beside a screenshot slideshow' },
 		{ kind: 'carousel', label: 'Photo carousel', icon: GalleryHorizontal, hint: 'A slideshow of photos with captions, one at a time' },
 		{ kind: 'gallery', label: 'Photo gallery', icon: Images, hint: 'A grid of photos; the first one is the banner' },
 		{ kind: 'stats', label: 'Highlights', icon: BarChart3, hint: 'Short figures: passing rate, graduates, years' },
