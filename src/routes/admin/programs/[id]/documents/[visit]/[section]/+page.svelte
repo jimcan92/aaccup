@@ -9,6 +9,7 @@
 	import PageHeader from '#lib/components/admin/page-header.svelte';
 	import StatusBadge from '#lib/components/admin/status-badge.svelte';
 	import DocumentFormat from '#lib/components/site/document-format.svelte';
+	import FolderFilePicker from '#lib/components/admin/folder-file-picker.svelte';
 	import * as Dialog from '#lib/components/ui/dialog/index.js';
 	import { previewUrl } from '#lib/drive-url.js';
 	import { formatDate, kindLabel } from '#lib/format.js';
@@ -42,6 +43,8 @@
 	]);
 
 	let editing = $state<string | null>(null);
+	// Folder document whose public file list is being chosen.
+	let choosing = $state<string | null>(null);
 	let adding = $state<'one' | 'bulk' | null>(null);
 	let removing = $state<{ id: string; title: string } | null>(null);
 	let editingRec = $state<string | null>(null);
@@ -209,6 +212,7 @@
 								{/if}
 								{#if document.updated_label}<span>{formatDate(document.updated_label)}</span>{/if}
 								{#if document.source === 'drive'}<span class="border border-ink/20 px-1">From Drive</span>{/if}
+								{#if document.shown_files}<span class="border border-program/35 px-1 text-program-ink">Shows {document.shown_files.length} chosen {document.shown_files.length === 1 ? 'file' : 'files'}</span>{/if}
 								{#if document.drive_missing}
 									<span class="border border-destructive/40 bg-destructive/5 px-1 font-medium text-destructive">Missing in Drive — hidden</span>
 								{:else if document.drive_public === false}
@@ -218,6 +222,9 @@
 						</div>
 						<div class="col-start-2 flex flex-wrap items-center gap-1.5 sm:col-start-3 sm:justify-end">
 							<StatusBadge status={document.workflow} />
+							{#if data.canPublish && document.format === 'folder' && previewUrl(document.drive_url)}
+								<button type="button" onclick={() => (choosing = choosing === document.id ? null : document.id)} class="h-9 px-2 text-[12px] font-medium underline-offset-4 hover:underline" aria-expanded={choosing === document.id}>Choose files</button>
+							{/if}
 							{#if data.canEdit}
 								<button type="button" onclick={() => (editing = editing === document.id ? null : document.id)} class="grid size-9 place-items-center hover:bg-paper" aria-label={`Edit ${document.title}`} aria-expanded={editing === document.id}>
 									<Pencil class="size-4" />
@@ -245,6 +252,9 @@
 						</div>
 					</div>
 
+					{#if choosing === document.id}
+						<FolderFilePicker documentId={document.id} shown={document.shown_files} onsaved={() => (choosing = null)} />
+					{/if}
 					{#if editing === document.id}
 						<form method="POST" action="?/saveDocument" use:enhance={close} class="mt-3 grid gap-4 bg-paper p-4 sm:grid-cols-2">
 							<input type="hidden" name="id" value={document.id} />

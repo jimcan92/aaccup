@@ -16,6 +16,8 @@ const ID = /^[\w-]{10,}$/;
  * Only folders inside a published document can be listed, so this never exposes the rest of the
  * service account's Drive. With ?preview=1 a signed-in staff member (resolved by the hook) can
  * list an unpublished folder document too, for review before publishing; that answer is not cached.
+ * A document's shown_files narrows its top level to the chosen items (and the subfolders below
+ * them); ?all=1 lifts that for staff, so the file picker in admin sees everything.
  */
 export const GET: RequestHandler = async ({ url, locals }) => {
 	const doc = url.searchParams.get('doc') ?? '';
@@ -28,14 +30,20 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	if (!db || !driveConfigured()) error(503, 'Drive is not configured');
 
 	// Row-level security returns published documents only, or what the staff member may see.
-	const { data: row } = await db.from('documents').select('drive_url').eq('id', doc).maybeSingle();
+	const { data: row } = await db.from('documents').select('drive_url, shown_files').eq('id', doc).maybeSingle();
 	const root = driveFolderId(row?.drive_url ?? undefined);
 	if (!root) error(404, 'Folder not found');
+
+	const everything = staffPreview && url.searchParams.get('all') === '1';
+	const shown = everything || !row?.shown_files ? null : new Set<string>(row.shown_files);
+	// A subfolder that was not chosen stays closed too.
+	if (shown && path.length && !shown.has(path[0])) error(404, 'Folder not found');
 
 	const folder = path.at(-1) ?? root;
 	try {
 		if (path.length && !(await isFolderPath(root, path))) error(404, 'Folder not found');
-		const items = await listFolder(folder, { checkAccess: true });
+		const listed = await listFolder(folder, { checkAccess: true });
+		const items = shown && !path.length ? listed.filter((item) => shown.has(item.targetId ?? item.id)) : listed;
 		const entries: FolderEntry[] = items.map((item) => ({
 			id: item.targetId ?? item.id,
 			name: item.name,

@@ -19,7 +19,9 @@ export class FolderListing {
 
 	constructor(
 		readonly documentId: string,
-		readonly preview = false
+		readonly preview = false,
+		/** Staff only: ignore the document's chosen files and list the whole folder. */
+		readonly all = false
 	) {}
 
 	/** Remembers where a subfolder sits, so it can be listed later. */
@@ -36,7 +38,8 @@ export class FolderListing {
 			const params = new URLSearchParams({ doc: this.documentId });
 			const path = this.#paths.get(folder) ?? [];
 			if (path.length) params.set('path', path.join(','));
-			if (this.preview) params.set('preview', '1');
+			if (this.preview || this.all) params.set('preview', '1');
+			if (this.all) params.set('all', '1');
 			const response = await fetch(`/api/drive-folder?${params}`);
 			if (!response.ok) throw new Error(String(response.status));
 			const entries = (await response.json()) as FolderEntry[];

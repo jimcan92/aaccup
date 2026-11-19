@@ -121,7 +121,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
 	const { data: documents } = await supabase
 		.from('documents')
-		.select('id, title, code, kind, format, drive_url, status, updated_label, note, sort_order, workflow, updated_at, source, drive_public, drive_missing')
+		.select('id, title, code, kind, format, drive_url, status, updated_label, note, sort_order, workflow, updated_at, source, drive_public, drive_missing, shown_files')
 		.eq('area_id', params.section)
 		.order('sort_order')
 		.order('created_at');
@@ -335,6 +335,32 @@ export const actions: Actions = {
 		await relinkFilledFolders(params.section, [id]);
 		const { error: rpcError } = await supabase.rpc('publish_document', { p_id: id });
 		return dbFail(rpcError) ?? { message: 'Published. It appears on the public site within a minute.' };
+	},
+
+	// Which of a folder document's files the public site lists: all of them, or only the chosen ones.
+	saveShownFiles: async ({ request, locals, params }) => {
+		const { supabase } = await publishableArea(locals, params.section);
+		const form = await request.formData();
+		const id = text(form, 'id');
+		const files = [...new Set(form.getAll('files').map(String))].filter((file) => /^[\w-]{10,}$/.test(file));
+		const all = form.get('mode') !== 'some';
+		if (!all && files.length === 0) return fail(400, { message: 'Check at least one file, or choose “Show every file”.' });
+		const { data: document, error: updateError } = await supabase
+			.from('documents')
+			.update({ shown_files: all ? null : files })
+			.eq('id', id)
+			.eq('area_id', params.section)
+			.eq('format', 'folder')
+			.select('title')
+			.maybeSingle();
+		const failed = dbFail(updateError);
+		if (failed) return failed;
+		if (!document) return fail(404, { message: 'That folder document was not found.' });
+		return {
+			message: all
+				? `“${document.title}” shows every file in its folder.`
+				: `“${document.title}” shows ${files.length} chosen ${files.length === 1 ? 'item' : 'items'}. The public site updates within a minute.`
+		};
 	},
 
 	// Takes a published document off the public site; it stays here as a draft.
