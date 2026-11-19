@@ -16,6 +16,7 @@ import {
 	text
 } from '#lib/server/admin.js';
 import { previewUrl } from '#lib/drive-url.js';
+import { isShownPath } from '#lib/shown-files.js';
 import { driveConfigured, folderIdFrom, folderName } from '#lib/server/drive.js';
 import { relinkFilledFolders, summary, syncArea } from '#lib/server/drive-sync.js';
 import type { StaffProfile } from '#lib/server/sso.js';
@@ -60,7 +61,7 @@ async function publishableArea(locals: App.Locals, id: string) {
 function readShownFiles(form: FormData): string[] | null | undefined | { problem: string } {
 	if (!form.has('mode')) return undefined;
 	if (form.get('mode') !== 'some') return null;
-	const files = [...new Set(form.getAll('files').map(String))].filter((file) => /^[\w-]{10,}$/.test(file));
+	const files = [...new Set(form.getAll('files').map(String))].filter(isShownPath);
 	return files.length ? files : { problem: 'Check at least one file, or choose “The whole folder”.' };
 }
 

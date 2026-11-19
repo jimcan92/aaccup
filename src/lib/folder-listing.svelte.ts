@@ -24,6 +24,11 @@ export class FolderListing {
 		readonly all = false
 	) {}
 
+	/** A folder's chain of ids below the document's folder ([] for the document's folder). */
+	pathOf(folder: string): string[] {
+		return this.#paths.get(folder) ?? [];
+	}
+
 	/** Remembers where a subfolder sits, so it can be listed later. */
 	enter(folder: string, parent: string) {
 		this.#paths.set(folder, [...(this.#paths.get(parent) ?? []), folder]);

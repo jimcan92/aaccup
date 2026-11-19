@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import { driveFolderId } from '#lib/drive-url.js';
 import { driveConfigured, isFolder, isFolderPath, listFolder } from '#lib/server/drive.js';
+import { levelRule } from '#lib/shown-files.js';
 import { supabaseAnon } from '#lib/server/sso.js';
 import type { FolderEntry } from '#lib/data/types.js';
 import type { RequestHandler } from './$types';
@@ -16,8 +17,8 @@ const ID = /^[\w-]{10,}$/;
  * Only folders inside a published document can be listed, so this never exposes the rest of the
  * service account's Drive. With ?preview=1 a signed-in staff member (resolved by the hook) can
  * list an unpublished folder document too, for review before publishing; that answer is not cached.
- * A document's shown_files narrows its top level to the chosen items (and the subfolders below
- * them); ?all=1 lifts that for staff, so the file picker in admin sees everything.
+ * A document's shown_files narrows each level to the chosen items and the folders leading to
+ * them (see shown-files.ts); ?all=1 lifts that for staff, so the file picker in admin sees everything.
  */
 export const GET: RequestHandler = async ({ url, locals }) => {
 	const doc = url.searchParams.get('doc') ?? '';
@@ -35,15 +36,15 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	if (!root) error(404, 'Folder not found');
 
 	const everything = staffPreview && url.searchParams.get('all') === '1';
-	const shown = everything || !row?.shown_files ? null : new Set<string>(row.shown_files);
-	// A subfolder that was not chosen stays closed too.
-	if (shown && path.length && !shown.has(path[0])) error(404, 'Folder not found');
+	const rule = levelRule(everything ? null : row?.shown_files, path);
+	// A subfolder that was not chosen, and holds nothing chosen, stays closed too.
+	if (rule.kind === 'closed') error(404, 'Folder not found');
 
 	const folder = path.at(-1) ?? root;
 	try {
 		if (path.length && !(await isFolderPath(root, path))) error(404, 'Folder not found');
 		const listed = await listFolder(folder, { checkAccess: true });
-		const items = shown && !path.length ? listed.filter((item) => shown.has(item.targetId ?? item.id)) : listed;
+		const items = rule.kind === 'some' ? listed.filter((item) => rule.ids.has(item.targetId ?? item.id)) : listed;
 		const entries: FolderEntry[] = items.map((item) => ({
 			id: item.targetId ?? item.id,
 			name: item.name,
