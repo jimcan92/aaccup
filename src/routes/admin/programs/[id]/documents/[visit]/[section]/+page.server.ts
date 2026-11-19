@@ -386,6 +386,25 @@ export const actions: Actions = {
 		};
 	},
 
+	// Sends a submitted document back to its area chair as a draft, without publishing it.
+	returnDocument: async ({ request, locals, params }) => {
+		const { staff, supabase } = await publishableArea(locals, params.section);
+		const id = text(await request.formData(), 'id');
+		const { data: document, error: updateError } = await supabase
+			.from('documents')
+			.update({ workflow: 'draft' })
+			.eq('id', id)
+			.eq('area_id', params.section)
+			.eq('workflow', 'in_review')
+			.select()
+			.maybeSingle();
+		const failed = dbFail(updateError);
+		if (failed) return failed;
+		if (!document) return fail(404, { message: 'That document is not waiting for review.' });
+		await supabase.from('revisions').insert({ entity: 'document', entity_id: id, snapshot: document, action: 'returned', actor: staff.id });
+		return { message: `Returned “${document.title}” to draft. The area chair can edit and submit it again.` };
+	},
+
 	// Takes a published document off the public site; it stays here as a draft.
 	unpublishDocument: async ({ request, locals, params }) => {
 		const { staff, supabase } = await publishableArea(locals, params.section);

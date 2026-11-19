@@ -202,7 +202,7 @@
 									<FolderFileChoice documentId={current.id} shown={current.shown_files} compact />
 								{/key}
 							{/if}
-							<button class="h-10 w-fit bg-ink px-4 text-[14px] font-medium text-paper hover:bg-ink-soft">Publish this</button>
+							<button class="h-10 w-fit bg-ink px-4 text-[14px] font-medium text-paper hover:bg-ink-soft">{current.workflow === 'in_review' ? 'Approve & publish' : 'Publish this'}</button>
 						</form>
 						{#if queue.length > 1}
 							<button type="button" onclick={() => step(1)} class="h-10 border border-rule px-4 text-[14px] hover:border-ink/30">Skip</button>

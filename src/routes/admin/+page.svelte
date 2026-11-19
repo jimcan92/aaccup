@@ -89,6 +89,33 @@
 	</ul>
 </section>
 
+<section class="mt-12" aria-labelledby="review-heading">
+	<div class="flex flex-wrap items-end justify-between gap-3">
+		<h2 id="review-heading" class="font-display text-[22px] font-semibold tracking-[-0.03em]">Waiting for review</h2>
+		<p class="font-mono text-[12px] text-ink-soft">
+			{data.reviewQueue.length ? `${data.reviewQueue.length} submitted ${data.reviewQueue.length === 1 ? 'document' : 'documents'}` : 'Nothing submitted'}
+		</p>
+	</div>
+	{#if data.reviewQueue.length}
+		<ul class="mt-4 border-t border-rule">
+			{#each data.reviewQueue as item (item.id)}
+				<li>
+					<a href={item.href} class="grid gap-1 border-b border-rule px-1 py-3 transition-colors hover:bg-paper sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4 sm:px-3">
+						<span class="min-w-0">
+							<span class="block truncate text-[14px] font-medium text-ink">{item.title}</span>
+							<span class="block text-[12px] text-ink-soft">{item.section}{item.by ? ` · submitted by ${item.by}` : ''}</span>
+						</span>
+						<span class="w-fit text-[12px] font-medium text-ink underline underline-offset-4">Review</span>
+					</a>
+				</li>
+			{/each}
+		</ul>
+		<p class="mt-3 text-[12px] leading-relaxed text-ink-soft">Open the section, then use Approve & publish, or Return to send it back to the area chair.</p>
+	{:else}
+		<p class="mt-3 border border-dashed border-ink/30 bg-paper p-4 text-[13px] text-ink-soft">Documents an area chair submits appear here for approval.</p>
+	{/if}
+</section>
+
 <section class="mt-12" aria-labelledby="links-heading">
 	<div class="flex flex-wrap items-end justify-between gap-3">
 		<h2 id="links-heading" class="font-display text-[22px] font-semibold tracking-[-0.03em]">Links to fix</h2>

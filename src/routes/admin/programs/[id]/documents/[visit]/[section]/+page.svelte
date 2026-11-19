@@ -226,7 +226,14 @@
 									<button class="h-9 px-2 text-[12px] font-medium underline-offset-4 hover:underline">Submit</button>
 								</form>
 							{/if}
-							{#if data.canPublish && document.workflow !== 'published'}
+							{#if data.canPublish && document.workflow === 'in_review'}
+								<!-- Submitted by an area chair: approve by publishing, or send it back as a draft. -->
+								<form method="POST" action="?/returnDocument" use:enhance>
+									<input type="hidden" name="id" value={document.id} />
+									<button class="h-9 px-2 text-[12px] font-medium text-ink-soft underline-offset-4 hover:text-ink hover:underline">Return</button>
+								</form>
+								<button type="button" onclick={() => (reviewing = [document.id])} class="h-9 px-2 text-[12px] font-medium underline-offset-4 hover:underline">Approve & publish…</button>
+							{:else if data.canPublish && document.workflow !== 'published'}
 								<button type="button" onclick={() => (reviewing = [document.id])} class="h-9 px-2 text-[12px] font-medium underline-offset-4 hover:underline">Publish…</button>
 							{:else if data.canPublish}
 								<form method="POST" action="?/unpublishDocument" use:enhance>

@@ -94,9 +94,34 @@ export const load: PageServerLoad = async ({ locals }) => {
 		}))
 		.filter((row) => row.problem !== null);
 
+	// Documents area chairs submitted, waiting for a focal person, admin, or task force member.
+	type ReviewRow = {
+		id: string;
+		title: string;
+		updated_at: string;
+		submitter: { full_name: string | null; email: string } | null;
+		area: { id: string; title: string; short_title: string | null; visit: { id: string; program: { id: string; code: string } } };
+	};
+	const { data: reviewRows } = locals.supabase
+		? await locals.supabase
+				.from('documents')
+				.select('id, title, updated_at, submitter:profiles!documents_updated_by_fkey(full_name, email), area:areas!inner(id, title, short_title, visit:visits!inner(id, program:programs(id, code)))')
+				.eq('workflow', 'in_review')
+				.order('updated_at', { ascending: false })
+		: { data: [] };
+	const reviewQueue = ((reviewRows ?? []) as unknown as ReviewRow[]).map((row) => ({
+		id: row.id,
+		title: row.title,
+		href: sectionHref(row.area.visit.program.id, row.area.visit.id, row.area.id),
+		section: `${row.area.visit.program.code} · ${row.area.short_title || row.area.title}`,
+		by: row.submitter?.full_name || row.submitter?.email || null,
+		at: row.updated_at
+	}));
+
 	return {
 		blocks: blocks ?? [],
 		programs: programSummaries,
-		linkIssues
+		linkIssues,
+		reviewQueue
 	};
 };
