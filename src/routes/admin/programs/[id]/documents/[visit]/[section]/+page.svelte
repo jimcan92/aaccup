@@ -9,7 +9,6 @@
 	import PageHeader from '#lib/components/admin/page-header.svelte';
 	import StatusBadge from '#lib/components/admin/status-badge.svelte';
 	import DocumentFormat from '#lib/components/site/document-format.svelte';
-	import FolderFilePicker from '#lib/components/admin/folder-file-picker.svelte';
 	import * as Dialog from '#lib/components/ui/dialog/index.js';
 	import { previewUrl } from '#lib/drive-url.js';
 	import { formatDate, kindLabel } from '#lib/format.js';
@@ -236,10 +235,7 @@
 							{:else if data.canPublish && document.workflow !== 'published'}
 								<button type="button" onclick={() => (reviewing = [document.id])} class="h-9 px-2 text-[12px] font-medium underline-offset-4 hover:underline">Publish…</button>
 							{:else if data.canPublish}
-								<form method="POST" action="?/unpublishDocument" use:enhance>
-									<input type="hidden" name="id" value={document.id} />
-									<button class="h-9 px-2 text-[12px] font-medium text-ink-soft underline-offset-4 hover:text-ink hover:underline">Unpublish</button>
-								</form>
+								<button type="button" onclick={() => (reviewing = [document.id])} class="h-9 px-2 text-[12px] font-medium underline-offset-4 hover:underline">Update…</button>
 							{/if}
 							{#if data.canEdit}
 								<button type="button" onclick={() => (editing = editing === document.id ? null : document.id)} class="grid size-9 place-items-center hover:bg-paper" aria-label={`Edit ${document.title}`} aria-expanded={editing === document.id}>
@@ -260,10 +256,6 @@
 							{@render documentFields(document)}
 							<button class="h-11 bg-ink px-5 text-[14px] font-medium text-paper hover:bg-ink-soft sm:w-fit">Save</button>
 						</form>
-						<!-- A published folder's visible files; unpublished folders choose them in the publish review. -->
-						{#if data.canPublish && document.workflow === 'published' && document.format === 'folder' && previewUrl(document.drive_url)}
-							<FolderFilePicker documentId={document.id} shown={document.shown_files} onsaved={() => (editing = null)} />
-						{/if}
 					{/if}
 				</li>
 			{:else}

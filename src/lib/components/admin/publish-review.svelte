@@ -28,6 +28,8 @@
 	 * Review before publishing: each document shows its file (or folder) preview beside where it
 	 * will sit on the section's public page, so nothing lands on the site unseen. `ids` is the
 	 * queue: one document from its row's Publish, or every unpublished one from Publish all.
+	 * A published document opened on its own (its row's Update) shows the same review, with its
+	 * folder's file choice to change and Unpublish behind a warning.
 	 */
 	let {
 		ids = $bindable(),
@@ -48,13 +50,17 @@
 	let frameLoading = $state(true);
 
 	const queue = $derived(
-		(ids ?? []).map((id) => documents.find((document) => document.id === id)).filter((document): document is Doc => !!document && document.workflow !== 'published')
+		(ids ?? [])
+			.map((id) => documents.find((document) => document.id === id))
+			.filter((document): document is Doc => !!document && (document.workflow !== 'published' || ids?.length === 1))
 	);
 	const current = $derived(queue[Math.min(index, queue.length - 1)] ?? null);
 	const embed = $derived(current ? previewUrl(current.drive_url ?? undefined) : null);
 	const isFolder = $derived(!!current && !!driveFolderId(current.drive_url ?? undefined));
 	// A folder document's file choice is saved with its publish (format 'folder' only, per the schema).
 	const choosesFiles = $derived(isFolder && current?.format === 'folder');
+	const updating = $derived(current?.workflow === 'published');
+	let confirmingUnpublish = $state(false);
 
 	$effect(() => {
 		void embed;
@@ -80,6 +86,7 @@
 	function close() {
 		ids = null;
 		index = 0;
+		confirmingUnpublish = false;
 	}
 
 	function step(by: number) {
@@ -88,7 +95,8 @@
 
 	const afterPublish = () => async ({ update }: { update: () => Promise<void> }) => {
 		await update();
-		if (queue.length === 0) close();
+		// A single document closes once done; a queue moves on to the next unpublished one.
+		if (queue.length <= 1) close();
 	};
 	const afterAll = () => async ({ update }: { update: () => Promise<void> }) => {
 		await update();
@@ -101,7 +109,7 @@
 		{#if current}
 			<div class="flex flex-wrap items-center gap-3 border-b border-rule px-5 py-3 pr-12">
 				<Dialog.Title class="min-w-0 flex-1 font-display text-[18px] font-semibold tracking-[-0.03em]">
-					Review before publishing
+					{updating ? 'Update published document' : 'Review before publishing'}
 				</Dialog.Title>
 				{#if queue.length > 1}
 					<div class="flex items-center gap-1 text-[13px] text-ink-soft">
@@ -194,6 +202,23 @@
 						{/if}
 					</div>
 
+					{#if updating}
+						<div class="grid gap-3 border-t border-rule pt-4">
+							{#if choosesFiles}
+								<form method="POST" action="?/saveShownFiles" use:enhance={afterPublish} class="grid gap-3">
+									<input type="hidden" name="id" value={current.id} />
+									{#key current.id}
+										<FolderFileChoice documentId={current.id} shown={current.shown_files} compact />
+									{/key}
+									<button class="h-10 w-fit bg-ink px-4 text-[14px] font-medium text-paper hover:bg-ink-soft">Save changes</button>
+								</form>
+							{/if}
+							<div class="flex flex-wrap gap-2">
+								<button type="button" onclick={() => (confirmingUnpublish = true)} class="h-10 border border-destructive/40 px-4 text-[14px] text-destructive hover:bg-destructive/10">Unpublish…</button>
+								<button type="button" onclick={close} class="h-10 border border-rule px-4 text-[14px] hover:border-ink/30">Close</button>
+							</div>
+						</div>
+					{:else}
 					<div class="flex flex-wrap gap-2 border-t border-rule pt-4">
 						<form method="POST" action="?/publishDocument" use:enhance={afterPublish} class="grid w-full gap-3">
 							<input type="hidden" name="id" value={current.id} />
@@ -215,7 +240,27 @@
 							<button class="text-[12px] text-ink-soft underline underline-offset-4 hover:text-ink">Publish all {queue.length} without reviewing each</button>
 						</form>
 					{/if}
+					{/if}
 				</div>
+			</div>
+		{/if}
+	</Dialog.Content>
+</Dialog.Root>
+
+<Dialog.Root open={confirmingUnpublish && !!current} onOpenChange={(open) => !open && (confirmingUnpublish = false)}>
+	<Dialog.Content class="rounded-none sm:max-w-md">
+		{#if current}
+			<Dialog.Title class="font-display text-[18px] font-semibold tracking-[-0.03em]">Unpublish “{current.title}”?</Dialog.Title>
+			<Dialog.Description class="text-[14px] leading-relaxed text-ink-soft">
+				It leaves the public site within a minute, so evaluators can no longer see it{isFolder ? ' or any file in its folder' : ''}.
+				It stays here as a draft, and nothing in Google Drive changes. You can publish it again any time.
+			</Dialog.Description>
+			<div class="flex flex-wrap gap-2">
+				<form method="POST" action="?/unpublishDocument" use:enhance={afterPublish}>
+					<input type="hidden" name="id" value={current.id} />
+					<button class="h-10 bg-destructive px-4 text-[14px] font-medium text-white hover:bg-destructive/90">Yes, unpublish</button>
+				</form>
+				<button type="button" onclick={() => (confirmingUnpublish = false)} class="h-10 border border-rule px-4 text-[14px] hover:border-ink/30">Cancel</button>
 			</div>
 		{/if}
 	</Dialog.Content>
