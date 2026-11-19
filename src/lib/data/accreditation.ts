@@ -148,9 +148,7 @@ const CURRENT_VISIT_DEFINITIONS: SectionDefinition[] = [
 		title: 'Faculty Development',
 		shortTitle: 'Faculty Development',
 		description:
-			'The program’s plan for faculty qualifications, professional growth, workload, and the impact of development on instruction.',
-		focus:
-			'Look for a documented faculty development plan, participation records, and evidence that development activities changed teaching practice.'
+			'The program’s plan for faculty qualifications, professional growth, workload, and the impact of development on instruction.'
 	},
 	{
 		number: 2,
@@ -158,9 +156,7 @@ const CURRENT_VISIT_DEFINITIONS: SectionDefinition[] = [
 		title: 'Instruction',
 		shortTitle: 'Instruction',
 		description:
-			'Curriculum delivery, assessment practices, learning resources, and the program’s system for reviewing and improving instruction.',
-		focus:
-			'Look for syllabi, assessment maps, classroom observations, and evidence that instruction is reviewed against intended learning outcomes.'
+			'Curriculum delivery, assessment practices, learning resources, and the program’s system for reviewing and improving instruction.'
 	},
 	{
 		number: 3,
@@ -168,9 +164,7 @@ const CURRENT_VISIT_DEFINITIONS: SectionDefinition[] = [
 		title: 'Extension',
 		shortTitle: 'Extension',
 		description:
-			'Community engagement projects, beneficiary outcomes, and the participation of faculty and students in extension work.',
-		focus:
-			'Look for extension plans, MOAs, activity reports, beneficiary data, and evidence of measurable community impact.'
+			'Community engagement projects, beneficiary outcomes, and the participation of faculty and students in extension work.'
 	},
 	{
 		number: 4,
@@ -178,9 +172,7 @@ const CURRENT_VISIT_DEFINITIONS: SectionDefinition[] = [
 		title: 'Linkages',
 		shortTitle: 'Linkages',
 		description:
-			'Partnerships, MOAs, industry collaboration, and the evidence that linkages are active rather than ceremonial.',
-		focus:
-			'Look for signed agreements, activity records, counterpart contributions, and evidence that partnerships benefit students and faculty.'
+			'Partnerships, MOAs, industry collaboration, and the evidence that linkages are active rather than ceremonial.'
 	}
 ];
 

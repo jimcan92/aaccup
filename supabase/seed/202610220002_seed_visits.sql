@@ -20,7 +20,7 @@ from (values
 	('BSIE — Additional documents', 'institutional', 'pdf', null, 'pending', null, 'Supplementary records, forms, and annexes for the survey visit.', 4)
 ) as d(title, kind, format, drive_url, status, updated_label, note, sort_order)
 join public.areas a on a.slug = 'common' join public.visits v on v.id = a.visit_id and v.slug = '2026-level-iii' join public.programs p on p.id = v.program_id and p.code = 'BSIE';
-insert into public.areas (visit_id, kind, number, slug, title, short_title, description, focus, sort_order, status) select v.id, 'current', 1, 'faculty-development', 'Faculty Development', 'Faculty Development', 'The program’s plan for faculty qualifications, professional growth, workload, and the impact of development on instruction.', 'Look for a documented faculty development plan, participation records, and evidence that development activities changed teaching practice.', 1, 'published' from public.visits v join public.programs p on p.id = v.program_id where p.code = 'BSIE' and v.slug = '2026-level-iii';
+insert into public.areas (visit_id, kind, number, slug, title, short_title, description, focus, sort_order, status) select v.id, 'current', 1, 'faculty-development', 'Faculty Development', 'Faculty Development', 'The program’s plan for faculty qualifications, professional growth, workload, and the impact of development on instruction.', null, 1, 'published' from public.visits v join public.programs p on p.id = v.program_id where p.code = 'BSIE' and v.slug = '2026-level-iii';
 insert into public.documents (area_id, title, kind, format, drive_url, status, updated_label, note, sort_order, workflow)
 select a.id, d.title, d.kind, d.format, d.drive_url, d.status::public.document_status, d.updated_label, d.note, d.sort_order, 'published'
 from (values
@@ -29,7 +29,7 @@ from (values
 	('Faculty Development — Evidence matrix', 'compliance', 'pdf', null, 'pending', null, 'The evidence matrix will be posted with the current visit files.', 2)
 ) as d(title, kind, format, drive_url, status, updated_label, note, sort_order)
 join public.areas a on a.slug = 'faculty-development' join public.visits v on v.id = a.visit_id and v.slug = '2026-level-iii' join public.programs p on p.id = v.program_id and p.code = 'BSIE';
-insert into public.areas (visit_id, kind, number, slug, title, short_title, description, focus, sort_order, status) select v.id, 'current', 2, 'instruction', 'Instruction', 'Instruction', 'Curriculum delivery, assessment practices, learning resources, and the program’s system for reviewing and improving instruction.', 'Look for syllabi, assessment maps, classroom observations, and evidence that instruction is reviewed against intended learning outcomes.', 2, 'published' from public.visits v join public.programs p on p.id = v.program_id where p.code = 'BSIE' and v.slug = '2026-level-iii';
+insert into public.areas (visit_id, kind, number, slug, title, short_title, description, focus, sort_order, status) select v.id, 'current', 2, 'instruction', 'Instruction', 'Instruction', 'Curriculum delivery, assessment practices, learning resources, and the program’s system for reviewing and improving instruction.', null, 2, 'published' from public.visits v join public.programs p on p.id = v.program_id where p.code = 'BSIE' and v.slug = '2026-level-iii';
 insert into public.documents (area_id, title, kind, format, drive_url, status, updated_label, note, sort_order, workflow)
 select a.id, d.title, d.kind, d.format, d.drive_url, d.status::public.document_status, d.updated_label, d.note, d.sort_order, 'published'
 from (values
@@ -38,7 +38,7 @@ from (values
 	('Instruction — Evidence matrix', 'compliance', 'pdf', null, 'pending', null, 'The evidence matrix will be posted with the current visit files.', 2)
 ) as d(title, kind, format, drive_url, status, updated_label, note, sort_order)
 join public.areas a on a.slug = 'instruction' join public.visits v on v.id = a.visit_id and v.slug = '2026-level-iii' join public.programs p on p.id = v.program_id and p.code = 'BSIE';
-insert into public.areas (visit_id, kind, number, slug, title, short_title, description, focus, sort_order, status) select v.id, 'current', 3, 'extension', 'Extension', 'Extension', 'Community engagement projects, beneficiary outcomes, and the participation of faculty and students in extension work.', 'Look for extension plans, MOAs, activity reports, beneficiary data, and evidence of measurable community impact.', 3, 'published' from public.visits v join public.programs p on p.id = v.program_id where p.code = 'BSIE' and v.slug = '2026-level-iii';
+insert into public.areas (visit_id, kind, number, slug, title, short_title, description, focus, sort_order, status) select v.id, 'current', 3, 'extension', 'Extension', 'Extension', 'Community engagement projects, beneficiary outcomes, and the participation of faculty and students in extension work.', null, 3, 'published' from public.visits v join public.programs p on p.id = v.program_id where p.code = 'BSIE' and v.slug = '2026-level-iii';
 insert into public.documents (area_id, title, kind, format, drive_url, status, updated_label, note, sort_order, workflow)
 select a.id, d.title, d.kind, d.format, d.drive_url, d.status::public.document_status, d.updated_label, d.note, d.sort_order, 'published'
 from (values
@@ -47,7 +47,7 @@ from (values
 	('Extension — Evidence matrix', 'compliance', 'pdf', null, 'pending', null, 'The evidence matrix will be posted with the current visit files.', 2)
 ) as d(title, kind, format, drive_url, status, updated_label, note, sort_order)
 join public.areas a on a.slug = 'extension' join public.visits v on v.id = a.visit_id and v.slug = '2026-level-iii' join public.programs p on p.id = v.program_id and p.code = 'BSIE';
-insert into public.areas (visit_id, kind, number, slug, title, short_title, description, focus, sort_order, status) select v.id, 'current', 4, 'linkages', 'Linkages', 'Linkages', 'Partnerships, MOAs, industry collaboration, and the evidence that linkages are active rather than ceremonial.', 'Look for signed agreements, activity records, counterpart contributions, and evidence that partnerships benefit students and faculty.', 4, 'published' from public.visits v join public.programs p on p.id = v.program_id where p.code = 'BSIE' and v.slug = '2026-level-iii';
+insert into public.areas (visit_id, kind, number, slug, title, short_title, description, focus, sort_order, status) select v.id, 'current', 4, 'linkages', 'Linkages', 'Linkages', 'Partnerships, MOAs, industry collaboration, and the evidence that linkages are active rather than ceremonial.', null, 4, 'published' from public.visits v join public.programs p on p.id = v.program_id where p.code = 'BSIE' and v.slug = '2026-level-iii';
 insert into public.documents (area_id, title, kind, format, drive_url, status, updated_label, note, sort_order, workflow)
 select a.id, d.title, d.kind, d.format, d.drive_url, d.status::public.document_status, d.updated_label, d.note, d.sort_order, 'published'
 from (values
@@ -163,7 +163,7 @@ from (values
 	('BSFI — Additional documents', 'institutional', 'pdf', null, 'pending', null, 'Supplementary records, forms, and annexes for the survey visit.', 4)
 ) as d(title, kind, format, drive_url, status, updated_label, note, sort_order)
 join public.areas a on a.slug = 'common' join public.visits v on v.id = a.visit_id and v.slug = '2026-level-iii' join public.programs p on p.id = v.program_id and p.code = 'BSFI';
-insert into public.areas (visit_id, kind, number, slug, title, short_title, description, focus, sort_order, status) select v.id, 'current', 1, 'faculty-development', 'Faculty Development', 'Faculty Development', 'The program’s plan for faculty qualifications, professional growth, workload, and the impact of development on instruction.', 'Look for a documented faculty development plan, participation records, and evidence that development activities changed teaching practice.', 1, 'published' from public.visits v join public.programs p on p.id = v.program_id where p.code = 'BSFI' and v.slug = '2026-level-iii';
+insert into public.areas (visit_id, kind, number, slug, title, short_title, description, focus, sort_order, status) select v.id, 'current', 1, 'faculty-development', 'Faculty Development', 'Faculty Development', 'The program’s plan for faculty qualifications, professional growth, workload, and the impact of development on instruction.', null, 1, 'published' from public.visits v join public.programs p on p.id = v.program_id where p.code = 'BSFI' and v.slug = '2026-level-iii';
 insert into public.documents (area_id, title, kind, format, drive_url, status, updated_label, note, sort_order, workflow)
 select a.id, d.title, d.kind, d.format, d.drive_url, d.status::public.document_status, d.updated_label, d.note, d.sort_order, 'published'
 from (values
@@ -172,7 +172,7 @@ from (values
 	('Faculty Development — Evidence matrix', 'compliance', 'pdf', null, 'pending', null, 'The evidence matrix will be posted with the current visit files.', 2)
 ) as d(title, kind, format, drive_url, status, updated_label, note, sort_order)
 join public.areas a on a.slug = 'faculty-development' join public.visits v on v.id = a.visit_id and v.slug = '2026-level-iii' join public.programs p on p.id = v.program_id and p.code = 'BSFI';
-insert into public.areas (visit_id, kind, number, slug, title, short_title, description, focus, sort_order, status) select v.id, 'current', 2, 'instruction', 'Instruction', 'Instruction', 'Curriculum delivery, assessment practices, learning resources, and the program’s system for reviewing and improving instruction.', 'Look for syllabi, assessment maps, classroom observations, and evidence that instruction is reviewed against intended learning outcomes.', 2, 'published' from public.visits v join public.programs p on p.id = v.program_id where p.code = 'BSFI' and v.slug = '2026-level-iii';
+insert into public.areas (visit_id, kind, number, slug, title, short_title, description, focus, sort_order, status) select v.id, 'current', 2, 'instruction', 'Instruction', 'Instruction', 'Curriculum delivery, assessment practices, learning resources, and the program’s system for reviewing and improving instruction.', null, 2, 'published' from public.visits v join public.programs p on p.id = v.program_id where p.code = 'BSFI' and v.slug = '2026-level-iii';
 insert into public.documents (area_id, title, kind, format, drive_url, status, updated_label, note, sort_order, workflow)
 select a.id, d.title, d.kind, d.format, d.drive_url, d.status::public.document_status, d.updated_label, d.note, d.sort_order, 'published'
 from (values
@@ -181,7 +181,7 @@ from (values
 	('Instruction — Evidence matrix', 'compliance', 'pdf', null, 'pending', null, 'The evidence matrix will be posted with the current visit files.', 2)
 ) as d(title, kind, format, drive_url, status, updated_label, note, sort_order)
 join public.areas a on a.slug = 'instruction' join public.visits v on v.id = a.visit_id and v.slug = '2026-level-iii' join public.programs p on p.id = v.program_id and p.code = 'BSFI';
-insert into public.areas (visit_id, kind, number, slug, title, short_title, description, focus, sort_order, status) select v.id, 'current', 3, 'extension', 'Extension', 'Extension', 'Community engagement projects, beneficiary outcomes, and the participation of faculty and students in extension work.', 'Look for extension plans, MOAs, activity reports, beneficiary data, and evidence of measurable community impact.', 3, 'published' from public.visits v join public.programs p on p.id = v.program_id where p.code = 'BSFI' and v.slug = '2026-level-iii';
+insert into public.areas (visit_id, kind, number, slug, title, short_title, description, focus, sort_order, status) select v.id, 'current', 3, 'extension', 'Extension', 'Extension', 'Community engagement projects, beneficiary outcomes, and the participation of faculty and students in extension work.', null, 3, 'published' from public.visits v join public.programs p on p.id = v.program_id where p.code = 'BSFI' and v.slug = '2026-level-iii';
 insert into public.documents (area_id, title, kind, format, drive_url, status, updated_label, note, sort_order, workflow)
 select a.id, d.title, d.kind, d.format, d.drive_url, d.status::public.document_status, d.updated_label, d.note, d.sort_order, 'published'
 from (values
@@ -190,7 +190,7 @@ from (values
 	('Extension — Evidence matrix', 'compliance', 'pdf', null, 'pending', null, 'The evidence matrix will be posted with the current visit files.', 2)
 ) as d(title, kind, format, drive_url, status, updated_label, note, sort_order)
 join public.areas a on a.slug = 'extension' join public.visits v on v.id = a.visit_id and v.slug = '2026-level-iii' join public.programs p on p.id = v.program_id and p.code = 'BSFI';
-insert into public.areas (visit_id, kind, number, slug, title, short_title, description, focus, sort_order, status) select v.id, 'current', 4, 'linkages', 'Linkages', 'Linkages', 'Partnerships, MOAs, industry collaboration, and the evidence that linkages are active rather than ceremonial.', 'Look for signed agreements, activity records, counterpart contributions, and evidence that partnerships benefit students and faculty.', 4, 'published' from public.visits v join public.programs p on p.id = v.program_id where p.code = 'BSFI' and v.slug = '2026-level-iii';
+insert into public.areas (visit_id, kind, number, slug, title, short_title, description, focus, sort_order, status) select v.id, 'current', 4, 'linkages', 'Linkages', 'Linkages', 'Partnerships, MOAs, industry collaboration, and the evidence that linkages are active rather than ceremonial.', null, 4, 'published' from public.visits v join public.programs p on p.id = v.program_id where p.code = 'BSFI' and v.slug = '2026-level-iii';
 insert into public.documents (area_id, title, kind, format, drive_url, status, updated_label, note, sort_order, workflow)
 select a.id, d.title, d.kind, d.format, d.drive_url, d.status::public.document_status, d.updated_label, d.note, d.sort_order, 'published'
 from (values
