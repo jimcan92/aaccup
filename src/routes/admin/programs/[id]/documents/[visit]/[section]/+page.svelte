@@ -43,8 +43,6 @@
 	]);
 
 	let editing = $state<string | null>(null);
-	// Folder document whose public file list is being chosen.
-	let choosing = $state<string | null>(null);
 	let adding = $state<'one' | 'bulk' | null>(null);
 	let removing = $state<{ id: string; title: string } | null>(null);
 	let editingRec = $state<string | null>(null);
@@ -222,15 +220,7 @@
 						</div>
 						<div class="col-start-2 flex flex-wrap items-center gap-1.5 sm:col-start-3 sm:justify-end">
 							<StatusBadge status={document.workflow} />
-							{#if data.canPublish && document.format === 'folder' && previewUrl(document.drive_url)}
-								<button type="button" onclick={() => (choosing = choosing === document.id ? null : document.id)} class="h-9 px-2 text-[12px] font-medium underline-offset-4 hover:underline" aria-expanded={choosing === document.id}>Choose files</button>
-							{/if}
-							{#if data.canEdit}
-								<button type="button" onclick={() => (editing = editing === document.id ? null : document.id)} class="grid size-9 place-items-center hover:bg-paper" aria-label={`Edit ${document.title}`} aria-expanded={editing === document.id}>
-									<Pencil class="size-4" />
-								</button>
-							{/if}
-							{#if data.canEdit && document.workflow === 'draft'}
+							{#if data.canEdit && !data.canPublish && document.workflow === 'draft'}
 								<form method="POST" action="?/submitDocument" use:enhance>
 									<input type="hidden" name="id" value={document.id} />
 									<button class="h-9 px-2 text-[12px] font-medium underline-offset-4 hover:underline">Submit</button>
@@ -244,6 +234,11 @@
 									<button class="h-9 px-2 text-[12px] font-medium text-ink-soft underline-offset-4 hover:text-ink hover:underline">Unpublish</button>
 								</form>
 							{/if}
+							{#if data.canEdit}
+								<button type="button" onclick={() => (editing = editing === document.id ? null : document.id)} class="grid size-9 place-items-center hover:bg-paper" aria-label={`Edit ${document.title}`} aria-expanded={editing === document.id}>
+									<Pencil class="size-4" />
+								</button>
+							{/if}
 							{#if data.canManage}
 								<button type="button" onclick={() => (removing = { id: document.id, title: document.title })} class="grid size-9 place-items-center text-ink-soft hover:bg-destructive/10 hover:text-destructive" aria-label={`Delete ${document.title}`}>
 									<Trash2 class="size-4" />
@@ -252,15 +247,16 @@
 						</div>
 					</div>
 
-					{#if choosing === document.id}
-						<FolderFilePicker documentId={document.id} shown={document.shown_files} onsaved={() => (choosing = null)} />
-					{/if}
 					{#if editing === document.id}
 						<form method="POST" action="?/saveDocument" use:enhance={close} class="mt-3 grid gap-4 bg-paper p-4 sm:grid-cols-2">
 							<input type="hidden" name="id" value={document.id} />
 							{@render documentFields(document)}
 							<button class="h-11 bg-ink px-5 text-[14px] font-medium text-paper hover:bg-ink-soft sm:w-fit">Save</button>
 						</form>
+						<!-- A published folder's visible files; unpublished folders choose them in the publish review. -->
+						{#if data.canPublish && document.workflow === 'published' && document.format === 'folder' && previewUrl(document.drive_url)}
+							<FolderFilePicker documentId={document.id} shown={document.shown_files} onsaved={() => (editing = null)} />
+						{/if}
 					{/if}
 				</li>
 			{:else}
