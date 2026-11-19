@@ -53,6 +53,17 @@ async function publishableArea(locals: App.Locals, id: string) {
 	return found;
 }
 
+/**
+ * A folder document's file choice from a form: null = the whole folder, else the chosen Drive ids.
+ * undefined when the form carries no choice; a string when it is invalid.
+ */
+function readShownFiles(form: FormData): string[] | null | undefined | { problem: string } {
+	if (!form.has('mode')) return undefined;
+	if (form.get('mode') !== 'some') return null;
+	const files = [...new Set(form.getAll('files').map(String))].filter((file) => /^[\w-]{10,}$/.test(file));
+	return files.length ? files : { problem: 'Check at least one file, or choose “The whole folder”.' };
+}
+
 function readDocument(form: FormData) {
 	const driveUrl = optional(form, 'drive_url');
 	const kind = text(form, 'kind');
@@ -331,7 +342,20 @@ export const actions: Actions = {
 
 	publishDocument: async ({ request, locals, params }) => {
 		const { supabase } = await publishableArea(locals, params.section);
-		const id = text(await request.formData(), 'id');
+		const form = await request.formData();
+		const id = text(form, 'id');
+		const shown = readShownFiles(form);
+		if (shown && !Array.isArray(shown)) return fail(400, { message: shown.problem });
+		if (shown !== undefined) {
+			const { error: choiceError } = await supabase
+				.from('documents')
+				.update({ shown_files: shown })
+				.eq('id', id)
+				.eq('area_id', params.section)
+				.eq('format', 'folder');
+			const failed = dbFail(choiceError);
+			if (failed) return failed;
+		}
 		await relinkFilledFolders(params.section, [id]);
 		const { error: rpcError } = await supabase.rpc('publish_document', { p_id: id });
 		return dbFail(rpcError) ?? { message: 'Published. It appears on the public site within a minute.' };
@@ -342,12 +366,11 @@ export const actions: Actions = {
 		const { supabase } = await publishableArea(locals, params.section);
 		const form = await request.formData();
 		const id = text(form, 'id');
-		const files = [...new Set(form.getAll('files').map(String))].filter((file) => /^[\w-]{10,}$/.test(file));
-		const all = form.get('mode') !== 'some';
-		if (!all && files.length === 0) return fail(400, { message: 'Check at least one file, or choose “Show every file”.' });
+		const files = readShownFiles(form) ?? null;
+		if (files && !Array.isArray(files)) return fail(400, { message: files.problem });
 		const { data: document, error: updateError } = await supabase
 			.from('documents')
-			.update({ shown_files: all ? null : files })
+			.update({ shown_files: files })
 			.eq('id', id)
 			.eq('area_id', params.section)
 			.eq('format', 'folder')
@@ -357,7 +380,7 @@ export const actions: Actions = {
 		if (failed) return failed;
 		if (!document) return fail(404, { message: 'That folder document was not found.' });
 		return {
-			message: all
+			message: !files
 				? `“${document.title}” shows every file in its folder.`
 				: `“${document.title}” shows ${files.length} chosen ${files.length === 1 ? 'item' : 'items'}. The public site updates within a minute.`
 		};

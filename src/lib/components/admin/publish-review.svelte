@@ -6,6 +6,7 @@
 	import MapPin from '@lucide/svelte/icons/map-pin';
 	import DocumentSkeleton from '#lib/components/site/document-skeleton.svelte';
 	import FolderBrowser from '#lib/components/site/folder-browser.svelte';
+	import FolderFileChoice from './folder-file-choice.svelte';
 	import * as Dialog from '#lib/components/ui/dialog/index.js';
 	import { driveFolderId, previewUrl } from '#lib/drive-url.js';
 	import { kindLabel } from '#lib/format.js';
@@ -19,6 +20,8 @@
 		drive_url: string | null;
 		workflow: string;
 		drive_public: boolean | null;
+		format: string;
+		shown_files: string[] | null;
 	};
 
 	/**
@@ -50,6 +53,8 @@
 	const current = $derived(queue[Math.min(index, queue.length - 1)] ?? null);
 	const embed = $derived(current ? previewUrl(current.drive_url ?? undefined) : null);
 	const isFolder = $derived(!!current && !!driveFolderId(current.drive_url ?? undefined));
+	// A folder document's file choice is saved with its publish (format 'folder' only, per the schema).
+	const choosesFiles = $derived(isFolder && current?.format === 'folder');
 
 	$effect(() => {
 		void embed;
@@ -190,9 +195,14 @@
 					</div>
 
 					<div class="flex flex-wrap gap-2 border-t border-rule pt-4">
-						<form method="POST" action="?/publishDocument" use:enhance={afterPublish}>
+						<form method="POST" action="?/publishDocument" use:enhance={afterPublish} class="grid w-full gap-3">
 							<input type="hidden" name="id" value={current.id} />
-							<button class="h-10 bg-ink px-4 text-[14px] font-medium text-paper hover:bg-ink-soft">Publish this</button>
+							{#if choosesFiles}
+								{#key current.id}
+									<FolderFileChoice documentId={current.id} shown={current.shown_files} compact />
+								{/key}
+							{/if}
+							<button class="h-10 w-fit bg-ink px-4 text-[14px] font-medium text-paper hover:bg-ink-soft">Publish this</button>
 						</form>
 						{#if queue.length > 1}
 							<button type="button" onclick={() => step(1)} class="h-10 border border-rule px-4 text-[14px] hover:border-ink/30">Skip</button>
