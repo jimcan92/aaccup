@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import DocumentRow from '#lib/components/site/document-row.svelte';
 	import RecommendationMatrix from './recommendation-matrix.svelte';
@@ -46,15 +47,17 @@
 	const groups = $derived.by(() => {
 		const kinds = new Set(section.documents.map((document) => document.kind));
 		if (section.kind === 'common' || kinds.size < 2 || section.documents.length <= 3) {
-			return [{ label: '', documents: section.documents }];
+			return [{ label: '', open: true, documents: section.documents }];
 		}
 
-		return documentKinds
-			.filter((kind) => kind.value !== 'all' && kinds.has(kind.value))
-			.map((kind) => ({
-				label: kind.label,
-				documents: section.documents.filter((document) => document.kind === kind.value)
-			}));
+		const present = documentKinds.filter((kind) => kind.value !== 'all' && kinds.has(kind.value));
+		// Only the narrative opens by default; with no narrative, the first group opens instead.
+		const opener = kinds.has('narrative') ? 'narrative' : present[0]?.value;
+		return present.map((kind) => ({
+			label: kind.label,
+			open: kind.value === opener,
+			documents: section.documents.filter((document) => document.kind === kind.value)
+		}));
 	});
 
 	function navLabel(item: Section): string {
@@ -132,22 +135,33 @@
 	{/if}
 
 	<div class="mt-8 space-y-10">
-		{#each groups as group (group.label)}
-			<section>
-				{#if group.label}
-					<div class="flex items-end justify-between gap-4 border-b border-ink/20 pb-2">
-						<h2 class="font-display text-[20px] font-semibold tracking-[-0.03em] text-ink">{group.label}</h2>
+		{#each groups as group (`${section.slug}:${group.label}`)}
+			{#if group.label}
+				<details open={group.open} class="group/kind">
+					<summary
+						class="flex cursor-pointer list-none items-end justify-between gap-4 border-b border-ink/20 pb-2 transition-colors hover:border-program/50 [&::-webkit-details-marker]:hidden"
+					>
+						<h2 class="flex items-center gap-2 font-display text-[20px] font-semibold tracking-[-0.03em] text-ink">
+							<ChevronDown class="size-4 shrink-0 -rotate-90 text-program transition-transform group-open/kind:rotate-0" />
+							{group.label}
+						</h2>
 						<span class="font-mono text-[12px] text-ink-soft">
 							{group.documents.length} {group.documents.length === 1 ? 'file' : 'files'}
 						</span>
+					</summary>
+					<div class="border-rule">
+						{#each group.documents as document (document.id)}
+							<DocumentRow {document} />
+						{/each}
 					</div>
-				{/if}
-				<div class:border-t={!group.label} class="border-rule">
+				</details>
+			{:else}
+				<section class="border-t border-rule">
 					{#each group.documents as document (document.id)}
 						<DocumentRow {document} />
 					{/each}
-				</div>
-			</section>
+				</section>
+			{/if}
 		{:else}
 			<div class="border border-dashed border-ink/30 bg-paper p-6 text-[13px] text-ink-soft">
 				No documents in this section yet.
