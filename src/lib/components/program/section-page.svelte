@@ -49,8 +49,10 @@
 	 */
 	const groups = $derived.by(() => {
 		const own = new Set(['compliance', 'narrative']);
-		const bucket = (kind: string) => (own.has(kind) ? kind : 'supporting');
-		const buckets = new Set(section.documents.map((document) => bucket(document.kind)));
+		// Drive folders number the area's narrative/compliance report 0 ("IX-0 …"), whatever its saved kind.
+		const bucket = (document: { kind: string; title: string }) =>
+			own.has(document.kind) ? document.kind : /^[IVX]+-0\b/i.test(document.title) ? 'compliance' : 'supporting';
+		const buckets = new Set(section.documents.map(bucket));
 		if (section.kind === 'common' || buckets.size < 2 || section.documents.length <= 3) {
 			return [{ label: '', open: true, documents: section.documents }];
 		}
@@ -61,7 +63,7 @@
 		return present.map((kind) => ({
 			label: kind.label,
 			open: kind.value === opener,
-			documents: section.documents.filter((document) => bucket(document.kind) === kind.value)
+			documents: section.documents.filter((document) => bucket(document) === kind.value)
 		}));
 	});
 
