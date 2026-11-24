@@ -43,20 +43,25 @@
 		section.kind === 'common' ? '§' : section.number ? pad2(section.number) : '··'
 	);
 
-	/** Group by document kind, in the order of `documentKinds`, unless the list is short or uniform. */
+	/**
+	 * Narrative and compliance reports get groups of their own; every other kind shares one
+	 * "Supporting evidence" group. No groups when the list is short or uniform.
+	 */
 	const groups = $derived.by(() => {
-		const kinds = new Set(section.documents.map((document) => document.kind));
-		if (section.kind === 'common' || kinds.size < 2 || section.documents.length <= 3) {
+		const own = new Set(['compliance', 'narrative']);
+		const bucket = (kind: string) => (own.has(kind) ? kind : 'supporting');
+		const buckets = new Set(section.documents.map((document) => bucket(document.kind)));
+		if (section.kind === 'common' || buckets.size < 2 || section.documents.length <= 3) {
 			return [{ label: '', open: true, documents: section.documents }];
 		}
 
-		const present = documentKinds.filter((kind) => kind.value !== 'all' && kinds.has(kind.value));
+		const present = documentKinds.filter((kind) => buckets.has(kind.value as string));
 		// Only the narrative opens by default; with no narrative, the first group opens instead.
-		const opener = kinds.has('narrative') ? 'narrative' : present[0]?.value;
+		const opener = buckets.has('narrative') ? 'narrative' : present[0]?.value;
 		return present.map((kind) => ({
 			label: kind.label,
 			open: kind.value === opener,
-			documents: section.documents.filter((document) => document.kind === kind.value)
+			documents: section.documents.filter((document) => bucket(document.kind) === kind.value)
 		}));
 	});
 
