@@ -9,6 +9,8 @@
 	import X from '@lucide/svelte/icons/x';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { previewUrl } from '#lib/drive-url.js';
+	import { closeFolderPreview, folderPreview } from '#lib/folder-preview.svelte.js';
+	import { closePreview, currentPreviewId } from '#lib/preview.js';
 	import { fileIcon, fileIconTone } from '#lib/file-icon.js';
 	import { FolderListing, ROOT } from '#lib/folder-listing.svelte.js';
 	import { formatDate } from '#lib/format.js';
@@ -26,7 +28,12 @@
 	// svelte-ignore state_referenced_locally
 	const folder = new FolderListing(documentId);
 	const open = new SvelteSet<string>();
-	let selected = $state<FolderEntry | null>(null);
+	// Only one preview is open on the page at a time: the file shown here lives in shared state.
+	const selected = $derived(folderPreview.owner === documentId ? folderPreview.entry : null);
+	// Leaving the page should not leave this folder's file open for the next visit.
+	$effect(() => () => {
+		if (folderPreview.owner === documentId) closeFolderPreview();
+	});
 	let frameLoading = $state(true);
 	let list = $state<HTMLElement | null>(null);
 
@@ -53,11 +60,16 @@
 		}
 	}
 
-	function toggleFile(entry: FolderEntry) {
-		if (selected?.id === entry.id) selected = null;
+	function toggleFile(entry: FolderEntry, row: HTMLElement) {
+		if (selected?.id === entry.id) closeFolderPreview();
 		else {
-			selected = entry;
+			// Opening a file closes any document preview open elsewhere on the page.
+			if (currentPreviewId()) closePreview();
+			folderPreview.owner = documentId;
+			folderPreview.entry = entry;
 			frameLoading = true;
+			// A preview closing above shifts the page; keep the clicked row on screen.
+			requestAnimationFrame(() => row.scrollIntoView({ block: 'nearest' }));
 		}
 	}
 
@@ -80,7 +92,7 @@
 			</a>
 			<button
 				type="button"
-				onclick={() => (selected = null)}
+				onclick={closeFolderPreview}
 				class="inline-flex h-8 items-center gap-1.5 border border-rule bg-paper px-3 text-[13px] font-medium text-ink transition-colors hover:bg-salt"
 			>
 				<X class="size-3.5" />
@@ -131,7 +143,7 @@
 				<li role="treeitem" aria-expanded={isOpen} aria-selected={entry.folder ? undefined : isOpen}>
 					<button
 						type="button"
-						onclick={() => (entry.folder ? toggleFolder(entry, id) : toggleFile(entry))}
+						onclick={(event) => (entry.folder ? toggleFolder(entry, id) : toggleFile(entry, event.currentTarget))}
 						class={cn(
 							'group/file flex w-full items-center gap-2.5 border-b border-rule py-2.5 pr-2 text-left transition-colors hover:bg-program-soft sm:pr-3',
 							isOpen && 'bg-program-soft'

@@ -7,6 +7,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import { browser } from '$app/env';
 	import { isLinked } from '#lib/drive-url.js';
+	import { closeFolderPreview } from '#lib/folder-preview.svelte.js';
 	import { closePreview, currentPreviewId, openPreview, previewUrl, wideScreen } from '#lib/preview.js';
 	import type { EvidenceDocument } from '#lib/data/types.js';
 	import { formatDate } from '#lib/format.js';
@@ -57,7 +58,11 @@
 		if (!canPreview || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 		event.preventDefault();
 		if (expanded) closePreview();
-		else openPreview(document.id);
+		else {
+			// Opening a document closes a file preview open inside any folder row.
+			closeFolderPreview();
+			openPreview(document.id);
+		}
 	}
 </script>
 
