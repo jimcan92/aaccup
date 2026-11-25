@@ -15,7 +15,7 @@
 </svelte:head>
 
 <div class="grid min-h-dvh bg-salt lg:grid-cols-[0.95fr_1.05fr]">
-	<div class="relative hidden overflow-hidden bg-ink p-10 text-paper lg:flex lg:flex-col lg:justify-between" style="--ring: #c9973a">
+	<div class="admin-chrome relative hidden overflow-hidden bg-ink p-10 text-paper lg:flex lg:flex-col lg:justify-between" style="--ring: #c9973a">
 		<a href="/" class="relative inline-flex items-center gap-3">
 			<BrandMarks size={36} />
 			<span class="leading-none">

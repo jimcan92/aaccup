@@ -15,7 +15,7 @@
 	{#if value.url && !embed}
 		<p class="text-[12px] text-destructive">This link can't be played here. Use a YouTube link or a Google Drive video link.</p>
 	{:else if embed}
-		<div class="aspect-video w-full max-w-md bg-ink"><iframe src={embed} title="Video preview" loading="lazy" allowfullscreen class="h-full w-full border-0"></iframe></div>
+		<div class="admin-chrome aspect-video w-full max-w-md bg-ink"><iframe src={embed} title="Video preview" loading="lazy" allowfullscreen class="h-full w-full border-0"></iframe></div>
 	{:else}
 		<p class={hint}>The video shows on the page once it has a link. Drive videos must be shared as “Anyone with the link”.</p>
 	{/if}

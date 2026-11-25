@@ -7,8 +7,8 @@
 	import InfoIcon from '@lucide/svelte/icons/info';
 	import TriangleAlertIcon from '@lucide/svelte/icons/triangle-alert';
 
-	// Colours come from the site tokens, so a toast follows light and dark on the public site and stays
-	// light in the admin (.admin-light); pass theme="light" there. Square, with a type accent (app.css).
+	// Colours come from the site tokens, so a toast follows light and dark, in the admin too.
+	// Square, with a type accent (app.css).
 	let { theme = mode.current, ...restProps }: SonnerProps = $props();
 </script>
 

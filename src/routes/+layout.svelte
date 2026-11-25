@@ -3,26 +3,35 @@
 	import { ModeWatcher } from 'mode-watcher';
 	import NavProgress from '#lib/components/site/nav-progress.svelte';
 	import SiteHeader from '#lib/components/site/site-header.svelte';
+	import { forcedTheme } from '#lib/preview-theme.svelte.js';
 	import '../app.css';
 
 	let { children } = $props();
 	const isAdmin = $derived(page.url.pathname.startsWith('/admin'));
 
-	// The admin keeps the light palette even when the visitor chose dark on the public site
-	// (dialogs and sheets render outside the admin layout, so the class goes on <html>).
+	// The admin's page previews ask for a theme (?theme=dark). That page shows it without the
+	// theme switcher's stored choice, so previewing never changes the visitor's own theme.
+	const forced = $derived(forcedTheme(page.url.searchParams));
+
+	// The admin keeps plain backgrounds, without the public pages' graph-paper texture (app.css).
 	$effect(() => {
-		document.documentElement.classList.toggle('admin-light', isAdmin);
+		document.documentElement.classList.toggle('in-admin', isAdmin);
+	});
+	$effect(() => {
+		if (!forced) return;
+		document.documentElement.classList.toggle('dark', forced === 'dark');
+		document.documentElement.style.colorScheme = forced;
 	});
 </script>
 
 <NavProgress />
 
+<!-- Light, dark or system, chosen with the theme switcher (remembered per browser); the admin follows it too. -->
+{#if !forced}<ModeWatcher defaultMode="system" />{/if}
+
 {#if isAdmin}
 	{@render children()}
 {:else}
-	<!-- Light, dark or system, chosen with the theme switcher in the header (remembered per browser). -->
-	<ModeWatcher defaultMode="system" />
-
 	<a
 		href="#main"
 		class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:bg-ink focus:px-4 focus:py-2 focus:text-sm focus:text-paper"

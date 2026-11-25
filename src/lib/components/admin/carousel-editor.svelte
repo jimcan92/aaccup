@@ -132,7 +132,7 @@
 			<div class="border border-rule bg-paper p-3">
 				<div class="grid gap-4 sm:grid-cols-[11rem_1fr]">
 					<div>
-						<div class="relative aspect-[16/10] overflow-hidden bg-ink">
+						<div class="admin-chrome relative aspect-[16/10] overflow-hidden bg-ink">
 							{#if slide.src}
 								<img
 									src={slide.src}

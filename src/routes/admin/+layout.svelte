@@ -14,6 +14,7 @@
 	import * as Sheet from '#lib/components/ui/sheet/index.js';
 	import { fresh } from '#lib/fresh-link.js';
 	import { Toaster } from '#lib/components/ui/sonner/index.js';
+	import ThemeToggle from '#lib/components/site/theme-toggle.svelte';
 	import { initials, roleInfo } from '#lib/admin.js';
 	import type { LayoutProps } from './$types';
 
@@ -119,6 +120,7 @@
 					<span class="pointer-events-none absolute left-full top-1/2 z-40 ml-3 -translate-y-1/2 whitespace-nowrap bg-ink px-2.5 py-1.5 text-[12px] font-medium text-paper opacity-0 shadow-lg ring-1 ring-paper/15 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" aria-hidden="true">{link.label}</span>
 				</a>
 			{/each}
+			<ThemeToggle class="text-paper/65 hover:bg-paper/8 hover:text-paper" />
 		</div>
 	{/if}
 {/snippet}
@@ -141,6 +143,10 @@
 				Sign out of CTU Accounts
 				<LogOut class="size-3.5" />
 			</a>
+			<div class="flex items-center justify-between px-1 text-[13px] text-paper/70">
+				Light or dark
+				<ThemeToggle class="-mr-3 size-9 hover:text-paper" />
+			</div>
 		</div>
 	{/if}
 {/snippet}
@@ -156,7 +162,7 @@
 {/snippet}
 
 <!-- Form results show here, lower right, wherever the page is scrolled. -->
-<Toaster position="bottom-right" theme="light" closeButton />
+<Toaster position="bottom-right" closeButton />
 
 {#if data.isLogin}
 	{@render children()}
@@ -164,13 +170,13 @@
 	<div class="min-h-dvh bg-salt text-ink">
 		<!-- Full sidebar; while a block editor shows its side preview, an icon rail instead. -->
 		{#if adminUi.compact}
-			<aside class="fixed inset-y-0 left-0 z-30 hidden w-16 flex-col items-center bg-ink text-paper lg:flex" style="--ring: #c9973a">
+			<aside class="admin-chrome fixed inset-y-0 left-0 z-30 hidden w-16 flex-col items-center bg-ink text-paper lg:flex" style="--ring: #c9973a">
 				<a href="/admin" class="py-5" title="AACCUP Desk"><BrandMarks size={30} /><span class="sr-only">AACCUP Desk</span></a>
 				<nav class="flex-1 py-2" aria-label="Admin">{@render railList()}</nav>
 				<div class="w-full border-t border-paper/10 py-4">{@render railUser()}</div>
 			</aside>
 		{:else}
-			<aside class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col bg-ink text-paper lg:flex" style="--ring: #c9973a">
+			<aside class="admin-chrome fixed inset-y-0 left-0 z-30 hidden w-64 flex-col bg-ink text-paper lg:flex" style="--ring: #c9973a">
 				<div class="px-5 py-6">{@render brand()}</div>
 				<nav class="flex-1 overflow-y-auto px-2 py-2" aria-label="Admin">{@render navList()}</nav>
 				<div class="border-t border-paper/10 p-5">{@render userCard()}</div>
@@ -178,7 +184,7 @@
 		{/if}
 
 		<header
-			class="sticky top-0 z-20 flex h-16 items-center justify-between gap-3 bg-ink px-5 text-paper lg:hidden"
+			class="admin-chrome sticky top-0 z-20 flex h-16 items-center justify-between gap-3 bg-ink px-5 text-paper lg:hidden"
 			style="--ring: #c9973a"
 		>
 			{@render brand()}
@@ -193,7 +199,7 @@
 				<Sheet.Content
 					side="left"
 					showCloseButton={false}
-					class="w-[86vw] max-w-xs gap-0 border-none bg-ink p-0 text-paper"
+					class="admin-chrome w-[86vw] max-w-xs gap-0 border-none bg-ink p-0 text-paper"
 					style="--ring: #c9973a"
 				>
 					<div class="flex items-center justify-between px-5 py-5">

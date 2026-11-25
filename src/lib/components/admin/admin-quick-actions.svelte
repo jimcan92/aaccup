@@ -78,4 +78,4 @@
 	});
 </script>
 
-<QuickActions {groups} class="bg-ink text-paper" />
+<QuickActions {groups} class="admin-chrome bg-ink text-paper" />

@@ -55,7 +55,7 @@
 	<div class="overflow-hidden border border-rule bg-paper">
 		{#if isCarousel}
 			{#if slides.length > 0}
-				<div class="relative aspect-[16/9] bg-ink">
+				<div class="admin-chrome relative aspect-[16/9] bg-ink">
 					<img
 						src={slides[0].src}
 						alt={slides[0].alt}
@@ -93,7 +93,7 @@
 				</div>
 			{/if}
 		{:else if isHero}
-			<div class="relative min-h-[17rem] overflow-hidden bg-ink p-6 text-paper">
+			<div class="admin-chrome relative min-h-[17rem] overflow-hidden bg-ink p-6 text-paper">
 				<div class="pointer-events-none absolute inset-0 opacity-10" aria-hidden="true">
 					<svg viewBox="0 0 600 400" fill="none" class="h-full w-full">
 						<g stroke="currentColor" stroke-width="0.8">

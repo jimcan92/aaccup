@@ -98,34 +98,13 @@
 	--program-ink: color-mix(in srgb, var(--program-base, #2f6763) 70%, #000000) !important;
 }
 
-/* The admin was designed light only: it keeps the light palette whatever the site theme. */
-.admin-light {
-	--background: #edf1ea;
-	--foreground: #082a2c;
-	--card: #f8faf5;
-	--card-foreground: #082a2c;
-	--popover: #f8faf5;
-	--popover-foreground: #082a2c;
-	--primary: #082a2c;
-	--primary-foreground: #f8faf5;
-	--secondary: #dfe7dd;
-	--secondary-foreground: #082a2c;
-	--muted: #e3e9e1;
-	--muted-foreground: #4f6868;
-	--accent: #dfe7dd;
-	--accent-foreground: #082a2c;
-	--border: #082a2c1f;
-	--input: #082a2c26;
-	--program: #082a2c;
-	--program-ink: #082a2c;
-	--program-soft: #e3e9e1;
-	--program-contrast: #f8faf5;
+/* The admin's sidebar and top bar stay dark petrol in both themes (they use bg-ink / text-paper). */
+.admin-chrome {
 	--ink: #082a2c;
 	--ink-soft: #335052;
-	--salt: #edf1ea;
 	--paper: #f8faf5;
+	--salt: #edf1ea;
 	--rule: #082a2c1f;
-	color-scheme: light;
 }
 
 @theme inline {
@@ -304,7 +283,7 @@
 	--grid-line: color-mix(in srgb, var(--ink) 6%, transparent);
 }
 
-html:not(.admin-light) section.bg-salt,
+html:not(.in-admin) section.bg-salt,
 .grid-texture {
 	background-image:
 		linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
@@ -314,7 +293,7 @@ html:not(.admin-light) section.bg-salt,
 
 /* Paper gets plain white, not the graph-paper lines. */
 @media print {
-	html:not(.admin-light) section.bg-salt,
+	html:not(.in-admin) section.bg-salt,
 	.grid-texture {
 		background-image: none;
 		background-color: #fff;
