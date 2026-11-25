@@ -15,12 +15,17 @@
 	// documentIndex keeps the visit's reading order: common, current, previous.
 	const allDocuments = $derived(documentIndex(visit));
 
-	const sections = [
-		{ value: 'all', label: 'All groups' },
-		{ value: 'common', label: 'Common documents' },
-		{ value: 'current', label: 'Current visit' },
-		{ value: 'previous', label: 'Previous visit' }
-	] as const;
+	// Only the groups this visit has (a program may have no common or previous-visit sections).
+	const sections = $derived(
+		(
+			[
+				{ value: 'all', label: 'All groups' },
+				{ value: 'common', label: 'Common documents' },
+				{ value: 'current', label: 'Current visit' },
+				{ value: 'previous', label: 'Previous visit' }
+			] as const
+		).filter((group) => group.value === 'all' || visit.sections.some((section) => section.kind === group.value))
+	);
 
 	const areaOptions = $derived(
 		visit.sections.map((section) => ({
