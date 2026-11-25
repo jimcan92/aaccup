@@ -10,6 +10,8 @@
 
 	const common = $derived(sectionsOf(visit, 'common'));
 	const current = $derived(sectionsOf(visit, 'current'));
+	// Only numbered sections are areas; "Additional documents (requested)" has no number.
+	const areaCount = $derived(current.filter((section) => section.number).length);
 	const previous = $derived(sectionsOf(visit, 'previous'));
 	const active = $derived(activeVisit(program));
 </script>
@@ -61,7 +63,7 @@
 		<section>
 			{@render heading(
 				`Current visit · ${visit.year}`,
-				`${current.length} ${current.length === 1 ? 'area' : 'areas'} under review`,
+				`${areaCount} ${areaCount === 1 ? 'area' : 'areas'} under review`,
 				`${countLinked(current.flatMap((s) => s.documents))} linked`
 			)}
 			<ul class="mt-5 grid gap-3 md:grid-cols-2">
@@ -74,7 +76,7 @@
 						>
 							<div class="flex items-start justify-between gap-4">
 								<span class="font-display text-[34px] font-semibold leading-none tracking-[-0.06em] text-program">
-									{pad2(section.number ?? 0)}
+									{section.number ? pad2(section.number) : '··'}
 								</span>
 								<ArrowRight class="size-4 text-program transition-transform group-hover:translate-x-0.5" />
 							</div>
