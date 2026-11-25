@@ -45,6 +45,10 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		if (path.length && !(await isFolderPath(root, path))) error(404, 'Folder not found');
 		const listed = await listFolder(folder, { checkAccess: true });
 		const items = rule.kind === 'some' ? listed.filter((item) => rule.ids.has(item.targetId ?? item.id)) : listed;
+		// Chosen items that are no longer here (deleted, moved out, or unshared from the sync account):
+		// say so instead of showing an empty folder.
+		const present = new Set(listed.map((item) => item.targetId ?? item.id));
+		const gone = rule.kind === 'some' ? [...rule.ids].filter((id) => !present.has(id)) : [];
 		const entries: FolderEntry[] = items.map((item) => ({
 			id: item.targetId ?? item.id,
 			name: item.name,
@@ -54,6 +58,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			url: item.webViewLink,
 			shared: item.isPublic
 		}));
+		for (const id of gone) entries.push({ id, name: '', folder: false, mimeType: '', modified: '', url: '', shared: null, missing: true });
 		return Response.json(entries, {
 			headers: { 'cache-control': staffPreview ? 'private, no-store' : 'public, s-maxage=60, stale-while-revalidate=300' }
 		});

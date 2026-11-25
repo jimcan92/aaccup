@@ -126,4 +126,6 @@ export type FolderEntry = {
 	url: string;
 	/** false = not shared as "Anyone with the link", so an evaluator cannot open it. */
 	shared: boolean | null;
+	/** A file chosen for the folder (shown_files) that is no longer in it: deleted, moved, or no longer readable. */
+	missing?: boolean;
 };

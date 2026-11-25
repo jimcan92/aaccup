@@ -14,6 +14,7 @@
 	import { fileIcon, fileIconTone } from '#lib/file-icon.js';
 	import { FolderListing, ROOT } from '#lib/folder-listing.svelte.js';
 	import { formatDate } from '#lib/format.js';
+	import { missingNote } from '#lib/missing-files.js';
 	import { cn } from '#lib/utils.js';
 	import type { FolderEntry } from '#lib/data/types.js';
 
@@ -133,7 +134,8 @@
 			<button type="button" class="underline" onclick={() => folder.load(id)}>Try again</button>
 		</p>
 	{:else if items.length === 0}
-		{@render note('Empty folder', depth)}
+		{@const gone = folder.missing.get(id) ?? 0}
+		{@render note(gone ? missingNote(gone) : 'Empty folder', depth, gone ? 'text-destructive' : 'text-ink-soft')}
 	{:else}
 		<ul role={depth === 1 ? 'tree' : 'group'} aria-label={depth === 1 ? `Files in ${title}` : undefined}>
 			{#each items as entry (entry.id)}
@@ -189,6 +191,7 @@
 				</li>
 			{/each}
 		</ul>
+		{#if folder.missing.get(id)}{@render note(missingNote(folder.missing.get(id) ?? 0), depth, 'text-destructive')}{/if}
 	{/if}
 {/snippet}
 

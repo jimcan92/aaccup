@@ -10,6 +10,7 @@
 	import { previewUrl } from '#lib/drive-url.js';
 	import { fileIcon, fileIconTone } from '#lib/file-icon.js';
 	import { FolderListing, ROOT } from '#lib/folder-listing.svelte.js';
+	import { missingNote } from '#lib/missing-files.js';
 	import { cn } from '#lib/utils.js';
 	import type { FolderEntry } from '#lib/data/types.js';
 
@@ -22,6 +23,8 @@
 
 	let folder = $state(untrack(() => new FolderListing(documentId, preview)));
 	const listings = $derived(folder.listings);
+	// Per folder: how many chosen files are no longer in Drive.
+	const missingCounts = $derived(folder.missing);
 	const open = new SvelteSet<string>();
 	let selected = $state<FolderEntry | null>(null);
 	let frameLoading = $state(true);
@@ -77,7 +80,8 @@
 			<button type="button" class="underline" onclick={() => load(folder)}>Try again</button>
 		</p>
 	{:else if items.length === 0}
-		<p class="py-1.5 text-[12px] text-ink-soft" style:padding-left={`${depth * 1 + 0.5}rem`}>Empty folder</p>
+		{@const gone = missingCounts.get(folder) ?? 0}
+		<p class="py-1.5 text-[12px] {gone ? 'text-destructive' : 'text-ink-soft'}" style:padding-left={`${depth * 1 + 0.5}rem`}>{gone ? missingNote(gone) : 'Empty folder'}</p>
 	{:else}
 		<ul role={depth === 0 ? 'tree' : 'group'} aria-label={depth === 0 ? `Files in ${title}` : undefined}>
 			{#each items as entry (entry.id)}

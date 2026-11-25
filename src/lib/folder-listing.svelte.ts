@@ -14,6 +14,8 @@ export const ROOT = '';
  */
 export class FolderListing {
 	readonly listings = new SvelteMap<string, Listing>();
+	/** Folder id → how many of its chosen files are no longer in Drive. */
+	readonly missing = new SvelteMap<string, number>();
 	// Folder id → its chain of folder ids below the document's folder.
 	readonly #paths = new Map<string, string[]>([[ROOT, []]]);
 
@@ -47,7 +49,9 @@ export class FolderListing {
 			if (this.all) params.set('all', '1');
 			const response = await fetch(`/api/drive-folder?${params}`);
 			if (!response.ok) throw new Error(String(response.status));
-			const entries = (await response.json()) as FolderEntry[];
+			const all = (await response.json()) as FolderEntry[];
+			const entries = all.filter((entry) => !entry.missing);
+			this.missing.set(folder, all.length - entries.length);
 			this.listings.set(folder, entries);
 			return entries;
 		} catch {
