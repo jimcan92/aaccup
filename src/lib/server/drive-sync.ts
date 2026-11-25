@@ -43,6 +43,7 @@ type DriveDoc = {
 	drive_missing: boolean;
 	workflow: string;
 	sort_order: number;
+	shown_files: string[] | null;
 };
 
 const empty = (): SyncTotals => ({ added: 0, updated: 0, missing: 0, notPublic: 0, emptyFolders: 0, errors: [] });
@@ -84,7 +85,7 @@ async function syncAreaFolder(db: SupabaseClient, area: AreaRow, totals: SyncTot
 
 	const { data: existing, error } = await db
 		.from('documents')
-		.select('id, title, drive_file_id, drive_name, drive_missing, workflow, sort_order')
+		.select('id, title, drive_file_id, drive_name, drive_missing, workflow, sort_order, shown_files')
 		.eq('area_id', area.id)
 		.eq('source', 'drive');
 	if (error) {
@@ -146,6 +147,18 @@ async function syncAreaFolder(db: SupabaseClient, area: AreaRow, totals: SyncTot
 			return;
 		}
 
+		// Files chosen for a folder that are all gone (deleted or moved out to be replaced): drop the
+		// choice, so the folder shows what is in it now instead of nothing. Partly gone: keep it.
+		let clearChoice = false;
+		if (isFolder(item) && doc.shown_files?.length && hasContent) {
+			try {
+				const present = new Set((await listFolder(item.targetId ?? item.id)).map((child) => child.targetId ?? child.id));
+				clearChoice = !doc.shown_files.some((path) => present.has(path.split('/')[0]));
+			} catch {
+				// Could not list it this time; keep the choice.
+			}
+		}
+
 		const titleUntouched = doc.drive_name !== null && doc.title === titleFromName(doc.drive_name);
 		const { error: updateError } = await db
 			.from('documents')
@@ -153,7 +166,8 @@ async function syncAreaFolder(db: SupabaseClient, area: AreaRow, totals: SyncTot
 				...shared,
 				...(titleUntouched ? { title: isFolder(item) ? item.name : titleFromName(item.name) } : {}),
 				// A file that came back needs another look before it is public again.
-				...(doc.drive_missing ? { workflow: 'draft' } : {})
+				...(doc.drive_missing ? { workflow: 'draft' } : {}),
+				...(clearChoice ? { shown_files: null } : {})
 			})
 			.eq('id', doc.id);
 		if (updateError) totals.errors.push(`${item.name}: ${updateError.message}`);

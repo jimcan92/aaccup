@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import { driveFolderId } from '#lib/drive-url.js';
 import { driveConfigured, isFolder, isFolderPath, listFolder } from '#lib/server/drive.js';
-import { levelRule } from '#lib/shown-files.js';
+import { isShownPath, levelRule } from '#lib/shown-files.js';
 import { supabaseAnon } from '#lib/server/sso.js';
 import type { FolderEntry } from '#lib/data/types.js';
 import type { RequestHandler } from './$types';
@@ -36,7 +36,10 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	if (!root) error(404, 'Folder not found');
 
 	const everything = staffPreview && url.searchParams.get('all') === '1';
-	const rule = levelRule(everything ? null : row?.shown_files, path);
+	// Staff reviewing a choice before saving it: ?shown=<path>,<path>… (or ?shown=* for the whole folder).
+	const draft = staffPreview ? url.searchParams.get('shown') : null;
+	const chosen = draft === null ? row?.shown_files : draft === '*' ? null : draft.split(',').filter(isShownPath);
+	const rule = levelRule(everything ? null : chosen, path);
 	// A subfolder that was not chosen, and holds nothing chosen, stays closed too.
 	if (rule.kind === 'closed') error(404, 'Folder not found');
 

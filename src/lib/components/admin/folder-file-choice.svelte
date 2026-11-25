@@ -16,7 +16,12 @@
 	 * folder shows everything in it. Values are id paths (see shown-files.ts). Lists the whole
 	 * folder (staff-only `all`), whatever is chosen now.
 	 */
-	let { documentId, shown, compact = false }: { documentId: string; shown: string[] | null; compact?: boolean } = $props();
+	let {
+		documentId,
+		shown,
+		compact = false,
+		onchange
+	}: { documentId: string; shown: string[] | null; compact?: boolean; /** The choice as it stands, saved or not (null = whole folder). */ onchange?: (shown: string[] | null) => void } = $props();
 
 	// svelte-ignore state_referenced_locally
 	const folder = new FolderListing(documentId, true, true);
@@ -32,6 +37,12 @@
 		Array.isArray(root) ? checked.filter((path) => root.some((entry) => entry.id === path.split('/')[0])) : checked
 	);
 	const gone = $derived(checked.length - kept.length);
+
+	// Tell the review preview what is chosen now, before it is saved.
+	$effect(() => {
+		const value = mode === 'all' ? null : [...kept];
+		untrack(() => onchange?.(value));
+	});
 
 	// Once, on open: untracked, so a later listing or a collapsed folder does not rerun it.
 	$effect(() =>

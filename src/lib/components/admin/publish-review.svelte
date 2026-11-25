@@ -102,6 +102,19 @@
 		await update();
 		close();
 	};
+
+	// A folder's file choice as changed in this dialog, before Publish saves it: the preview follows it.
+	// Only differences from the saved choice are kept, so opening the picker does not reload the preview.
+	let choice = $state<Record<string, string[] | null>>({});
+	function setChoice(id: string, value: string[] | null) {
+		const saved = documents.find((document) => document.id === id)?.shown_files ?? null;
+		// Nothing checked yet cannot be saved either; keep showing the saved choice until something is.
+		if ((Array.isArray(value) && value.length === 0) || JSON.stringify(value) === JSON.stringify(saved)) {
+			if (id in choice) delete choice[id];
+		} else if (JSON.stringify(choice[id]) !== JSON.stringify(value)) {
+			choice[id] = value;
+		}
+	}
 </script>
 
 <Dialog.Root open={ids !== null && queue.length > 0} onOpenChange={(open) => !open && close()}>
@@ -123,8 +136,8 @@
 			<div class="grid lg:grid-cols-[minmax(0,1fr)_22rem]">
 				<div class="relative h-[45vh] border-b border-rule bg-salt lg:h-[72vh] lg:border-r lg:border-b-0">
 					{#if isFolder}
-						{#key current.id}
-							<FolderBrowser documentId={current.id} title={current.title} preview />
+						{#key `${current.id}|${JSON.stringify(choice[current.id] ?? 'saved')}`}
+							<FolderBrowser documentId={current.id} title={current.title} preview shown={current.id in choice ? choice[current.id] : undefined} />
 						{/key}
 					{:else if embed}
 						{#key embed}
@@ -208,7 +221,7 @@
 								<form method="POST" action="?/saveShownFiles" use:enhance={afterPublish} class="grid gap-3">
 									<input type="hidden" name="id" value={current.id} />
 									{#key current.id}
-										<FolderFileChoice documentId={current.id} shown={current.shown_files} compact />
+										<FolderFileChoice documentId={current.id} shown={current.shown_files} compact onchange={(value) => setChoice(current.id, value)} />
 									{/key}
 									<button class="h-10 w-fit bg-ink px-4 text-[14px] font-medium text-paper hover:bg-ink-soft">Save changes</button>
 								</form>
@@ -224,7 +237,7 @@
 							<input type="hidden" name="id" value={current.id} />
 							{#if choosesFiles}
 								{#key current.id}
-									<FolderFileChoice documentId={current.id} shown={current.shown_files} compact />
+									<FolderFileChoice documentId={current.id} shown={current.shown_files} compact onchange={(value) => setChoice(current.id, value)} />
 								{/key}
 							{/if}
 							<button class="h-10 w-fit bg-ink px-4 text-[14px] font-medium text-paper hover:bg-ink-soft">{current.workflow === 'in_review' ? 'Approve & publish' : 'Publish this'}</button>

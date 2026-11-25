@@ -19,9 +19,14 @@
 	 * fetched at a time), files open in the preview pane. Listing goes through /api/drive-folder.
 	 */
 	// preview: the staff review-before-publish dialog, where the document may still be a draft.
-	let { documentId, title, preview = false }: { documentId: string; title: string; preview?: boolean } = $props();
+	let {
+		documentId,
+		title,
+		preview = false,
+		shown = undefined
+	}: { documentId: string; title: string; preview?: boolean; /** Staff review: an unsaved file choice to show. */ shown?: string[] | null } = $props();
 
-	let folder = $state(untrack(() => new FolderListing(documentId, preview)));
+	let folder = $state(untrack(() => new FolderListing(documentId, preview, false, shown)));
 	const listings = $derived(folder.listings);
 	// Per folder: how many chosen files are no longer in Drive.
 	const missingCounts = $derived(folder.missing);
@@ -40,7 +45,7 @@
 		// reads and writes `listings`, which would otherwise re-run this effect in a loop.
 		void documentId;
 		untrack(() => {
-			if (folder.documentId !== documentId) folder = new FolderListing(documentId, preview);
+			if (folder.documentId !== documentId) folder = new FolderListing(documentId, preview, false, shown);
 			open.clear();
 			selected = null;
 			load(ROOT);

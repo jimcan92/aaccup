@@ -23,7 +23,9 @@ export class FolderListing {
 		readonly documentId: string,
 		readonly preview = false,
 		/** Staff only: ignore the document's chosen files and list the whole folder. */
-		readonly all = false
+		readonly all = false,
+		/** Staff only: an unsaved choice to preview (null = the whole folder); undefined uses the saved one. */
+		readonly shown: string[] | null | undefined = undefined
 	) {}
 
 	/** A folder's chain of ids below the document's folder ([] for the document's folder). */
@@ -47,6 +49,7 @@ export class FolderListing {
 			if (path.length) params.set('path', path.join(','));
 			if (this.preview || this.all) params.set('preview', '1');
 			if (this.all) params.set('all', '1');
+			if (this.shown !== undefined) params.set('shown', this.shown === null ? '*' : this.shown.join(','));
 			const response = await fetch(`/api/drive-folder?${params}`);
 			if (!response.ok) throw new Error(String(response.status));
 			const all = (await response.json()) as FolderEntry[];
