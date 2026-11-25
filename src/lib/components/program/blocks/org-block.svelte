@@ -13,15 +13,20 @@
 </script>
 
 {#snippet card(person: OrgItem, top: boolean)}
-	<li class="flex w-[calc(50%-0.375rem)] flex-col items-center border bg-paper p-3 text-center sm:w-48 sm:p-4 {top ? 'border-program border-t-4' : 'border-rule'}">
-		{#if person.photo}
-			<Photo src={person.photo} alt={person.name} width={300} class="size-16 {top ? 'sm:size-20' : ''}" iconClass="size-5" />
-		{:else}
-			<Initials name={person.name} class="size-16 text-[20px] {top ? 'sm:size-20 sm:text-[24px]' : ''}" />
-		{/if}
-		<p class="mt-3 text-balance font-display text-[15px] font-semibold leading-snug tracking-[-0.02em] text-ink">{person.name}</p>
-		<p class="mt-1 text-[13px] font-medium leading-snug text-program">{person.role}</p>
-		{#if person.unit}<p class="mt-0.5 text-[12px] leading-snug text-ink-soft">{person.unit}</p>{/if}
+	<!-- The photo fills the card; name and role sit on a dark band at the bottom so they stay readable. -->
+	<li class="relative aspect-[4/5] w-[calc(50%-0.375rem)] overflow-hidden border bg-paper {top ? 'border-program border-t-4 sm:w-64' : 'border-rule sm:w-52'}">
+		<div class="absolute inset-0">
+			{#if person.photo}
+				<Photo src={person.photo} alt={person.name} width={600} class="h-full w-full" imgClass="object-top" iconClass="size-6" />
+			{:else}
+				<Initials name={person.name} class="h-full w-full text-[44px] {top ? 'sm:text-[56px]' : ''}" />
+			{/if}
+		</div>
+		<div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/70 to-transparent px-2.5 pb-2.5 pt-8 text-center text-white sm:px-3 sm:pb-3">
+			<p class="text-balance font-display text-[13px] font-semibold leading-tight tracking-[-0.01em] {top ? 'sm:text-[15px]' : ''}">{person.name}</p>
+			<p class="mt-0.5 text-[11px] font-medium leading-snug text-white/90 {top ? 'sm:text-[12px]' : ''}">{person.role}</p>
+			{#if person.unit}<p class="text-[11px] leading-snug text-white/75">{person.unit}</p>{/if}
+		</div>
 	</li>
 {/snippet}
 
