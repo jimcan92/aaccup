@@ -2,6 +2,7 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import { visitHref } from '#lib/admin-links.js';
 import { canManage, dbFail, integer, optional, requireStaff, text, VISIT_SLUG } from '#lib/server/admin.js';
 import { loadDriveSetup } from '#lib/server/drive-setup.js';
+import { ADDITIONAL_SECTION, VISIT_AREAS } from '#lib/visit-presets.js';
 import type { Actions, PageServerLoad } from './$types';
 
 // The Documents tab: the program's visits, and Drive setup for the active one.
@@ -83,6 +84,38 @@ export const actions: Actions = {
 			sort_order: 0,
 			status: 'draft'
 		});
+
+		// Starting current-visit areas: the ones ticked on the form (a preset; they stay editable).
+		const picked = new Set(form.getAll('areas').map(String));
+		const areas = VISIT_AREAS.filter((area) => picked.has(area.slug)).map((area, index) => ({
+			visit_id: visit!.id,
+			kind: 'current',
+			number: index + 1,
+			slug: area.slug,
+			title: area.title,
+			short_title: area.shortTitle,
+			description: area.description,
+			sort_order: (index + 1) * 10,
+			status: 'draft'
+		}));
+		if (form.get('additional') === 'on') {
+			areas.push({
+				visit_id: visit!.id,
+				kind: 'current',
+				number: null as unknown as number,
+				slug: ADDITIONAL_SECTION.slug,
+				title: ADDITIONAL_SECTION.title,
+				short_title: ADDITIONAL_SECTION.shortTitle,
+				description: ADDITIONAL_SECTION.description,
+				sort_order: ADDITIONAL_SECTION.sortOrder,
+				status: 'draft'
+			});
+		}
+		if (areas.length) {
+			const { error: areasError } = await supabase.from('areas').insert(areas);
+			const areasFailed = dbFail(areasError);
+			if (areasFailed) return areasFailed;
+		}
 
 		redirect(303, visitHref(params.id, visit!.id));
 	}

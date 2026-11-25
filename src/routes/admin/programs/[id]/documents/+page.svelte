@@ -6,12 +6,21 @@
 	import PublicPreview from '#lib/components/admin/public-preview.svelte';
 	import StatusBadge from '#lib/components/admin/status-badge.svelte';
 	import { visitHref } from '#lib/admin-links.js';
+	import { mandatoryAreas, VISIT_AREAS, type VisitType } from '#lib/visit-presets.js';
 	import type { PageProps } from './$types';
 
 	// The Documents tab: Drive setup and visits, beside the public documents page.
 	let { data }: PageProps = $props();
 
 	const field = 'h-11 w-full border border-rule bg-salt px-3 text-[14px] text-ink outline-none focus:border-ink disabled:opacity-60';
+
+	// New visit: the type and level tick a starting set of areas; the user may change any tick.
+	let level = $state('');
+	let visitType = $state<VisitType>('first');
+	let picked = $state<string[]>([]);
+	function preset() {
+		picked = visitType === 'first' ? mandatoryAreas(level) : [];
+	}
 </script>
 
 <svelte:head>
@@ -61,12 +70,35 @@
 		<form method="POST" action="?/createVisit" use:enhance class="mt-6 grid gap-4 border border-rule bg-paper p-5 md:grid-cols-[7rem_9rem_1fr_1fr_auto] md:items-end">
 			<p class="font-display text-[18px] font-semibold md:col-span-5">Add a visit</p>
 			<label class="grid gap-1.5 text-[13px] font-medium">Year<input name="year" type="number" required min="1980" max="2100" class={field} /></label>
-			<label class="grid gap-1.5 text-[13px] font-medium">Level<input name="level" required placeholder="Level IV" class={field} /></label>
+			<label class="grid gap-1.5 text-[13px] font-medium">Level<input name="level" required placeholder="Level IV" bind:value={level} oninput={preset} class={field} /></label>
 			<label class="grid gap-1.5 text-[13px] font-medium">Public label<input name="label" placeholder="Level IV visit" class={field} /></label>
 			<label class="grid gap-1.5 text-[13px] font-medium">Previous survey label<input name="previous_label" placeholder="2026 survey" class={field} /></label>
 			<button class="h-11 bg-ink px-5 text-[14px] font-medium text-paper hover:bg-ink-soft">Add</button>
+			<fieldset class="grid gap-3 border-t border-rule pt-4 md:col-span-5">
+				<legend class="sr-only">Starting areas</legend>
+				<div class="flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px]">
+					<span class="font-medium">Type of visit</span>
+					<label class="inline-flex items-center gap-2"><input type="radio" name="visit_type" value="first" bind:group={visitType} onchange={preset} /> First survey at this level</label>
+					<label class="inline-flex items-center gap-2"><input type="radio" name="visit_type" value="revisit" bind:group={visitType} onchange={preset} /> Revisit (only the areas in the Board Action)</label>
+				</div>
+				<div class="flex flex-wrap gap-x-5 gap-y-2 text-[13px]">
+					<span class="font-medium">Current-visit areas</span>
+					{#each VISIT_AREAS as area (area.slug)}
+						<label class="inline-flex items-center gap-2"><input type="checkbox" name="areas" value={area.slug} bind:group={picked} /> {area.title}</label>
+					{/each}
+					<label class="inline-flex items-center gap-2"><input type="checkbox" name="additional" checked /> Additional documents (requested)</label>
+				</div>
+				<p class="text-[12px] text-ink-soft">
+					{#if visitType === 'first'}
+						A first survey covers the level's mandatory areas{mandatoryAreas(level).length ? ' (ticked for you)' : ''} plus the options the program chose.
+					{:else}
+						A revisit covers only the areas the Board Action names; tick those.
+					{/if}
+					These are only a start: sections can be added, renamed or removed on the visit's page.
+				</p>
+			</fieldset>
 			<p class="text-[12px] text-ink-soft md:col-span-5">
-				New visits start archived and in draft, with an empty common-documents section. Say “visit”, not “accredited”, unless the status is official.
+				New visits start archived and in draft, with a common-documents section and the areas ticked above. Say “visit”, not “accredited”, unless the status is official.
 			</p>
 		</form>
 	{/if}
