@@ -9,17 +9,17 @@
 </script>
 
 <Section title={content.title} {tone}>
-	<ul class="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+	<ul class="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-4 lg:grid-cols-6">
 		{#each content.items as person, index (index)}
 			<li use:reveal={{ delay: stagger(index) }}>
 				{#if person.photo}
-					<Photo src={person.photo} alt={person.name} width={800} class="aspect-[4/5] w-full" iconClass="size-8" />
+					<Photo src={person.photo} alt={person.name} width={500} class="aspect-[4/5] w-full" iconClass="size-8" />
 				{:else}
-					<Initials name={person.name} class="aspect-[4/5] w-full text-[clamp(2rem,5vw,3.25rem)]" />
+					<Initials name={person.name} class="aspect-[4/5] w-full text-[clamp(1.75rem,4vw,2.5rem)]" />
 				{/if}
-				<p class="mt-3 font-display text-[17px] font-semibold leading-snug tracking-[-0.02em] text-ink">{person.name}</p>
-				{#if person.role}<p class="mt-0.5 text-[14px] font-medium text-program">{person.role}</p>{/if}
-				{#if person.credentials}<p class="mt-0.5 text-[13px] leading-snug text-ink-soft">{person.credentials}</p>{/if}
+				<p class="mt-2.5 font-display text-[15px] font-semibold leading-snug tracking-[-0.02em] text-ink">{person.name}</p>
+				{#if person.role}<p class="mt-0.5 text-[13px] font-medium leading-snug text-program">{person.role}</p>{/if}
+				{#if person.credentials}<p class="mt-0.5 text-[12px] leading-snug text-ink-soft">{person.credentials}</p>{/if}
 			</li>
 		{/each}
 	</ul>
