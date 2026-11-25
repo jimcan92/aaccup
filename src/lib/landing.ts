@@ -17,9 +17,10 @@ export type NewsItem = { date: string; title: string; body?: string; href?: stri
 /**
  * A box on the organization chart; level 1 is the top row (four rows at most).
  * When any box names a `parent` (the `id` of the box it reports to), the chart is shown as a tree
- * that opens one office at a time, and `level` is ignored.
+ * that opens one office at a time, and `level` is ignored. `thumb` is an optional small copy of
+ * the photo for the chart map; without it the map uses `photo`.
  */
-export type OrgItem = { id?: string; parent?: string; name: string; role: string; unit?: string; photo?: string; level: 1 | 2 | 3 | 4 };
+export type OrgItem = { id?: string; parent?: string; name: string; role: string; unit?: string; photo?: string; thumb?: string; level: 1 | 2 | 3 | 4 };
 /** A campus event; date and end are YYYY-MM-DD, time is free text ("8:00 AM – 5:00 PM"); photo is a poster or event photo. */
 export type EventItem = { date: string; end?: string; time?: string; title: string; place?: string; body?: string; href?: string; photo?: string };
 /** A key record such as the BOR resolution or COPC; url is its Google Drive link, empty while in preparation. */

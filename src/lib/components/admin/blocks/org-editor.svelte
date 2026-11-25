@@ -69,7 +69,17 @@
 						{/each}
 					</select>
 				</div>
-				<ImageField bind:value={person.photo} {programId} />
+				<!-- A new photo drops the old small copy used on the chart map. -->
+				<ImageField
+					bind:value={
+						() => person.photo,
+						(photo) => {
+							if (photo !== person.photo) person.thumb = '';
+							person.photo = photo;
+						}
+					}
+					{programId}
+				/>
 			</div>
 			<ItemControls {index} count={value.items.length} noun="person" onmove={(delta) => (value.items = move(value.items, index, delta))} onremove={() => remove(index)} />
 		</div>

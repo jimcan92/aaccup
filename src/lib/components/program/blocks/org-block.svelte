@@ -3,8 +3,9 @@
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import { fade } from 'svelte/transition';
 	import Photo from '#lib/components/site/photo.svelte';
+	import { imageSrc } from '#lib/image-url.js';
 	import type { OrgContent, OrgItem } from '#lib/landing.js';
-	import { buildOrgTree, countUnder, hasReportingLines, layoutOrgTree, pathTo, startingFocus } from '#lib/org-tree.js';
+	import { buildOrgTree, countUnder, hasReportingLines, layoutCompactChart, pathTo, startingFocus } from '#lib/org-tree.js';
 	import Initials from './initials.svelte';
 	import Section from './section.svelte';
 
@@ -22,28 +23,44 @@
 	const focus = $derived(chosen && tree.nodes.has(chosen) ? chosen : startingFocus(tree));
 	const path = $derived(focus ? pathTo(tree, focus) : []);
 	const children = $derived(focus ? tree.nodes.get(focus)!.children : []);
-
-	// Minimap geometry.
-	const map = $derived(layoutOrgTree(tree));
-	const colGap = 34;
-	const rowGap = 7;
-	const pad = 6;
-	const at = (key: string) => {
-		const p = map.positions.get(key)!;
-		return { x: pad + p.x * colGap, y: pad + p.y * rowGap };
-	};
-	const mapWidth = $derived(pad * 2 + (map.columns - 1) * colGap);
-	const mapHeight = $derived(pad * 2 + (map.rows - 1) * rowGap);
 	const shown = $derived(new Set([...(focus ? [focus] : []), ...children]));
 	const onPath = $derived(new Set(path));
-	// The part of the map that is on screen: the open office and the people under it.
+
+	// The whole chart in small: grid cells from the compact layout, drawn in SVG units.
+	const chartMap = $derived(layoutCompactChart(tree));
+	const cellW = 32;
+	const cellH = 36;
+	const pad = 18;
+	const dot = 24;
+	const mapW = $derived(pad * 2 + (chartMap.columns - 1) * cellW);
+	const mapH = $derived(pad * 2 + (chartMap.rows - 1) * cellH);
+	const spot = (key: string) => {
+		const cell = chartMap.cells.get(key)!;
+		return { x: pad + cell.x * cellW, y: pad + cell.y * cellH };
+	};
+	function edge(from: string, to: string): string {
+		const a = spot(from);
+		const b = spot(to);
+		const bar = a.y + cellH / 2;
+		// People stacked in a column hang off a spine just left of their photos.
+		if (chartMap.cells.get(to)!.stacked) {
+			const spine = b.x - dot / 2 - 4;
+			return `M${a.x} ${a.y}V${bar}H${spine}V${b.y}H${b.x}`;
+		}
+		return `M${a.x} ${a.y}V${bar}H${b.x}V${b.y}`;
+	}
+	// The part of the map shown on the right: the open office and the people under it.
 	const view = $derived.by(() => {
 		if (!focus) return null;
-		const points = [...shown].map(at);
+		const points = [...shown].map(spot);
 		const xs = points.map((p) => p.x);
 		const ys = points.map((p) => p.y);
-		return { x: Math.min(...xs) - 4, y: Math.min(...ys) - 4, width: Math.max(...xs) - Math.min(...xs) + 8, height: Math.max(...ys) - Math.min(...ys) + 8 };
+		const r = dot / 2 + 5;
+		return { x: Math.min(...xs) - r, y: Math.min(...ys) - r, width: Math.max(...xs) - Math.min(...xs) + r * 2, height: Math.max(...ys) - Math.min(...ys) + r * 2 };
 	});
+
+	// Name and position of the small photo under the pointer or keyboard focus.
+	let hovered = $state<string | null>(null);
 
 	let chart = $state<HTMLElement>();
 
@@ -54,6 +71,8 @@
 		chosen = node.children.length ? key : (node.parent ?? key);
 		if (chart && chart.getBoundingClientRect().top < 0) chart.scrollIntoView({ behavior: 'smooth', block: 'start' });
 	}
+
+	const pct = (value: number, of: number) => `${(value / of) * 100}%`;
 </script>
 
 {#snippet face(person: OrgItem, lead: boolean)}
@@ -80,22 +99,88 @@
 {/snippet}
 
 <!-- The photo fills the card; name and role sit on a dark band at the bottom so they stay readable. -->
-{#snippet card(person: OrgItem, top: boolean)}
-	<li class="relative aspect-[4/5] w-[calc(50%-0.375rem)] overflow-hidden border bg-paper {top ? 'border-program border-t-4 sm:w-64' : 'border-rule sm:w-52'}">
+{#snippet card(person: OrgItem, top: boolean, narrow = false)}
+	<li class="relative aspect-[4/5] w-[calc(50%-0.375rem)] overflow-hidden border bg-paper {top ? 'border-program border-t-4 sm:w-64' : `border-rule ${narrow ? 'sm:w-44' : 'sm:w-52'}`}">
 		{@render face(person, top)}
 		{@render caption(person, top)}
 	</li>
 {/snippet}
 
+<!-- The whole chart in small, with a photo for each person; click a photo to open that office. -->
+{#snippet chartMapView()}
+	<div class="relative mx-auto w-full" style:aspect-ratio={`${mapW} / ${mapH}`} style:max-width={`${mapW * 1.5}px`}>
+		<svg viewBox={`0 0 ${mapW} ${mapH}`} class="absolute inset-0 h-full w-full" aria-hidden="true">
+			{#if view}<rect x={view.x} y={view.y} width={view.width} height={view.height} rx="6" class="fill-program/10 stroke-program/50" stroke-width="1" />{/if}
+			{#each [...tree.nodes.values()] as node (node.key)}
+				{#if node.parent}
+					<path d={edge(node.parent, node.key)} fill="none" class={onPath.has(node.key) || (node.parent === focus) ? 'stroke-program' : 'stroke-ink/25'} stroke-width={onPath.has(node.key) ? 1.8 : 1} />
+				{/if}
+			{/each}
+		</svg>
+		{#each [...tree.nodes.values()] as node (node.key)}
+			{@const p = spot(node.key)}
+			{@const isFocus = node.key === focus}
+			{@const lit = isFocus || onPath.has(node.key) || shown.has(node.key)}
+			<button
+				type="button"
+				onclick={() => open(node.key)}
+				onpointerenter={() => (hovered = node.key)}
+				onpointerleave={() => (hovered = hovered === node.key ? null : hovered)}
+				onfocus={() => (hovered = node.key)}
+				onblur={() => (hovered = hovered === node.key ? null : hovered)}
+				aria-label={`${node.item.name}, ${node.item.role}`}
+				aria-current={isFocus ? 'true' : undefined}
+				class="absolute -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full bg-paper transition-[opacity,box-shadow] hover:z-10 hover:opacity-100 hover:ring-2 hover:ring-program focus-visible:z-10 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-program {isFocus ? 'z-10 ring-[3px] ring-program' : lit ? 'ring-2 ring-program/70' : 'opacity-60 ring-1 ring-ink/25'}"
+				style:left={pct(p.x, mapW)}
+				style:top={pct(p.y, mapH)}
+				style:width={pct(dot * (isFocus ? 1.3 : 1), mapW)}
+				style:aspect-ratio="1"
+			>
+				{#if node.item.thumb || node.item.photo}
+					<img src={imageSrc(node.item.thumb || node.item.photo!, 120)} alt="" loading="lazy" class="h-full w-full object-cover object-top" />
+				{:else}
+					<Initials name={node.item.name} class="h-full w-full text-[9px]" />
+				{/if}
+			</button>
+		{/each}
+
+		{#if hovered && tree.nodes.has(hovered)}
+			{@const p = spot(hovered)}
+			{@const node = tree.nodes.get(hovered)!}
+			{@const leftSide = p.x > mapW / 2}
+			<!-- Tooltip: who the small photo is. -->
+			<div
+				class="pointer-events-none absolute z-20 w-max max-w-[15rem] -translate-y-1/2 border border-rule bg-paper px-2.5 py-1.5 shadow-lg {leftSide ? '-translate-x-full' : ''}"
+				style:left={leftSide ? `calc(${pct(p.x, mapW)} - 22px)` : `calc(${pct(p.x, mapW)} + 22px)`}
+				style:top={pct(p.y, mapH)}
+				role="tooltip"
+			>
+				<p class="text-[12px] font-semibold leading-tight text-ink">{node.item.name}</p>
+				<p class="mt-0.5 text-[11px] leading-snug text-program">{node.item.role}</p>
+				{#if node.children.length}<p class="mt-0.5 text-[11px] leading-snug text-ink-soft">{countUnder(tree, hovered)} under · click to open</p>{/if}
+			</div>
+		{/if}
+	</div>
+{/snippet}
+
 <Section title={content.title} {tone}>
 	{#if isTree && focus}
-		<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_13rem] lg:gap-10">
-			<!-- Small screens: the map folds away above the chart. -->
+		<div class="grid gap-6 lg:grid-cols-2 lg:gap-10">
+			<!-- Small screens: the chart folds away above the open office. -->
 			<details class="border border-rule bg-paper lg:hidden">
-				<summary class="cursor-pointer px-4 py-2.5 text-[13px] font-medium text-ink-soft">Map of the whole organization</summary>
-				<div class="max-h-[60vh] overflow-auto px-4 pb-4">{@render minimap()}</div>
+				<summary class="cursor-pointer px-4 py-2.5 text-[13px] font-medium text-ink-soft">Whole organization chart</summary>
+				<div class="max-h-[70vh] overflow-auto p-3">{@render chartMapView()}</div>
 			</details>
 
+			<!-- Wide screens: the whole chart on the left, used to move around. -->
+			<div class="hidden lg:block">
+				<div class="sticky top-20">
+					<p class="mb-2 text-[12px] font-medium text-ink-soft">Whole organization — click a photo to see the people under that office</p>
+					<div class="max-h-[calc(100vh-7rem)] overflow-auto border border-rule bg-paper p-3">{@render chartMapView()}</div>
+				</div>
+			</div>
+
+			<!-- The open office and the people under it. -->
 			<div bind:this={chart} class="flex scroll-mt-20 flex-col items-center">
 				{#if path.length > 1}
 					<!-- The offices above the open one; each opens its own part of the chart. -->
@@ -105,12 +190,12 @@
 							{#if index > 0}<li aria-hidden="true"><ChevronRight class="size-4 text-ink-soft" /></li>{/if}
 							<li>
 								<button type="button" onclick={() => open(key)} class="flex items-center gap-2 border border-rule bg-paper py-1 pl-1 pr-3 text-left hover:border-program">
-									<span class="relative block h-10 w-8 shrink-0 overflow-hidden">
-										{#if person.photo}<Photo src={person.photo} alt="" width={120} class="h-full w-full" imgClass="object-top" iconClass="size-3" />{:else}<Initials name={person.name} class="h-full w-full text-[12px]" />{/if}
+									<span class="relative block size-9 shrink-0 overflow-hidden rounded-full">
+										{#if person.thumb || person.photo}<img src={imageSrc(person.thumb || person.photo!, 120)} alt="" class="h-full w-full object-cover object-top" />{:else}<Initials name={person.name} class="h-full w-full text-[12px]" />{/if}
 									</span>
 									<span class="grid">
-										<span class="max-w-[11rem] truncate text-[12px] font-semibold leading-tight text-ink">{person.name}</span>
-										<span class="max-w-[11rem] truncate text-[11px] leading-tight text-program">{person.role}</span>
+										<span class="max-w-[10rem] truncate text-[12px] font-semibold leading-tight text-ink">{person.name}</span>
+										<span class="max-w-[10rem] truncate text-[11px] leading-tight text-program">{person.role}</span>
 									</span>
 								</button>
 							</li>
@@ -130,7 +215,7 @@
 							{#each children as key (key)}
 								{@const node = tree.nodes.get(key)!}
 								{#if node.children.length}
-									<li class="w-[calc(50%-0.375rem)] sm:w-52">
+									<li class="w-[calc(50%-0.375rem)] sm:w-44">
 										<button
 											type="button"
 											onclick={() => open(key)}
@@ -142,20 +227,13 @@
 										</button>
 									</li>
 								{:else}
-									{@render card(node.item, false)}
+									{@render card(node.item, false, true)}
 								{/if}
 							{/each}
 						</ul>
 					{/key}
 				{/if}
 			</div>
-
-			<aside class="hidden lg:block" aria-label="Map of the whole organization">
-				<div class="sticky top-24">
-					<p class="mb-2 text-[12px] font-medium text-ink-soft">Where you are</p>
-					<div class="max-h-[calc(100vh-8rem)] overflow-auto border border-rule bg-paper p-2">{@render minimap()}</div>
-				</div>
-			</aside>
 		</div>
 	{:else}
 		<div class="flex flex-col items-center">
@@ -169,31 +247,3 @@
 		</div>
 	{/if}
 </Section>
-
-{#snippet minimap()}
-	<svg viewBox={`0 0 ${mapWidth} ${mapHeight}`} class="block w-full" style:max-width={`${mapWidth * 1.6}px`} role="img" aria-label="Map of the whole organization; the highlighted part is on screen">
-		{#if view}<rect x={view.x} y={view.y} width={view.width} height={view.height} rx="3" class="fill-program/12 stroke-program/50" stroke-width="0.75" />{/if}
-		{#each [...tree.nodes.values()] as node (node.key)}
-			{#if node.parent}
-				{@const a = at(node.parent)}
-				{@const b = at(node.key)}
-				<path d={`M${a.x} ${a.y}H${(a.x + b.x) / 2}V${b.y}H${b.x}`} fill="none" class={onPath.has(node.key) ? 'stroke-program' : 'stroke-ink/20'} stroke-width={onPath.has(node.key) ? 1.25 : 0.75} />
-			{/if}
-		{/each}
-		{#each [...tree.nodes.values()] as node (node.key)}
-			{@const p = at(node.key)}
-			<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-			<g class="cursor-pointer" onclick={() => open(node.key)}>
-				<title>{node.item.name} — {node.item.role}</title>
-				<circle cx={p.x} cy={p.y} r="5" fill="transparent" />
-				<circle
-					cx={p.x}
-					cy={p.y}
-					r={node.key === focus ? 3.6 : 2.3}
-					class={node.key === focus ? 'fill-program stroke-paper' : onPath.has(node.key) ? 'fill-program' : shown.has(node.key) ? 'fill-program/70' : 'fill-ink/30'}
-					stroke-width={node.key === focus ? 1.2 : 0}
-				/>
-			</g>
-		{/each}
-	</svg>
-{/snippet}

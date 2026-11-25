@@ -81,27 +81,41 @@ export function countUnder(tree: OrgTree, key: string): number {
 	return node.children.reduce((sum, child) => sum + 1 + countUnder(tree, child), 0);
 }
 
+/** A box placed on the compact chart, in grid cells; `stacked` boxes hang in a column under their office. */
+export type ChartCell = { x: number; y: number; stacked: boolean };
+
 /**
- * Minimap layout: depth runs left to right, and leaves are stacked top to bottom;
- * a parent sits level with the middle of its children.
+ * Compact upright layout of the whole chart, like the printed one: offices with people under
+ * them spread side by side, while people with nobody under them hang in a single column under
+ * their office. Keeps a 90-person chart narrow enough for half the page.
  */
-export function layoutOrgTree(tree: OrgTree): { positions: Map<string, { x: number; y: number }>; columns: number; rows: number } {
-	const positions = new Map<string, { x: number; y: number }>();
-	let row = 0;
-	let columns = 0;
-	const place = (key: string): number => {
+export function layoutCompactChart(tree: OrgTree): { cells: Map<string, ChartCell>; columns: number; rows: number } {
+	const cells = new Map<string, ChartCell>();
+	let rows = 0;
+
+	// Places `key` with its top at `row` and its left edge at `left`; returns the columns it spans.
+	const place = (key: string, left: number, row: number): number => {
 		const node = tree.nodes.get(key)!;
-		columns = Math.max(columns, node.depth + 1);
-		let y: number;
-		if (node.children.length) {
-			const ys = node.children.map(place);
-			y = (ys[0] + ys[ys.length - 1]) / 2;
-		} else {
-			y = row++;
+		const leaves = node.children.filter((child) => !tree.nodes.get(child)!.children.length);
+		const branches = node.children.filter((child) => tree.nodes.get(child)!.children.length);
+		rows = Math.max(rows, row + 1);
+
+		let span = 0;
+		if (leaves.length) {
+			leaves.forEach((leaf, index) => {
+				cells.set(leaf, { x: left, y: row + 1 + index, stacked: true });
+				rows = Math.max(rows, row + 2 + index);
+			});
+			span = 1;
 		}
-		positions.set(key, { x: node.depth, y });
-		return y;
+		for (const branch of branches) span += place(branch, left + span, row + 1);
+		span = Math.max(span, 1);
+
+		cells.set(key, { x: left + (span - 1) / 2, y: row, stacked: false });
+		return span;
 	};
-	for (const root of tree.roots) place(root);
-	return { positions, columns, rows: Math.max(row, 1) };
+
+	let columns = 0;
+	for (const root of tree.roots) columns += place(root, columns, 0);
+	return { cells, columns: Math.max(columns, 1), rows: Math.max(rows, 1) };
 }
