@@ -4,6 +4,7 @@
 	import { enhance } from '#lib/admin-enhance.js';
 	import ArrowDown from '@lucide/svelte/icons/arrow-down';
 	import ArrowUp from '@lucide/svelte/icons/arrow-up';
+	import ArrowUpToLine from '@lucide/svelte/icons/arrow-up-to-line';
 	import ImagePlus from '@lucide/svelte/icons/image-plus';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -40,6 +41,8 @@
 		programId,
 		first,
 		last,
+		position = 0,
+		count = 0,
 		canEdit,
 		canManage,
 		onremove,
@@ -49,6 +52,9 @@
 		programId: string;
 		first: boolean;
 		last: boolean;
+		/** Place of the block on the page (1 = top) and how many blocks there are; 0 hides the number box. */
+		position?: number;
+		count?: number;
 		canEdit: boolean;
 		canManage: boolean;
 		onremove: () => void;
@@ -140,8 +146,27 @@
 		</span>
 		<span class="ml-auto flex items-center gap-1">
 			{#if canEdit}
-				<form method="POST" action="?/move" use:enhance><input type="hidden" name="id" value={block.id} /><input type="hidden" name="direction" value="up" /><button class={small} disabled={first} aria-label="Move block up"><ArrowUp class="size-4" /></button></form>
-				<form method="POST" action="?/move" use:enhance><input type="hidden" name="id" value={block.id} /><input type="hidden" name="direction" value="down" /><button class={small} disabled={last} aria-label="Move block down"><ArrowDown class="size-4" /></button></form>
+				<form method="POST" action="?/move" use:enhance><input type="hidden" name="id" value={block.id} /><input type="hidden" name="position" value="1" /><button class={small} disabled={first} aria-label="Move block to the top" title="Move to the top"><ArrowUpToLine class="size-4" /></button></form>
+				<form method="POST" action="?/move" use:enhance><input type="hidden" name="id" value={block.id} /><input type="hidden" name="direction" value="up" /><button class={small} disabled={first} aria-label="Move block up" title="Move up"><ArrowUp class="size-4" /></button></form>
+				<form method="POST" action="?/move" use:enhance><input type="hidden" name="id" value={block.id} /><input type="hidden" name="direction" value="down" /><button class={small} disabled={last} aria-label="Move block down" title="Move down"><ArrowDown class="size-4" /></button></form>
+				{#if position && count > 1}
+					<!-- Type a place (1 = top) and press Enter or leave the box; the other blocks shift to make room. -->
+					<form method="POST" action="?/move" use:enhance class="flex items-center gap-1 text-[12px] text-ink-soft">
+						<input type="hidden" name="id" value={block.id} />
+						<input
+							type="number"
+							name="position"
+							min="1"
+							max={count}
+							value={position}
+							onchange={(event) => event.currentTarget.form?.requestSubmit()}
+							aria-label={`Place on the page, 1 to ${count}`}
+							title="Place on the page (1 = top)"
+							class="h-8 w-12 border border-rule bg-salt px-1.5 text-center text-[13px] text-ink outline-none focus:border-ink"
+						/>
+						<span aria-hidden="true">of {count}</span>
+					</form>
+				{/if}
 			{/if}
 			{#if canManage}
 				<button type="button" onclick={onremove} class="{small} hover:text-destructive" aria-label="Delete block"><Trash2 class="size-4" /></button>

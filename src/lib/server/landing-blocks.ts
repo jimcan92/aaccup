@@ -175,16 +175,21 @@ export function landingActions(programOf: (params: Record<string, string>) => st
 			const { supabase } = await editor(locals, programId);
 			const form = await request.formData();
 			const id = text(form, 'id');
-			const direction = text(form, 'direction') === 'up' ? -1 : 1;
 
 			const list = await siblings(supabase, programId);
 			const index = list.findIndex((block) => block.id === id);
-			const other = list[index + direction];
-			if (index === -1 || !other) return { message: 'Already at the end.' };
+			if (index === -1) return { message: 'That block is gone; reload the page.' };
+
+			// A position (1 = top) puts the block there and shifts the others; otherwise one step up or down.
+			const asked = Number(text(form, 'position'));
+			const target = Number.isInteger(asked) && asked >= 1
+				? Math.min(asked, list.length) - 1
+				: index + (text(form, 'direction') === 'up' ? -1 : 1);
+			if (target < 0 || target >= list.length || target === index) return { message: 'Already there.' };
 
 			// Renumber so equal sort orders cannot get stuck.
 			const order = list.map((block) => block.id);
-			[order[index], order[index + direction]] = [order[index + direction], order[index]];
+			order.splice(target, 0, ...order.splice(index, 1));
 			for (const [position, blockId] of order.entries()) {
 				const { error: moveError } = await supabase.from('program_blocks').update({ sort_order: position }).eq('id', blockId);
 				if (moveError) return dbFail(moveError);

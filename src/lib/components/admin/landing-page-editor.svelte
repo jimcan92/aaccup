@@ -266,6 +266,8 @@
 			programId={folderId}
 			first={index === 0}
 			last={index === blocks.length - 1}
+			position={index + 1}
+			count={blocks.length}
 			{canEdit}
 			{canManage}
 			onremove={() => (removing = { id: block.id, label: blockLabel(block.kind as 'gallery', (block.draft as { layout?: string })?.layout) })}
