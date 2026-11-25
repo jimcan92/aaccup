@@ -73,10 +73,29 @@
 	--rule: #e7eee51f;
 }
 
-/* Each program sets its tints inline (light colours); in dark mode they become dark tints of the program colour. */
+/*
+ * Dark mode on program pages. Each program sets its colours inline (light values, plus
+ * --program-base and --program-accent-dark from themeStyle). In dark mode the program colour
+ * stays on its own surfaces (.on-program: header, hero, footer); elsewhere the accent (e.g.
+ * BSIE gold) carries text, numbers, lines and buttons, on surfaces tinted with the program colour.
+ */
 .dark .program-scope {
-	--program-soft: color-mix(in srgb, var(--program) 22%, #0e1919) !important;
-	--program-ink: color-mix(in srgb, var(--program) 30%, #eef3ec) !important;
+	--program: var(--program-accent-dark, #cfe1dc) !important;
+	--program-contrast: var(--program-accent-contrast, #0e1919) !important;
+	--program-ink: color-mix(in srgb, var(--program-accent-dark, #cfe1dc) 70%, #ffffff) !important;
+	--program-soft: color-mix(in srgb, var(--program-base, #2f6763) 40%, #0d0b0b) !important;
+	--salt: color-mix(in srgb, var(--program-base, #2f6763) 16%, #0b0a0a);
+	--paper: color-mix(in srgb, var(--program-base, #2f6763) 24%, #0d0c0c);
+	--rule: color-mix(in srgb, var(--program-accent-dark, #cfe1dc) 18%, transparent);
+	--ink: #f5eeea;
+	--ink-soft: color-mix(in srgb, var(--program-accent-dark, #cfe1dc) 20%, #cbc3bf);
+}
+
+.dark .program-scope.on-program,
+.dark .program-scope .on-program {
+	--program: var(--program-base, #2f6763) !important;
+	--program-contrast: var(--program-base-contrast, #f2f6f0) !important;
+	--program-ink: color-mix(in srgb, var(--program-base, #2f6763) 70%, #000000) !important;
 }
 
 /* The admin was designed light only: it keeps the light palette whatever the site theme. */

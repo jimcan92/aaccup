@@ -87,6 +87,8 @@ export interface ProgramTheme {
 	soft: string;
 	/** Text color placed on top of `program`. */
 	contrast: string;
+	/** Optional second color (e.g. BSIE gold). In dark mode it carries text, numbers and lines. */
+	accent?: string;
 }
 
 export interface Program {

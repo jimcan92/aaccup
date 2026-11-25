@@ -75,7 +75,7 @@ type DossierJson = {
 		website?: string | null;
 		email?: string | null;
 		phone?: string | null;
-		theme: { program: string | null; ink: string | null; soft: string | null; contrast: string | null };
+		theme: { program: string | null; ink: string | null; soft: string | null; contrast: string | null; accent?: string | null };
 	};
 	visit: { slug: string; year: number; level: string; label: string; previous_label: string | null; status: VisitStatus };
 	visits: { slug: string; year: number; level: string; label: string; status: VisitStatus }[];
@@ -113,12 +113,13 @@ type DossierJson = {
 
 const NEUTRAL_THEME = { program: '#082a2c', ink: '#082a2c', soft: '#e3e9e1', contrast: '#ffffff' };
 
-function theme(raw: { program: string | null; ink: string | null; soft: string | null; contrast: string | null }) {
+function theme(raw: { program: string | null; ink: string | null; soft: string | null; contrast: string | null; accent?: string | null }) {
 	return {
 		program: raw.program || NEUTRAL_THEME.program,
 		ink: raw.ink || NEUTRAL_THEME.ink,
 		soft: raw.soft || NEUTRAL_THEME.soft,
-		contrast: raw.contrast || NEUTRAL_THEME.contrast
+		contrast: raw.contrast || NEUTRAL_THEME.contrast,
+		...(raw.accent ? { accent: raw.accent } : {})
 	};
 }
 

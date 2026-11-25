@@ -4,7 +4,7 @@
 	import ImageField from '#lib/components/admin/blocks/image-field.svelte';
 	import LandingPageEditor from '#lib/components/admin/landing-page-editor.svelte';
 	import type { ProgramPatch } from '#lib/block-preview.js';
-	import { contrastRatio } from '#lib/theme.js';
+	import { contrastRatio, darkAccent } from '#lib/theme.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -28,6 +28,7 @@
 
 	// Kept in a variable: inside a Svelte attribute, `{6}` would be read as an expression.
 	const HEX_PATTERN = '#[0-9a-fA-F]{6}';
+	const HEX_RE = /^#[0-9a-f]{6}$/i;
 
 	// svelte-ignore state_referenced_locally
 	let colors = $state({
@@ -36,6 +37,10 @@
 		soft: data.program.theme_soft ?? '#e3e9e1',
 		contrast: data.program.theme_contrast ?? '#ffffff'
 	});
+	// svelte-ignore state_referenced_locally
+	let accent = $state<string>(data.program.theme_accent ?? '');
+	// What dark mode will use for text: the accent, or the program color, lightened until it reads.
+	const darkText = $derived(darkAccent({ ...colors, accent: HEX_RE.test(accent) ? accent : undefined }));
 
 	// Empty optional fields are hidden on the public page, as the dossier loader does.
 	const patch = $derived<ProgramPatch>({
@@ -49,7 +54,7 @@
 		website: typed.website || undefined,
 		email: typed.email || undefined,
 		phone: typed.phone || undefined,
-		theme: { ...colors }
+		theme: { ...colors, ...(HEX_RE.test(accent) ? { accent } : {}) }
 	});
 
 	const checks = $derived([
@@ -163,6 +168,28 @@
 										<span class="text-[12px] font-normal text-ink-soft">{item.hint}</span>
 									</label>
 								{/each}
+							</div>
+							<div class="mt-4 grid gap-3 sm:grid-cols-2">
+								<label class={label}>
+									Accent color (optional)
+									<span class="flex gap-2">
+										<input type="color" value={HEX_RE.test(accent) ? accent : '#c9973a'} oninput={(event) => (accent = event.currentTarget.value)} class="h-11 w-14 shrink-0 cursor-pointer border border-rule bg-salt p-1" aria-label="Accent color picker" />
+										<input name="theme_accent" bind:value={accent} pattern={HEX_PATTERN} placeholder="none" class="{field} font-mono" />
+										{#if accent}<button type="button" onclick={() => (accent = '')} class="h-11 shrink-0 border border-rule px-3 text-[12px] hover:bg-salt">Clear</button>{/if}
+									</span>
+									<span class="text-[12px] font-normal text-ink-soft">A second color, like BSIE gold. In dark mode it takes the text, numbers and lines; the program color keeps the header, hero and footer.</span>
+								</label>
+								<!-- Dark mode preview: program color on the header, the dark-mode text color on the page. -->
+								<div class="overflow-hidden border border-rule" aria-label="Dark mode preview">
+									<div class="flex items-center justify-between px-3 py-2 text-[12px] font-semibold" style:background={colors.program} style:color={colors.contrast}>
+										<span>{typed.code || 'Program'}</span><span class="font-normal opacity-80">Dark mode</span>
+									</div>
+									<div class="px-3 py-3" style:background={`color-mix(in srgb, ${colors.program} 20%, #0b0a0a)`}>
+										<p class="font-display text-[26px] font-semibold leading-none" style:color={darkText}>01</p>
+										<p class="mt-1 text-[12px]" style="color: #f5eeea">Area title on a dark page</p>
+										<p class="mt-2 font-mono text-[11px]" style:color={darkText}>{darkText} · {contrastRatio(darkText, '#221418').toFixed(1)}:1</p>
+									</div>
+								</div>
 							</div>
 							<ul class="mt-4 space-y-1.5 text-[13px]">
 								{#each checks as check (check.label)}

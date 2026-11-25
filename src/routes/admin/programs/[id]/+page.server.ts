@@ -43,7 +43,9 @@ export const actions: Actions = {
 			theme_program: text(form, 'theme_program').toLowerCase(),
 			theme_ink: text(form, 'theme_ink').toLowerCase(),
 			theme_soft: text(form, 'theme_soft').toLowerCase(),
-			theme_contrast: text(form, 'theme_contrast').toLowerCase()
+			theme_contrast: text(form, 'theme_contrast').toLowerCase(),
+			// Optional: empty clears it, and dark mode then uses a lighter tone of the program color.
+			theme_accent: optional(form, 'theme_accent')?.toLowerCase() ?? null
 		};
 
 		if (!values.code || !values.name) return fail(400, { message: 'Code and name are required.' });
@@ -54,6 +56,9 @@ export const actions: Actions = {
 		if (values.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) return fail(400, { message: 'Check the email address.' });
 		if (![values.theme_program, values.theme_ink, values.theme_soft, values.theme_contrast].every((color) => HEX.test(color))) {
 			return fail(400, { message: 'Colors must be six-digit hex values like #7a1e2b.' });
+		}
+		if (values.theme_accent && !HEX.test(values.theme_accent)) {
+			return fail(400, { message: 'The accent color must be a six-digit hex value like #c9973a, or empty.' });
 		}
 
 		const { data: before } = await supabase.from('programs').select('code').eq('id', params.id).single();
