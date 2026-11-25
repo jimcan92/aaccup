@@ -13,7 +13,7 @@ export type TestimonialItem = { quote: string; name: string; role?: string; phot
 export type FaqItem = { question: string; answer: string };
 export type LinkButton = { label: string; href: string };
 /** An announcement; date is YYYY-MM-DD. */
-export type NewsItem = { date: string; title: string; body?: string; href?: string };
+export type NewsItem = { date: string; title: string; body?: string; href?: string; photo?: string };
 /**
  * A box on the organization chart; level 1 is the top row (four rows at most).
  * When any box names a `parent` (the `id` of the box it reports to), the chart is shown as a tree

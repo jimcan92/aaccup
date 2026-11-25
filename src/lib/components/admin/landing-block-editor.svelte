@@ -216,7 +216,7 @@
 			{:else if block.kind === 'cta'}
 				<CtaEditor bind:value={extra} />
 			{:else if block.kind === 'news'}
-				<NewsEditor bind:value={extra} />
+				<NewsEditor bind:value={extra} {programId} />
 			{:else if block.kind === 'org'}
 				<OrgEditor bind:value={extra} {programId} />
 			{:else if block.kind === 'events'}

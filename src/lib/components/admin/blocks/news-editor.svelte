@@ -2,16 +2,17 @@
 	import RichTextarea from '#lib/components/admin/blocks/rich-textarea.svelte';
 	import Plus from '@lucide/svelte/icons/plus';
 	import type { NewsContent } from '#lib/landing.js';
+	import ImageField from './image-field.svelte';
 	import ItemControls from './item-controls.svelte';
 	import { addButton, field, hint, move } from './ui';
 
-	let { value = $bindable() }: { value: NewsContent } = $props();
+	let { value = $bindable(), programId }: { value: NewsContent; programId: string } = $props();
 
 	const today = () => new Date().toISOString().slice(0, 10);
 </script>
 
 <div class="grid gap-3">
-	<button type="button" onclick={() => (value.items = [{ date: today(), title: '', body: '', href: '' }, ...value.items])} class={addButton}><Plus class="size-4" /> Add announcement at the top</button>
+	<button type="button" onclick={() => (value.items = [{ date: today(), title: '', body: '', href: '', photo: '' }, ...value.items])} class={addButton}><Plus class="size-4" /> Add announcement at the top</button>
 	{#each value.items as item, index (index)}
 		<div class="grid gap-3 border border-rule p-3 sm:grid-cols-[minmax(0,1fr)_auto]">
 			<div class="grid gap-2">
@@ -21,6 +22,7 @@
 				</div>
 				<RichTextarea bind:value={item.body} ariaLabel="Details" rows={2} placeholder="Details (optional)" />
 				<input bind:value={item.href} aria-label="Link" placeholder="Link for more (optional), https://…" class="{field} font-mono text-[12px]" />
+				<ImageField bind:value={item.photo} {programId} label="Photo or news card (optional)" />
 			</div>
 			<ItemControls {index} count={value.items.length} noun="announcement" onmove={(delta) => (value.items = move(value.items, index, delta))} onremove={() => (value.items = value.items.filter((_, i) => i !== index))} />
 		</div>
