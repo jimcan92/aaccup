@@ -40,6 +40,9 @@
 	--salt: #edf1ea;
 	--paper: #f8faf5;
 	--rule: #082a2c1f;
+
+	--good: #1d5b3a;
+	--good-soft: #e2ede4;
 }
 
 /* Dark: the same roles, inverted. Set by the theme switcher (mode-watcher puts .dark on <html>). */
@@ -71,6 +74,9 @@
 	--salt: #0e1919;
 	--paper: #142222;
 	--rule: #e7eee51f;
+
+	--good: #7fd3a3;
+	--good-soft: #173326;
 }
 
 /*
@@ -139,8 +145,9 @@
 	--color-foam: #b9d4c6;
 	--color-bsie: #7a1e2b;
 	--color-bsie-soft: #f1e2e4;
-	--color-bsfi: #1d5b3a;
-	--color-bsfi-soft: #e2ede4;
+	/* Also the admin's "good" colour (checks, published badges); lighter in dark mode. */
+	--color-bsfi: var(--good);
+	--color-bsfi-soft: var(--good-soft);
 	--color-signal: #c9973a;
 	--color-rule: var(--rule);
 
