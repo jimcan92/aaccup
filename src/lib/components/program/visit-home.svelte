@@ -63,7 +63,7 @@
 		<section>
 			{@render heading(
 				`Current visit · ${visit.year}`,
-				`${areaCount} ${areaCount === 1 ? 'area' : 'areas'} under review`,
+				`${areaCount} mandatory ${areaCount === 1 ? 'area' : 'areas'}`,
 				`${countLinked(current.flatMap((s) => s.documents))} linked`
 			)}
 			<ul class="mt-5 grid gap-3 md:grid-cols-2">
