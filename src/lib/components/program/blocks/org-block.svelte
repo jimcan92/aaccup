@@ -7,6 +7,7 @@
 	import type { OrgContent, OrgItem } from '#lib/landing.js';
 	import { buildOrgTree, countUnder, hasReportingLines, layoutCompactChart, pathTo, startingFocus } from '#lib/org-tree.js';
 	import Initials from './initials.svelte';
+	import RoleText from './role-text.svelte';
 	import Section from './section.svelte';
 
 	let { content, tone }: { content: OrgContent; tone: 'paper' | 'salt' } = $props();
@@ -86,12 +87,12 @@
 {/snippet}
 
 {#snippet caption(person: OrgItem, lead: boolean, under = 0)}
-	<div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/70 to-transparent px-2.5 pb-2.5 pt-8 text-center text-white sm:px-3 sm:pb-3">
+	<div class="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/85 via-black/70 to-transparent px-2.5 pb-2.5 pt-8 text-center text-white sm:px-3 sm:pb-3">
 		<p class="text-balance font-display text-[13px] font-semibold leading-tight tracking-[-0.01em] {lead ? 'sm:text-[15px]' : ''}">{person.name}</p>
-		<p class="mt-0.5 text-[11px] font-medium leading-snug text-white/90 {lead ? 'sm:text-[12px]' : ''}">{person.role}</p>
+		<div class="mt-0.5"><RoleText text={person.role} class="text-[11px] font-medium leading-snug text-white/90 {lead ? 'sm:text-[12px]' : ''}" /></div>
 		{#if person.unit}<p class="text-[11px] leading-snug text-white/75">{person.unit}</p>{/if}
 		{#if under}
-			<span class="mt-2 inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white ring-1 ring-white/30 group-hover:bg-white/25">
+			<span class="mt-2 inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white ring-1 ring-white/30 group-has-[>button:hover]:bg-white/25">
 				{under} under <ChevronDown class="size-3.5" />
 			</span>
 		{/if}
@@ -215,16 +216,16 @@
 							{#each children as key (key)}
 								{@const node = tree.nodes.get(key)!}
 								{#if node.children.length}
-									<li class="w-[calc(50%-0.375rem)] sm:w-44">
+									<li class="group relative aspect-[4/5] w-[calc(50%-0.375rem)] overflow-hidden border border-rule bg-paper transition-shadow has-[>button:hover]:border-program has-[>button:hover]:shadow-lg sm:w-44">
+										{@render face(node.item, false)}
+										<!-- The whole card opens the office; the role above it has its own toggle. -->
 										<button
 											type="button"
 											onclick={() => open(key)}
 											aria-label={`${node.item.name}, ${node.item.role}: show the ${countUnder(tree, key)} people under this office`}
-											class="group relative block aspect-[4/5] w-full overflow-hidden border border-rule bg-paper text-left transition-shadow hover:border-program hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-program"
-										>
-											{@render face(node.item, false)}
-											{@render caption(node.item, false, countUnder(tree, key))}
-										</button>
+											class="absolute inset-0 block focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-program"
+										></button>
+										{@render caption(node.item, false, countUnder(tree, key))}
 									</li>
 								{:else}
 									{@render card(node.item, false, true)}
