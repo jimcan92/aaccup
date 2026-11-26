@@ -40,7 +40,7 @@
 -->
 <section class="border-b border-rule {background[tone]}" aria-labelledby={title ? `${id}-heading` : undefined}>
 	<div class="mx-auto max-w-[1280px] px-5 py-16 sm:px-8">
-		<div class="mx-auto flex max-w-5xl flex-wrap items-end justify-between gap-4">
+		<div class="flex flex-wrap items-end justify-between gap-4">
 			<div>
 				{#if title}
 					<h2 id={`${id}-heading`} class="text-balance font-display text-[clamp(1.8rem,3.6vw,2.9rem)] font-semibold leading-[1.02] tracking-[-0.04em] text-ink">{title}</h2>
@@ -58,7 +58,7 @@
 		</div>
 
 		<!-- Wide screens: each card spans two grid rows and the next starts one row down, so cards interlock. -->
-		<ol class="relative mx-auto mt-12 max-w-5xl md:grid md:grid-cols-2 md:gap-x-16">
+		<ol class="relative mt-12 md:grid md:grid-cols-2 md:gap-x-16">
 			<!-- The line: down the left on phones, down the middle on wide screens. -->
 			<span class="absolute bottom-6 left-[7px] top-6 w-0.5 bg-gradient-to-b from-program/10 via-program/35 to-program md:left-1/2 md:-translate-x-1/2" aria-hidden="true"></span>
 
