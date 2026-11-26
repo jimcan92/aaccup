@@ -47,6 +47,14 @@
 		if (slides.length > 1) photo = (photo + delta + slides.length) % slides.length;
 	}
 	const external = (href: string) => /^https?:/.test(href);
+	// A card with a video but no photo shows the video's own thumbnail: Drive serves one at the file's image link.
+	function videoThumb(link: string | undefined): string {
+		const embed = videoEmbed(link);
+		const drive = embed?.match(/drive\.google\.com\/file\/d\/([\w-]+)\//)?.[1];
+		if (drive) return `https://drive.google.com/file/d/${drive}/view`;
+		const youtube = embed?.match(/youtube-nocookie\.com\/embed\/([\w-]+)/)?.[1];
+		return youtube ? `https://i.ytimg.com/vi/${youtube}/hqdefault.jpg` : '';
+	}
 </script>
 
 <section class="border-b border-rule {background[tone]}" aria-labelledby={content.title ? `${id}-heading` : undefined}>
@@ -94,8 +102,8 @@
 					<li class="min-w-0" use:reveal={{ delay: stagger(i) }}>
 						<button type="button" onclick={() => show(i)} class="group flex h-full w-full flex-col overflow-hidden border border-rule {card[tone]} text-left transition duration-300 hover:-translate-y-1 hover:shadow-xl focus-visible:-translate-y-1 focus-visible:shadow-xl" aria-label={`Open ${item.title}`}>
 							<span class="relative block aspect-[4/3] overflow-hidden bg-program/10">
-								{#if item.photo}
-									<Photo src={item.photo} alt="" width={900} class="h-full w-full" imgClass="transition-transform duration-500 group-hover:scale-[1.04]" />
+								{#if item.photo || videoThumb(item.video)}
+									<Photo src={item.photo || videoThumb(item.video)} alt="" width={900} class="h-full w-full" imgClass="transition-transform duration-500 group-hover:scale-[1.04]" />
 								{:else}
 									<span class="grid h-full place-items-center text-program/50"><HandHeart class="size-10" strokeWidth={1.25} /></span>
 								{/if}
