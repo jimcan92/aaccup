@@ -135,7 +135,8 @@
 		<RecommendationMatrix items={section.recommendations} />
 	{/if}
 
-	{#if section.documents.length > 0 && pending === section.documents.length}
+	<!-- Nothing published yet, or only rows still waiting for a Drive link. The requested-documents section starts empty on purpose. -->
+	{#if pending === section.documents.length && section.slug !== 'additional-documents'}
 		<div class="mt-6 border border-dashed border-ink/30 bg-paper p-4 text-[13px] leading-relaxed text-ink-soft">
 			This section is in preparation. The structure is in place; the task force will link the evidence before the visit.
 		</div>
