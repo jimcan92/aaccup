@@ -66,12 +66,24 @@ export const cleaners: Record<string, (value: Raw, title: string) => object | st
 
 	partners(value, title) {
 		const items = list(value.items)
-			.map((item) => ({ name: str(item.name, 120), logo: str(item.logo, 500), href: str(item.href, 500) }))
-			.filter((item) => item.name || item.logo || item.href);
+			.map((item) => ({
+				name: str(item.name, 120),
+				logo: str(item.logo, 500),
+				href: str(item.href, 500),
+				group: str(item.group, 80),
+				sector: str(item.sector, 120),
+				place: str(item.place, 120),
+				note: str(item.note, 120)
+			}))
+			.filter((item) => item.name || item.logo || item.href || item.sector || item.place || item.note);
 		if (items.some((item) => !item.name)) return 'Each partner needs a name.';
 		if (items.some((item) => badImage(item.logo))) return 'Each logo needs an https:// link or an uploaded image.';
 		if (items.some((item) => item.href && !isLink(item.href))) return 'Partner links must start with https://.';
-		return { title, items: items.slice(0, 40) };
+		const stats = list(value.stats)
+			.map((item) => ({ value: str(item.value, 20), label: str(item.label, 80) }))
+			.filter((item) => item.value || item.label);
+		if (stats.some((item) => !item.value || !item.label)) return 'Each figure needs a number and a label.';
+		return { title, intro: str(value.intro, 1000), stats: stats.slice(0, 4), items: items.slice(0, 60) };
 	},
 
 	testimonials(value, title) {

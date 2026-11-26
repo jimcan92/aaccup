@@ -8,7 +8,11 @@ export type TimelineItem = { year: string; title: string; body?: string };
 export type GalleryLayout = 'grid' | 'carousel';
 /** A faculty or staff member; photo is an uploaded image or Drive link. */
 export type PersonItem = { name: string; role: string; credentials?: string; photo?: string };
-export type PartnerItem = { name: string; logo?: string; href?: string };
+/**
+ * A partner; group is the heading it is listed under ("Industry · Manufacturing"), sector what it does,
+ * place where it is, and note a short fact such as "13 BSIE trainees · since 2025".
+ */
+export type PartnerItem = { name: string; logo?: string; href?: string; group?: string; sector?: string; place?: string; note?: string };
 export type TestimonialItem = { quote: string; name: string; role?: string; photo?: string };
 export type FaqItem = { question: string; answer: string };
 export type LinkButton = { label: string; href: string };
@@ -55,7 +59,8 @@ export type VmgoContent = {
 };
 /** A photo beside a heading and text; side is where the photo sits on wide screens. */
 export type MediaContent = { title?: string; body?: string; src?: string; alt?: string; side?: 'left' | 'right'; button?: LinkButton };
-export type PartnersContent = { title?: string; items: PartnerItem[] };
+/** Partners: an optional intro and a few figures, then the partners (grouped when any names a group). */
+export type PartnersContent = { title?: string; intro?: string; stats?: StatItem[]; items: PartnerItem[] };
 export type TestimonialsContent = { title?: string; items: TestimonialItem[] };
 export type FaqContent = { title?: string; items: FaqItem[] };
 export type VideoContent = { title?: string; url?: string; caption?: string };
@@ -219,6 +224,8 @@ export const sampleContent: Record<BlockKind, object> = {
 	},
 	partners: {
 		title: 'Partners & linkages',
+		intro: '',
+		stats: [],
 		items: [{ name: 'Partner agency' }, { name: 'Local government unit' }, { name: 'Industry partner' }, { name: 'Partner university' }]
 	},
 	testimonials: {
