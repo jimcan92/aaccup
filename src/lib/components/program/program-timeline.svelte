@@ -1,6 +1,10 @@
 <script lang="ts">
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
-	import { paragraphs } from '#lib/image-url.js';
+	import Expand from '@lucide/svelte/icons/expand';
+	import X from '@lucide/svelte/icons/x';
+	import Photo from '#lib/components/site/photo.svelte';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { imageSrc, paragraphs } from '#lib/image-url.js';
 	import type { TimelineItem } from '#lib/landing.js';
 
 	let { items, title, tone = 'paper' }: { items: TimelineItem[]; title?: string; tone?: 'paper' | 'salt' } = $props();
@@ -9,6 +13,9 @@
 
 	// Each card shows the start of its story; "Read more" shows the rest, one card or all at once.
 	let open = $state<boolean[]>([]);
+	// The milestone whose photo is shown full size.
+	let viewing = $state<number | null>(null);
+	const viewed = $derived(viewing === null ? null : items[viewing]);
 	const stories = $derived(items.map((item) => paragraphs(item.body)));
 	const longer = (index: number) => stories[index].length > 1 || (stories[index][0]?.length ?? 0) > 160;
 	const withMore = $derived(items.filter((_, index) => longer(index)).length);
@@ -70,6 +77,13 @@
 						<!-- A short tick joins the card to the centre line on wide screens. -->
 						<span class="absolute top-[34px] hidden h-0.5 w-8 bg-program/35 md:block {left ? '-right-8' : '-left-8'}" aria-hidden="true"></span>
 
+						{#if item.photo}
+							<!-- The photo sits flush with the card's top edge; it opens full size, so certificates can be read. -->
+							<button type="button" onclick={() => (viewing = index)} class="group/photo relative -mx-5 -mt-5 mb-5 block w-[calc(100%+2.5rem)] cursor-zoom-in overflow-hidden sm:-mx-6 sm:-mt-6 sm:w-[calc(100%+3rem)]" aria-label={`View photo: ${item.title}`}>
+								<Photo src={item.photo} alt="" width={900} class="aspect-[16/10] w-full" imgClass="transition-transform duration-500 group-hover/photo:scale-[1.03]" />
+								<span class="absolute bottom-2 right-2 grid size-8 place-items-center bg-ink/70 text-paper opacity-0 transition-opacity group-hover/photo:opacity-100 group-focus-visible/photo:opacity-100" aria-hidden="true"><Expand class="size-4" /></span>
+							</button>
+						{/if}
 						<p class="font-display text-[clamp(2.1rem,4vw,3.1rem)] font-semibold leading-none tracking-[-0.06em] {last ? '' : 'text-program'}">{item.year}</p>
 						<h3 class="mt-2 text-balance font-display text-[18px] font-semibold leading-snug tracking-[-0.02em] sm:text-[19px] {last ? '' : 'text-ink'}">{item.title}</h3>
 
@@ -99,3 +113,18 @@
 		</ol>
 	</div>
 </section>
+
+<Dialog.Root open={viewing !== null} onOpenChange={(value) => !value && (viewing = null)}>
+	<Dialog.Content class="max-h-[94dvh] max-w-[min(96vw,72rem)] gap-0 rounded-none border-none bg-black p-0 sm:max-w-[min(96vw,72rem)]" showCloseButton={false}>
+		{#if viewed?.photo}
+			<img src={imageSrc(viewed.photo, 2400)} alt={viewed.title} class="max-h-[84dvh] w-full object-contain" />
+			<div class="flex items-start justify-between gap-4 bg-paper px-5 py-3">
+				<div>
+					<Dialog.Title class="font-display text-[17px] font-semibold text-ink">{viewed.year} · {viewed.title}</Dialog.Title>
+					<Dialog.Description class="sr-only">Milestone photo</Dialog.Description>
+				</div>
+				<Dialog.Close class="grid size-9 shrink-0 place-items-center text-ink-soft hover:bg-salt hover:text-ink" aria-label="Close"><X class="size-5" /></Dialog.Close>
+			</div>
+		{/if}
+	</Dialog.Content>
+</Dialog.Root>

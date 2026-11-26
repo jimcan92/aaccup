@@ -2,8 +2,8 @@
 
 export type GalleryItem = { src: string; alt: string; caption?: string };
 export type StatItem = { value: string; label: string };
-/** A dated milestone; body is plain paragraphs. */
-export type TimelineItem = { year: string; title: string; body?: string };
+/** A dated milestone; body is plain paragraphs, photo an uploaded image or Drive link shown on the card. */
+export type TimelineItem = { year: string; title: string; body?: string; photo?: string };
 /** How a photo gallery is shown: a grid of photos, or a slider one photo at a time. */
 export type GalleryLayout = 'grid' | 'carousel';
 /** A faculty or staff member; photo is an uploaded image or Drive link. */

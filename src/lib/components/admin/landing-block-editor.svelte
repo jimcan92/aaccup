@@ -27,6 +27,7 @@
 	import DocumentsEditor from './blocks/documents-editor.svelte';
 	import ShowcaseEditor from './blocks/showcase-editor.svelte';
 	import ProjectsEditor from './blocks/projects-editor.svelte';
+	import ImageField from './blocks/image-field.svelte';
 
 	type Block = {
 		id: string;
@@ -253,6 +254,7 @@
 									<input bind:value={milestone.title} aria-label="Title" placeholder="Founded as Moalboal Province High School" class={field} />
 								</div>
 								<textarea bind:value={milestone.body} aria-label="Details" rows="3" class="w-full border border-rule bg-salt p-3 text-[14px] leading-relaxed outline-none focus:border-ink" placeholder="What happened (optional). Leave an empty line between paragraphs."></textarea>
+								<ImageField bind:value={milestone.photo} {programId} label="Photo (optional)" />
 							</div>
 							<div class="flex gap-1 sm:flex-col">
 								<button type="button" onclick={() => (milestones = move(milestones, index, -1))} disabled={index === 0} class={small} aria-label="Move entry up"><ArrowUp class="size-4" /></button>
@@ -261,7 +263,7 @@
 							</div>
 						</div>
 					{/each}
-					<button type="button" onclick={() => (milestones = [...milestones, { year: '', title: '', body: '' }])} class="inline-flex h-9 w-fit items-center gap-1.5 border border-rule px-3 text-[13px] font-medium hover:border-ink/30"><Plus class="size-4" /> Add entry</button>
+					<button type="button" onclick={() => (milestones = [...milestones, { year: '', title: '', body: '', photo: '' }])} class="inline-flex h-9 w-fit items-center gap-1.5 border border-rule px-3 text-[13px] font-medium hover:border-ink/30"><Plus class="size-4" /> Add entry</button>
 					<p class="text-[12px] text-ink-soft">Entries show in this order, oldest first is usual. The year can be a range, like 1977–1978.</p>
 				</div>
 			{:else}

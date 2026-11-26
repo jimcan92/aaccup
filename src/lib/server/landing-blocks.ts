@@ -60,10 +60,12 @@ function cleanContent(kind: Kind, raw: string): object | string {
 			.map((item) => ({
 				year: String(item?.year ?? '').trim().slice(0, 40),
 				title: String(item?.title ?? '').trim().slice(0, 200),
-				body: String(item?.body ?? '').trim().slice(0, 4000)
+				body: String(item?.body ?? '').trim().slice(0, 4000),
+				photo: String(item?.photo ?? '').trim().slice(0, 500)
 			}))
-			.filter((item) => item.year || item.title || item.body);
+			.filter((item) => item.year || item.title || item.body || item.photo);
 		if (clean.some((item) => !item.year || !item.title)) return 'Each timeline entry needs a year and a title.';
+		if (clean.some((item) => item.photo && !isHttpUrl(item.photo))) return 'Each photo needs an https:// link or an uploaded image.';
 		return { title, items: clean.slice(0, 60) };
 	}
 
