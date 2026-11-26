@@ -1,21 +1,23 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 
-	// A long role is cut to two lines; clicking it opens the rest with a short height animation.
-	let { text, class: className = '' }: { text: string; class?: string } = $props();
+	// A long role is cut to one or two lines; clicking it opens the rest with a short height animation.
+	let { text, lines = 2, class: className = '' }: { text: string; lines?: 1 | 2; class?: string } = $props();
+	const clamp = $derived(lines === 1 ? 'line-clamp-1' : 'line-clamp-2');
 
 	let el = $state<HTMLElement>();
 	let open = $state(false);
 	let long = $state(false);
 
-	// Only a role that does not fit in two lines gets the toggle. The element never changes,
+	// Only a role that does not fit gets the toggle. The element never changes,
 	// so measuring cannot flip what is rendered.
 	$effect(() => {
 		void text;
+		const cut = clamp;
 		const node = el;
 		if (!node) return;
 		const measure = () => {
-			if (!node.classList.contains('line-clamp-2')) return;
+			if (!node.classList.contains(cut)) return;
 			long = node.scrollHeight > node.clientHeight + 1;
 		};
 		measure();
@@ -45,5 +47,5 @@
 	title={long ? (open ? 'Show less' : 'Show all designations') : undefined}
 	class="w-full text-center {long ? 'pointer-events-auto cursor-pointer' : 'pointer-events-none'} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
 >
-	<span bind:this={el} class="overflow-hidden {open ? 'block' : 'line-clamp-2'} {className}">{text}</span>
+	<span bind:this={el} class="overflow-hidden {open ? 'block' : clamp} {className}">{text}</span>
 </button>

@@ -87,12 +87,12 @@
 {/snippet}
 
 {#snippet caption(person: OrgItem, lead: boolean, under = 0)}
-	<div class="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/85 via-black/70 to-transparent px-2.5 pb-2.5 pt-8 text-center text-white sm:px-3 sm:pb-3">
-		<p class="text-balance font-display text-[13px] font-semibold leading-tight tracking-[-0.01em] {lead ? 'sm:text-[15px]' : ''}">{person.name}</p>
-		<div class="mt-0.5"><RoleText text={person.role} class="text-[11px] font-medium leading-snug text-white/90 {lead ? 'sm:text-[12px]' : ''}" /></div>
+	<div class="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/85 via-black/70 to-transparent px-2.5 pb-2 pt-7 text-center text-white sm:px-3 sm:pb-2.5">
+		<p class="text-balance font-display text-[13px] font-semibold leading-[1.15] tracking-[-0.01em] {lead ? 'sm:text-[15px]' : ''}">{person.name}</p>
+		<div class="mt-0.5"><RoleText text={person.role} lines={under ? 1 : 2} class="text-[11px] font-medium leading-snug text-white/90 {lead ? 'sm:text-[12px]' : ''}" /></div>
 		{#if person.unit}<p class="text-[11px] leading-snug text-white/75">{person.unit}</p>{/if}
 		{#if under}
-			<span class="mt-2 inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white ring-1 ring-white/30 group-has-[>button:hover]:bg-white/25">
+			<span class="mt-1.5 inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-px text-[11px] font-semibold text-white ring-1 ring-white/30 group-has-[>button:hover]:bg-white/25">
 				{under} under <ChevronDown class="size-3.5" />
 			</span>
 		{/if}
