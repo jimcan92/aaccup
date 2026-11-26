@@ -52,10 +52,10 @@
 <section class="border-b border-rule {background[tone]}" aria-labelledby={content.title ? `${id}-heading` : undefined}>
 	<div class="mx-auto max-w-[1280px] px-5 py-16 sm:px-8">
 		<!--
-			Wide screens: the heading, intro and figures on the left, the video on the right, both starting at the top.
-			Without a video, the figures take the right side. Phones: heading, video, figures.
+			Wide screens: the heading and intro beside the video, tops aligned, with the figures in one row below both.
+			Without a video, the figures sit beside the intro. Phones: heading, video, figures.
 		-->
-		<div class="grid gap-8 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-start lg:gap-x-12 {embed ? 'lg:grid-rows-[auto_1fr]' : ''}">
+		<div class="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-start lg:gap-x-12">
 			<div class="lg:col-start-1 lg:row-start-1">
 				<p class="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.08em] text-program"><HandHeart class="size-3.5" /> Extension</p>
 				{#if content.title}
@@ -67,7 +67,7 @@
 			</div>
 
 			{#if embed}
-				<figure class="lg:col-start-2 lg:row-span-2 lg:row-start-1">
+				<figure class="lg:col-start-2 lg:row-start-1">
 					<div class="aspect-video w-full overflow-hidden bg-ink shadow-[0_30px_80px_-35px_rgba(0,0,0,0.5)]">
 						<iframe src={embed} title={content.videoCaption || content.title || 'Extension video'} class="h-full w-full" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe>
 					</div>
@@ -76,10 +76,10 @@
 			{/if}
 
 			{#if stats.length}
-				<!-- Two figures to a row. -->
-				<dl class="grid grid-cols-2 gap-px border border-rule bg-rule {embed ? 'lg:col-start-1 lg:row-start-2' : 'lg:col-start-2 lg:row-start-1'}">
+				<!-- Below the video the figures share one row; beside the intro, two to a row. -->
+				<dl class="grid grid-cols-2 gap-px border border-rule bg-rule {embed ? 'lg:col-span-2 lg:row-start-2 lg:flex' : 'lg:col-start-2 lg:row-start-1'}">
 					{#each stats as stat, i (i)}
-						<div class="min-w-0 {card[tone]} p-4 {stats.length % 2 && i === stats.length - 1 ? 'col-span-2' : ''}" use:reveal={{ delay: stagger(i) }}>
+						<div class="min-w-0 {card[tone]} p-4 {embed ? 'lg:flex-1' : ''} {stats.length % 2 && i === stats.length - 1 ? 'col-span-2' : ''}" use:reveal={{ delay: stagger(i) }}>
 							<dd class="font-display text-[clamp(1.6rem,3vw,2.2rem)] font-semibold leading-none tracking-[-0.05em] text-program">{stat.value}</dd>
 							<dt class="mt-1.5 text-[13px] leading-snug text-ink-soft">{stat.label}</dt>
 						</div>
