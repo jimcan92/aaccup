@@ -203,12 +203,14 @@ export const cleaners: Record<string, (value: Raw, title: string) => object | st
 				body: str(item.body, 2000),
 				photo: str(item.photo, 500),
 				photos: (Array.isArray(item.photos) ? item.photos : []).map((src) => str(src, 500)).filter(Boolean).slice(0, 12),
+				video: str(item.video, 500),
 				href: str(item.href, 500)
 			}))
 			.filter((item) => item.title || item.body || item.photo);
 		if (items.some((item) => !item.title)) return 'Each project needs a title.';
 		if (items.some((item) => badImage(item.photo) || item.photos.some(badImage))) return 'Each photo needs an https:// link or an uploaded image.';
 		if (items.some((item) => item.href && !isLink(item.href))) return 'Project links must start with https:// or /.';
+		if (items.some((item) => item.video && !videoEmbed(item.video))) return 'Each project video needs a YouTube or Google Drive video link.';
 		return { title, intro: str(value.intro, 1000), video, videoCaption: str(value.videoCaption, 300), stats: stats.slice(0, 4), items: items.slice(0, 24) };
 	},
 

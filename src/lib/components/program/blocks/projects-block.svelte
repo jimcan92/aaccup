@@ -7,6 +7,7 @@
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import HandHeart from '@lucide/svelte/icons/hand-heart';
 	import MapPin from '@lucide/svelte/icons/map-pin';
+	import Play from '@lucide/svelte/icons/play';
 	import Users from '@lucide/svelte/icons/users';
 	import X from '@lucide/svelte/icons/x';
 	import * as Dialog from '#lib/components/ui/dialog/index.js';
@@ -87,8 +88,11 @@
 								{:else}
 									<span class="grid h-full place-items-center text-program/50"><HandHeart class="size-10" strokeWidth={1.25} /></span>
 								{/if}
-								{#if item.photos?.length}
-									<span class="absolute bottom-2 right-2 bg-ink/75 px-2 py-1 font-mono text-[11px] text-paper">+{item.photos.length} photos</span>
+								{#if item.photos?.length || item.video}
+									<span class="absolute bottom-2 right-2 flex gap-1 font-mono text-[11px] text-paper">
+										{#if item.video}<span class="inline-flex items-center gap-1 bg-program px-2 py-1 text-program-contrast"><Play class="size-3" />Video</span>{/if}
+										{#if item.photos?.length}<span class="bg-ink/75 px-2 py-1">+{item.photos.length} photos</span>{/if}
+									</span>
 								{/if}
 							</span>
 							<span class="flex flex-1 flex-col p-5">
@@ -122,6 +126,12 @@
 		}}
 	>
 		{#if current}
+			{@const currentVideo = videoEmbed(current.video)}
+			{#if currentVideo}
+				<div class="aspect-video w-full bg-black">
+					<iframe src={currentVideo} title={`${current.title} video`} class="h-full w-full" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+				</div>
+			{/if}
 			{#if pictures.length}
 				<div class="relative grid place-items-center bg-black">
 					<img src={imageSrc(pictures[photo], 2000)} alt={`${current.title}, photo ${photo + 1}`} class="max-h-[60dvh] w-auto max-w-full object-contain" />

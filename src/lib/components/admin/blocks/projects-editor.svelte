@@ -65,13 +65,17 @@
 					{#if (item.photos?.length ?? 0) < 12}
 						<button type="button" onclick={() => (item.photos = [...(item.photos ?? []), ''])} class={addButton}><Plus class="size-4" /> Add another photo</button>
 					{/if}
+					<input bind:value={item.video} aria-label="Project video" placeholder="Project video (optional): YouTube or Google Drive link, plays when the card opens" class="{field} font-mono text-[12px]" />
+					{#if item.video && !videoEmbed(item.video)}
+						<p class="text-[12px] text-destructive">Use a YouTube link or a Google Drive video link.</p>
+					{/if}
 					<input bind:value={item.href} aria-label="Documents link" placeholder="Documents link (optional): Drive folder or /bsie/visit/extension" class="{field} font-mono text-[12px]" />
 				</div>
 				<ItemControls {index} count={value.items.length} noun="project" onmove={(delta) => (value.items = move(value.items, index, delta))} onremove={() => (value.items = value.items.filter((_, i) => i !== index))} />
 			</div>
 		{/each}
 		{#if value.items.length < 24}
-			<button type="button" onclick={() => (value.items = [...value.items, { title: '', partner: '', date: '', beneficiaries: '', body: '', photo: '', photos: [], href: '' }])} class={addButton}><Plus class="size-4" /> Add project</button>
+			<button type="button" onclick={() => (value.items = [...value.items, { title: '', partner: '', date: '', beneficiaries: '', body: '', photo: '', photos: [], video: '', href: '' }])} class={addButton}><Plus class="size-4" /> Add project</button>
 		{/if}
 		<p class={hint}>Projects show in this order. Extra photos show when a visitor opens the project.</p>
 	</div>

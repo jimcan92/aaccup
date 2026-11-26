@@ -36,8 +36,11 @@ export type ShowcaseIcon = (typeof showcaseIcons)[number];
 export type ShowcaseFeature = { icon: ShowcaseIcon; title: string; text?: string };
 /** A screenshot of the system; src is an uploaded image or Drive link. */
 export type ShowcaseShot = { src: string; caption?: string };
-/** An extension project; date and beneficiaries are free text ("June 2025", "120 farmers"); photos are extra pictures shown when the card opens. */
-export type ProjectItem = { title: string; partner?: string; date?: string; beneficiaries?: string; body?: string; photo?: string; photos?: string[]; href?: string };
+/**
+ * An extension project; date and beneficiaries are free text ("June 2025", "120 farmers"); photos are extra pictures
+ * shown when the card opens, and video a YouTube or Drive link played there.
+ */
+export type ProjectItem = { title: string; partner?: string; date?: string; beneficiaries?: string; body?: string; photo?: string; photos?: string[]; video?: string; href?: string };
 
 export type PeopleContent = { title?: string; items: PersonItem[] };
 /** Text size of a vision or mission statement; md is the default. */
