@@ -29,14 +29,22 @@
 	let open = $state<number | null>(null);
 	let photo = $state(0);
 	const current = $derived(open === null ? null : items[open]);
-	const pictures = $derived(current ? [current.photo, ...(current.photos ?? [])].filter((src): src is string => Boolean(src)) : []);
+	// The opened card's slides: its video first (when it has one), then its photos.
+	type Slide = { kind: 'video' | 'photo'; src: string };
+	const slides = $derived.by((): Slide[] => {
+		if (!current) return [];
+		const video = videoEmbed(current.video);
+		const photos = [current.photo, ...(current.photos ?? [])].filter((src): src is string => Boolean(src));
+		return [...(video ? [{ kind: 'video' as const, src: video }] : []), ...photos.map((src) => ({ kind: 'photo' as const, src }))];
+	});
+	const slide = $derived(slides[photo]);
 
 	function show(index: number) {
 		open = index;
 		photo = 0;
 	}
 	function step(delta: number) {
-		if (pictures.length > 1) photo = (photo + delta + pictures.length) % pictures.length;
+		if (slides.length > 1) photo = (photo + delta + slides.length) % slides.length;
 	}
 	const external = (href: string) => /^https?:/.test(href);
 </script>
@@ -118,7 +126,7 @@
 
 <Dialog.Root open={open !== null} onOpenChange={(value) => !value && (open = null)}>
 	<Dialog.Content
-		class="max-h-[94dvh] max-w-[min(96vw,60rem)] gap-0 overflow-y-auto rounded-none border-none bg-paper p-0 sm:max-w-[min(96vw,60rem)]"
+		class="max-h-[96dvh] max-w-[min(96vw,60rem)] gap-0 overflow-y-auto rounded-none border-none bg-paper p-0 sm:max-w-[min(96vw,60rem)] xl:max-w-[min(94vw,80rem)]"
 		showCloseButton={false}
 		onkeydown={(event: KeyboardEvent) => {
 			if (event.key === 'ArrowRight') step(1);
@@ -126,19 +134,22 @@
 		}}
 	>
 		{#if current}
-			{@const currentVideo = videoEmbed(current.video)}
-			{#if currentVideo}
-				<div class="aspect-video w-full bg-black">
-					<iframe src={currentVideo} title={`${current.title} video`} class="h-full w-full" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>
-				</div>
-			{/if}
-			{#if pictures.length}
-				<div class="relative grid place-items-center bg-black">
-					<img src={imageSrc(pictures[photo], 2000)} alt={`${current.title}, photo ${photo + 1}`} class="max-h-[60dvh] w-auto max-w-full object-contain" />
-					{#if pictures.length > 1}
-						<button type="button" onclick={() => step(-1)} class="absolute left-2 top-1/2 grid size-11 -translate-y-1/2 place-items-center bg-ink/70 text-paper hover:bg-ink" aria-label="Previous photo"><ChevronLeft class="size-5" /></button>
-						<button type="button" onclick={() => step(1)} class="absolute right-2 top-1/2 grid size-11 -translate-y-1/2 place-items-center bg-ink/70 text-paper hover:bg-ink" aria-label="Next photo"><ChevronRight class="size-5" /></button>
-						<span class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-ink/75 px-2 py-1 font-mono text-[11px] text-paper">{photo + 1} / {pictures.length}</span>
+			<!-- One block, so the dialog's grid cannot squeeze the media frame below its 16:9 height. -->
+			<div>
+			{#if slide}
+				<!-- One stage for the video and the photos, so moving between them keeps the same frame. -->
+				<div class="relative aspect-video max-h-[72dvh] w-full overflow-hidden bg-black">
+					{#if slide.kind === 'video'}
+						{#key slide.src}
+							<iframe src={slide.src} title={`${current.title} video`} class="absolute inset-0 h-full w-full" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+						{/key}
+					{:else}
+						<img src={imageSrc(slide.src, 2400)} alt={`${current.title}, photo ${photo + 1}`} class="absolute inset-0 h-full w-full object-contain" />
+					{/if}
+					{#if slides.length > 1}
+						<button type="button" onclick={() => step(-1)} class="absolute left-2 top-1/2 grid size-11 -translate-y-1/2 place-items-center bg-ink/70 text-paper hover:bg-ink" aria-label="Previous"><ChevronLeft class="size-5" /></button>
+						<button type="button" onclick={() => step(1)} class="absolute right-2 top-1/2 grid size-11 -translate-y-1/2 place-items-center bg-ink/70 text-paper hover:bg-ink" aria-label="Next"><ChevronRight class="size-5" /></button>
+						<span class="pointer-events-none absolute left-2 top-2 bg-ink/75 px-2 py-1 font-mono text-[11px] text-paper">{slide.kind === 'video' ? 'Video · ' : ''}{photo + 1} / {slides.length}</span>
 					{/if}
 				</div>
 			{/if}
@@ -159,6 +170,7 @@
 						Open the documents <ArrowUpRight class="size-4" />
 					</a>
 				{/if}
+			</div>
 			</div>
 		{/if}
 	</Dialog.Content>
