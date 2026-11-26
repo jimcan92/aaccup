@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import Expand from '@lucide/svelte/icons/expand';
 	import X from '@lucide/svelte/icons/x';
@@ -11,19 +12,20 @@
 
 	const id = $props.id();
 
-	// Each card shows the start of its story; "Read more" shows the rest, one card or all at once.
+	// Each card shows the start of its story. On a card without a photo, "Read more" opens the rest in place,
+	// one card or all at once; a photo card opens in a dialog with the photo and the whole story.
 	let open = $state<boolean[]>([]);
-	// The milestone whose photo is shown full size.
 	let viewing = $state<number | null>(null);
 	const viewed = $derived(viewing === null ? null : items[viewing]);
 	const stories = $derived(items.map((item) => paragraphs(item.body)));
 	const longer = (index: number) => stories[index].length > 1 || (stories[index][0]?.length ?? 0) > 160;
-	const withMore = $derived(items.filter((_, index) => longer(index)).length);
-	const allOpen = $derived(withMore > 0 && items.every((_, index) => !longer(index) || open[index]));
+	const inline = (index: number) => longer(index) && !items[index].photo;
+	const withMore = $derived(items.filter((_, index) => inline(index)).length);
+	const allOpen = $derived(withMore > 0 && items.every((_, index) => !inline(index) || open[index]));
 
 	function toggleAll() {
 		const next = !allOpen;
-		open = items.map((_, index) => longer(index) && next);
+		open = items.map((_, index) => inline(index) && next);
 	}
 
 	// Literal class names so Tailwind keeps them; cards and the marker ring contrast with the section.
@@ -64,7 +66,7 @@
 				{@const left = index % 2 === 0}
 				{@const last = index === items.length - 1}
 				{@const story = stories[index]}
-				{@const overlay = Boolean(item.photo) && !open[index]}
+				{@const overlay = Boolean(item.photo)}
 				<li class="relative pb-8 last:pb-0 md:pb-6 {left ? 'md:col-start-1' : 'md:col-start-2'}" style:grid-row={`${index + 1} / span 2`}>
 					<!-- The marker sits on the line: left edge on phones, the centre (between the columns) on wide screens. -->
 					<span
@@ -91,21 +93,14 @@
 									{#if story.length}
 										<p class="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-white/80">{story[0]}</p>
 										{#if longer(index)}
-											<button type="button" onclick={() => (open[index] = true)} class="pointer-events-auto mt-2 inline-flex cursor-pointer items-center gap-1 text-[12.5px] font-semibold text-white hover:underline hover:underline-offset-4" aria-expanded="false">
-												Read more <ChevronDown class="size-4" />
+											<button type="button" onclick={() => (viewing = index)} class="pointer-events-auto mt-2 inline-flex cursor-pointer items-center gap-1 text-[12.5px] font-semibold text-white hover:underline hover:underline-offset-4" aria-haspopup="dialog">
+												Read more <ArrowUpRight class="size-4" />
 											</button>
 										{/if}
 									{/if}
 								</div>
 							</div>
 						{:else}
-							{#if item.photo}
-								<!-- Opened photo card: the photo above, the full story below. -->
-								<button type="button" onclick={() => (viewing = index)} class="group/photo relative -mx-5 -mt-5 mb-5 block w-[calc(100%+2.5rem)] cursor-zoom-in overflow-hidden sm:-mx-6 sm:-mt-6 sm:w-[calc(100%+3rem)]" aria-label={`View photo: ${item.title}`}>
-									<Photo src={item.photo} alt="" width={900} class="aspect-[16/10] w-full" imgClass="transition-transform duration-500 group-hover/photo:scale-[1.03]" />
-									<span class="absolute right-2 top-2 grid size-8 place-items-center bg-black/60 text-white opacity-0 transition-opacity group-hover/photo:opacity-100 group-focus-visible/photo:opacity-100" aria-hidden="true"><Expand class="size-4" /></span>
-								</button>
-							{/if}
 							<p class="font-display text-[clamp(2.1rem,4vw,3.1rem)] font-semibold leading-none tracking-[-0.06em] {last ? '' : 'text-program'}">{item.year}</p>
 							<h3 class="mt-2 text-balance font-display text-[18px] font-semibold leading-snug tracking-[-0.02em] sm:text-[19px] {last ? '' : 'text-ink'}">{item.title}</h3>
 
@@ -117,7 +112,7 @@
 										<p class="line-clamp-3">{story[0]}</p>
 									{/if}
 								</div>
-								{#if longer(index)}
+								{#if inline(index)}
 									<button
 										type="button"
 										onclick={() => (open[index] = !open[index])}
@@ -138,15 +133,25 @@
 </section>
 
 <Dialog.Root open={viewing !== null} onOpenChange={(value) => !value && (viewing = null)}>
-	<Dialog.Content class="max-h-[94dvh] max-w-[min(96vw,72rem)] gap-0 rounded-none border-none bg-black p-0 sm:max-w-[min(96vw,72rem)]" showCloseButton={false}>
-		{#if viewed?.photo}
-			<img src={imageSrc(viewed.photo, 2400)} alt={viewed.title} class="max-h-[84dvh] w-full object-contain" />
-			<div class="flex items-start justify-between gap-4 bg-paper px-5 py-3">
-				<div>
-					<Dialog.Title class="font-display text-[17px] font-semibold text-ink">{viewed.year} · {viewed.title}</Dialog.Title>
-					<Dialog.Description class="sr-only">Milestone photo</Dialog.Description>
+	<Dialog.Content class="max-h-[94dvh] max-w-[min(96vw,64rem)] gap-0 overflow-y-auto rounded-none border-none bg-paper p-0 sm:max-w-[min(96vw,64rem)]" showCloseButton={false}>
+		{#if viewed}
+			<div>
+				{#if viewed.photo}
+					<div class="grid place-items-center bg-black">
+						<img src={imageSrc(viewed.photo, 2400)} alt={viewed.title} class="max-h-[64dvh] w-auto max-w-full object-contain" />
+					</div>
+				{/if}
+				<div class="relative p-6 sm:p-8">
+					<Dialog.Close class="absolute right-3 top-3 grid size-9 place-items-center text-ink-soft hover:bg-salt hover:text-ink" aria-label="Close"><X class="size-5" /></Dialog.Close>
+					<p class="font-display text-[clamp(1.9rem,3.6vw,2.6rem)] font-semibold leading-none tracking-[-0.05em] text-program">{viewed.year}</p>
+					<Dialog.Title class="mt-2 pr-10 text-balance font-display text-[clamp(1.2rem,2.4vw,1.5rem)] font-semibold leading-snug tracking-[-0.02em] text-ink">{viewed.title}</Dialog.Title>
+					<Dialog.Description class="sr-only">Milestone details</Dialog.Description>
+					{#if viewing !== null && stories[viewing].length}
+						<div class="mt-3 max-w-[68ch] space-y-3 text-[15px] leading-relaxed text-ink-soft">
+							{#each stories[viewing] as paragraph, p (p)}<p>{paragraph}</p>{/each}
+						</div>
+					{/if}
 				</div>
-				<Dialog.Close class="grid size-9 shrink-0 place-items-center text-ink-soft hover:bg-salt hover:text-ink" aria-label="Close"><X class="size-5" /></Dialog.Close>
 			</div>
 		{/if}
 	</Dialog.Content>
