@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import MapPin from '@lucide/svelte/icons/map-pin';
 	import RichText from '#lib/components/site/rich-text.svelte';
 	import { imageSrc } from '#lib/image-url.js';
@@ -23,6 +24,24 @@
 		const rest = order.get('') ?? [];
 		return named.length ? [...named, ...(rest.length ? [['Other partners', rest] as [string, PartnerItem[]]] : [])] : [['', rest] as [string, PartnerItem[]]];
 	});
+	// A long list opens with its first groups (about eight partners) and a "Show all" button; ten or fewer always show in full.
+	const FIRST = 8;
+	const total = $derived(content.items.length);
+	const folds = $derived(total > 10);
+	let expanded = $state(false);
+	const shown = $derived.by(() => {
+		if (!folds || expanded) return groups;
+		// Whole groups while they fit in the first few; only a first group that is too long is cut.
+		const out: [string, PartnerItem[]][] = [];
+		let count = 0;
+		for (const [name, partners] of groups) {
+			if (out.length && count + partners.length > FIRST) break;
+			out.push([name, out.length ? partners : partners.slice(0, FIRST)]);
+			count += partners.length;
+		}
+		return out;
+	});
+	const id = $props.id();
 	// A partner with a sector, place or note gets a detail card; a name or logo alone stays a centred tile.
 	const detailed = (partner: PartnerItem) => Boolean(partner.sector || partner.place || partner.note);
 </script>
@@ -46,13 +65,13 @@
 		</div>
 	{/if}
 
-	<div class="grid gap-10">
-		{#each groups as [group, partners] (group)}
+	<div id={`${id}-list`} class="relative grid gap-10">
+		{#each shown as [group, partners] (group)}
 			<div>
 				{#if group}
 					<h3 class="mb-4 flex items-baseline gap-3 border-b border-rule pb-2 font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-ink-soft">
 						<span>{group}</span>
-						<span class="text-ink-soft/60">{partners.length}</span>
+						<span class="text-ink-soft/60">{groups.find(([name]) => name === group)?.[1].length}</span>
 					</h3>
 				{/if}
 				<ul class="grid gap-3 {partners.some(detailed) ? 'sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5'}">
@@ -92,5 +111,26 @@
 				</ul>
 			</div>
 		{/each}
+		{#if folds && !expanded}
+			<!-- A fade over the last row says the list goes on. -->
+			<div class="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t {tone === 'salt' ? 'from-salt' : 'from-paper'} to-transparent" aria-hidden="true"></div>
+		{/if}
 	</div>
+	{#if folds}
+		<div class="mt-6 flex justify-center">
+			<button
+				type="button"
+				onclick={() => {
+					expanded = !expanded;
+					if (!expanded) document.getElementById(`${id}-list`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+				}}
+				class="inline-flex h-11 cursor-pointer items-center gap-2 border border-rule bg-paper px-5 text-[14px] font-semibold text-ink hover:border-ink/30"
+				aria-expanded={expanded}
+				aria-controls={`${id}-list`}
+			>
+				{expanded ? 'Show fewer' : `Show all ${total} partners`}
+				<ChevronDown class="size-4 transition-transform {expanded ? 'rotate-180' : ''}" />
+			</button>
+		</div>
+	{/if}
 </Section>
