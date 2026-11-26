@@ -107,6 +107,14 @@ async function siblings(supabase: SupabaseClient, programId: string | null) {
 	return data ?? [];
 }
 
+/** Save the page order: each block's position in `order` becomes its sort order, so equal sort orders cannot get stuck. */
+async function renumber(supabase: SupabaseClient, order: string[]) {
+	for (const [position, blockId] of order.entries()) {
+		const { error: moveError } = await supabase.from('program_blocks').update({ sort_order: position }).eq('id', blockId);
+		if (moveError) return dbFail(moveError);
+	}
+}
+
 /** The blocks to edit, in page order. */
 export async function loadBlocks(supabase: SupabaseClient, programId: string | null) {
 	const { data, error: loadError } = await scoped(
@@ -189,14 +197,9 @@ export function landingActions(programOf: (params: Record<string, string>) => st
 				: index + (text(form, 'direction') === 'up' ? -1 : 1);
 			if (target < 0 || target >= list.length || target === index) return { message: 'Already there.' };
 
-			// Renumber so equal sort orders cannot get stuck.
 			const order = list.map((block) => block.id);
 			order.splice(target, 0, ...order.splice(index, 1));
-			for (const [position, blockId] of order.entries()) {
-				const { error: moveError } = await supabase.from('program_blocks').update({ sort_order: position }).eq('id', blockId);
-				if (moveError) return dbFail(moveError);
-			}
-			return { message: 'Order saved.' };
+			return (await renumber(supabase, order)) ?? { message: 'Order saved.' };
 		},
 
 		submit: async ({ request, locals, params }) => {
@@ -218,10 +221,16 @@ export function landingActions(programOf: (params: Record<string, string>) => st
 			return dbFail(rpcError) ?? { message: 'Published. The public page updates within a minute.' };
 		},
 
-		unpublish: async ({ request, locals }) => {
+		unpublish: async ({ request, locals, params }) => {
 			const { supabase } = requireStaff(locals, ['admin', 'focal']);
-			const { error: rpcError } = await supabase.rpc('unpublish_program_block', { p_id: text(await request.formData(), 'id') });
-			return dbFail(rpcError) ?? { message: 'Taken off the public page. The draft is kept.' };
+			const id = text(await request.formData(), 'id');
+			const { error: rpcError } = await supabase.rpc('unpublish_program_block', { p_id: id });
+			if (rpcError) return dbFail(rpcError);
+
+			// A block taken off the page moves to the bottom, so the live blocks stay together at the top.
+			const order = (await siblings(supabase, programOf(params))).map((block) => block.id);
+			if (order.includes(id)) order.push(...order.splice(order.indexOf(id), 1));
+			return (await renumber(supabase, order)) ?? { message: 'Taken off the public page and moved to the bottom. The draft is kept.' };
 		},
 
 		delete: async ({ request, locals, params }) => {
