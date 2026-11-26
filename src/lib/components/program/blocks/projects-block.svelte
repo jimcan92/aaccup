@@ -51,42 +51,42 @@
 
 <section class="border-b border-rule {background[tone]}" aria-labelledby={content.title ? `${id}-heading` : undefined}>
 	<div class="mx-auto max-w-[1280px] px-5 py-16 sm:px-8">
-		<!-- Heading and intro on one row; the video and the figures start together below them. -->
-		<div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-end lg:gap-12">
-			<div>
+		<!--
+			Wide screens: the heading, intro and figures on the left, the video on the right, both starting at the top.
+			Without a video, the figures take the right side. Phones: heading, video, figures.
+		-->
+		<div class="grid gap-8 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-start lg:gap-x-12 {embed ? 'lg:grid-rows-[auto_1fr]' : ''}">
+			<div class="lg:col-start-1 lg:row-start-1">
 				<p class="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.08em] text-program"><HandHeart class="size-3.5" /> Extension</p>
 				{#if content.title}
 					<h2 id={`${id}-heading`} class="mt-3 text-balance font-display text-[clamp(1.7rem,3.4vw,2.8rem)] font-semibold leading-[1.02] tracking-[-0.04em] text-ink">{content.title}</h2>
 				{/if}
+				{#if content.intro}
+					<div class="mt-4 max-w-[60ch] space-y-4 text-[15px] leading-relaxed text-ink-soft sm:text-[16px]"><RichText text={content.intro} /></div>
+				{/if}
 			</div>
-			{#if content.intro}
-				<div class="max-w-[60ch] space-y-4 text-[15px] leading-relaxed text-ink-soft sm:text-[16px]"><RichText text={content.intro} /></div>
+
+			{#if embed}
+				<figure class="lg:col-start-2 lg:row-span-2 lg:row-start-1">
+					<div class="aspect-video w-full overflow-hidden bg-ink shadow-[0_30px_80px_-35px_rgba(0,0,0,0.5)]">
+						<iframe src={embed} title={content.videoCaption || content.title || 'Extension video'} class="h-full w-full" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe>
+					</div>
+					{#if content.videoCaption}<figcaption class="mt-3 text-[14px] text-ink-soft">{content.videoCaption}</figcaption>{/if}
+				</figure>
+			{/if}
+
+			{#if stats.length}
+				<!-- Two figures to a row. -->
+				<dl class="grid grid-cols-2 gap-px border border-rule bg-rule {embed ? 'lg:col-start-1 lg:row-start-2' : 'lg:col-start-2 lg:row-start-1'}">
+					{#each stats as stat, i (i)}
+						<div class="min-w-0 {card[tone]} p-4 {stats.length % 2 && i === stats.length - 1 ? 'col-span-2' : ''}" use:reveal={{ delay: stagger(i) }}>
+							<dd class="font-display text-[clamp(1.6rem,3vw,2.2rem)] font-semibold leading-none tracking-[-0.05em] text-program">{stat.value}</dd>
+							<dt class="mt-1.5 text-[13px] leading-snug text-ink-soft">{stat.label}</dt>
+						</div>
+					{/each}
+				</dl>
 			{/if}
 		</div>
-
-		{#if embed || stats.length}
-			<div class="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)] lg:items-start lg:gap-12">
-				{#if embed}
-					<figure class={stats.length ? '' : 'lg:col-span-2'}>
-						<div class="aspect-video w-full overflow-hidden bg-ink shadow-[0_30px_80px_-35px_rgba(0,0,0,0.5)]">
-							<iframe src={embed} title={content.videoCaption || content.title || 'Extension video'} class="h-full w-full" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe>
-						</div>
-						{#if content.videoCaption}<figcaption class="mt-3 text-[14px] text-ink-soft">{content.videoCaption}</figcaption>{/if}
-					</figure>
-				{/if}
-				{#if stats.length}
-					<!-- Figures share the row evenly, however many there are; beside the video they stack. -->
-					<dl class="flex flex-wrap gap-px border border-rule bg-rule {embed ? '' : 'lg:col-span-2'}">
-						{#each stats as stat, i (i)}
-							<div class="min-w-0 flex-1 basis-[9rem] {embed ? 'lg:basis-full' : ''} {card[tone]} p-4" use:reveal={{ delay: stagger(i) }}>
-								<dd class="font-display text-[clamp(1.8rem,3.4vw,2.5rem)] font-semibold leading-none tracking-[-0.05em] text-program">{stat.value}</dd>
-								<dt class="mt-1.5 text-[13px] leading-snug text-ink-soft">{stat.label}</dt>
-							</div>
-						{/each}
-					</dl>
-				{/if}
-			</div>
-		{/if}
 
 		{#if items.length}
 			<ul class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
