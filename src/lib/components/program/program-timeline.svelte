@@ -64,6 +64,7 @@
 				{@const left = index % 2 === 0}
 				{@const last = index === items.length - 1}
 				{@const story = stories[index]}
+				{@const overlay = Boolean(item.photo) && !open[index]}
 				<li class="relative pb-8 last:pb-0 md:pb-6 {left ? 'md:col-start-1' : 'md:col-start-2'}" style:grid-row={`${index + 1} / span 2`}>
 					<!-- The marker sits on the line: left edge on phones, the centre (between the columns) on wide screens. -->
 					<span
@@ -72,39 +73,61 @@
 					></span>
 
 					<article
-						class="relative ml-9 border p-5 shadow-[0_10px_30px_-22px_rgb(0_0_0/0.45)] transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_34px_-20px_rgb(0_0_0/0.5)] sm:p-6 md:ml-0 {last ? 'on-program border-program bg-program text-program-contrast' : `border-rule ${card[tone]}`}"
+						class="relative ml-9 border shadow-[0_10px_30px_-22px_rgb(0_0_0/0.45)] transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_34px_-20px_rgb(0_0_0/0.5)] md:ml-0 {overlay ? '' : 'p-5 sm:p-6'} {last ? 'on-program border-program bg-program text-program-contrast' : `border-rule ${card[tone]}`}"
 					>
 						<!-- A short tick joins the card to the centre line on wide screens. -->
 						<span class="absolute top-[34px] hidden h-0.5 w-8 bg-program/35 md:block {left ? '-right-8' : '-left-8'}" aria-hidden="true"></span>
 
-						{#if item.photo}
-							<!-- The photo sits flush with the card's top edge; it opens full size, so certificates can be read. -->
-							<button type="button" onclick={() => (viewing = index)} class="group/photo relative -mx-5 -mt-5 mb-5 block w-[calc(100%+2.5rem)] cursor-zoom-in overflow-hidden sm:-mx-6 sm:-mt-6 sm:w-[calc(100%+3rem)]" aria-label={`View photo: ${item.title}`}>
-								<Photo src={item.photo} alt="" width={900} class="aspect-[16/10] w-full" imgClass="transition-transform duration-500 group-hover/photo:scale-[1.03]" />
-								<span class="absolute bottom-2 right-2 grid size-8 place-items-center bg-ink/70 text-paper opacity-0 transition-opacity group-hover/photo:opacity-100 group-focus-visible/photo:opacity-100" aria-hidden="true"><Expand class="size-4" /></span>
-							</button>
-						{/if}
-						<p class="font-display text-[clamp(2.1rem,4vw,3.1rem)] font-semibold leading-none tracking-[-0.06em] {last ? '' : 'text-program'}">{item.year}</p>
-						<h3 class="mt-2 text-balance font-display text-[18px] font-semibold leading-snug tracking-[-0.02em] sm:text-[19px] {last ? '' : 'text-ink'}">{item.title}</h3>
-
-						{#if story.length}
-							<div class="mt-2.5 space-y-3 text-[14.5px] leading-relaxed {last ? 'opacity-90' : 'text-ink-soft'}">
-								{#if open[index]}
-									{#each story as paragraph, p (p)}<p>{paragraph}</p>{/each}
-								{:else}
-									<p class="line-clamp-3">{story[0]}</p>
-								{/if}
-							</div>
-							{#if longer(index)}
-								<button
-									type="button"
-									onclick={() => (open[index] = !open[index])}
-									class="mt-3 inline-flex cursor-pointer items-center gap-1 text-[13px] font-semibold {last ? '' : 'text-program'} hover:underline hover:underline-offset-4"
-									aria-expanded={Boolean(open[index])}
-								>
-									{open[index] ? 'Show less' : 'Read more'}
-									<ChevronDown class="size-4 transition-transform {open[index] ? 'rotate-180' : ''}" />
+						{#if overlay}
+							<!-- Photo card: the year, title and first lines sit on a gradient over the bottom of the photo. -->
+							<div class="relative aspect-square overflow-hidden sm:aspect-[4/3]">
+								<button type="button" onclick={() => (viewing = index)} class="group/photo absolute inset-0 block cursor-zoom-in" aria-label={`View photo: ${item.title}`}>
+									<Photo src={item.photo ?? ''} alt="" width={900} class="h-full w-full" imgClass="transition-transform duration-500 group-hover/photo:scale-[1.03]" />
+									<span class="absolute right-2 top-2 grid size-8 place-items-center bg-black/60 text-white opacity-0 transition-opacity group-hover/photo:opacity-100 group-focus-visible/photo:opacity-100" aria-hidden="true"><Expand class="size-4" /></span>
 								</button>
+								<div class="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent px-5 pb-4 pt-16 sm:pt-20 text-white sm:px-6">
+									<p class="font-display text-[clamp(1.7rem,3vw,2.3rem)] font-semibold leading-none tracking-[-0.05em]">{item.year}</p>
+									<h3 class="mt-1.5 text-balance font-display text-[16px] font-semibold leading-snug tracking-[-0.02em] sm:text-[17px]">{item.title}</h3>
+									{#if story.length}
+										<p class="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-white/80">{story[0]}</p>
+										{#if longer(index)}
+											<button type="button" onclick={() => (open[index] = true)} class="pointer-events-auto mt-2 inline-flex cursor-pointer items-center gap-1 text-[12.5px] font-semibold text-white hover:underline hover:underline-offset-4" aria-expanded="false">
+												Read more <ChevronDown class="size-4" />
+											</button>
+										{/if}
+									{/if}
+								</div>
+							</div>
+						{:else}
+							{#if item.photo}
+								<!-- Opened photo card: the photo above, the full story below. -->
+								<button type="button" onclick={() => (viewing = index)} class="group/photo relative -mx-5 -mt-5 mb-5 block w-[calc(100%+2.5rem)] cursor-zoom-in overflow-hidden sm:-mx-6 sm:-mt-6 sm:w-[calc(100%+3rem)]" aria-label={`View photo: ${item.title}`}>
+									<Photo src={item.photo} alt="" width={900} class="aspect-[16/10] w-full" imgClass="transition-transform duration-500 group-hover/photo:scale-[1.03]" />
+									<span class="absolute right-2 top-2 grid size-8 place-items-center bg-black/60 text-white opacity-0 transition-opacity group-hover/photo:opacity-100 group-focus-visible/photo:opacity-100" aria-hidden="true"><Expand class="size-4" /></span>
+								</button>
+							{/if}
+							<p class="font-display text-[clamp(2.1rem,4vw,3.1rem)] font-semibold leading-none tracking-[-0.06em] {last ? '' : 'text-program'}">{item.year}</p>
+							<h3 class="mt-2 text-balance font-display text-[18px] font-semibold leading-snug tracking-[-0.02em] sm:text-[19px] {last ? '' : 'text-ink'}">{item.title}</h3>
+
+							{#if story.length}
+								<div class="mt-2.5 space-y-3 text-[14.5px] leading-relaxed {last ? 'opacity-90' : 'text-ink-soft'}">
+									{#if open[index]}
+										{#each story as paragraph, p (p)}<p>{paragraph}</p>{/each}
+									{:else}
+										<p class="line-clamp-3">{story[0]}</p>
+									{/if}
+								</div>
+								{#if longer(index)}
+									<button
+										type="button"
+										onclick={() => (open[index] = !open[index])}
+										class="mt-3 inline-flex cursor-pointer items-center gap-1 text-[13px] font-semibold {last ? '' : 'text-program'} hover:underline hover:underline-offset-4"
+										aria-expanded={Boolean(open[index])}
+									>
+										{open[index] ? 'Show less' : 'Read more'}
+										<ChevronDown class="size-4 transition-transform {open[index] ? 'rotate-180' : ''}" />
+									</button>
+								{/if}
 							{/if}
 						{/if}
 					</article>
