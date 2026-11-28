@@ -1,4 +1,4 @@
-import { showcaseIcons, statementFonts, statementSizes, videoEmbed, type ShowcaseIcon, type StatementFont, type StatementSize } from '#lib/landing.js';
+import { showcaseIcons, statementFonts, statementSizes, videoEmbed, videoFile, type ShowcaseIcon, type StatementFont, type StatementSize } from '#lib/landing.js';
 import { previewUrl } from '#lib/drive-url.js';
 import { isHttpUrl } from './admin';
 
@@ -105,8 +105,8 @@ export const cleaners: Record<string, (value: Raw, title: string) => object | st
 
 	video(value, title) {
 		const url = str(value.url, 500);
-		if (url && !videoEmbed(url)) return 'Use a YouTube link or a Google Drive video link.';
-		return { title, url, caption: str(value.caption, 300) };
+		if (url && !videoEmbed(url) && !videoFile(url)) return 'Use a YouTube link, a Google Drive video link, or a link to an .mp4 file.';
+		return { title, url, caption: str(value.caption, 300), autoplay: value.autoplay === true };
 	},
 
 	cta(value, title) {

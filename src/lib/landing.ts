@@ -66,7 +66,8 @@ export type MediaContent = { title?: string; body?: string; src?: string; alt?: 
 export type PartnersContent = { title?: string; intro?: string; stats?: StatItem[]; items: PartnerItem[] };
 export type TestimonialsContent = { title?: string; items: TestimonialItem[] };
 export type FaqContent = { title?: string; items: FaqItem[] };
-export type VideoContent = { title?: string; url?: string; caption?: string };
+/** `autoplay` starts the video muted when it scrolls into view (a video file or YouTube; Drive's player cannot). */
+export type VideoContent = { title?: string; url?: string; caption?: string; autoplay?: boolean };
 export type CtaContent = { title?: string; body?: string; buttons: LinkButton[] };
 export type NewsContent = { title?: string; items: NewsItem[] };
 export type OrgContent = { title?: string; items: OrgItem[] };
@@ -146,7 +147,7 @@ export function hasContent(block: LandingBlock): boolean {
 		case 'media':
 			return Boolean(block.content.title || block.content.body || block.content.src);
 		case 'video':
-			return Boolean(videoEmbed(block.content.url));
+			return Boolean(videoEmbed(block.content.url) || videoFile(block.content.url));
 		case 'cta':
 			return Boolean(block.content.title || block.content.buttons?.length);
 		case 'showcase':
@@ -155,6 +156,17 @@ export function hasContent(block: LandingBlock): boolean {
 			return Boolean(videoEmbed(block.content.video) || block.content.items?.length);
 		default:
 			return Array.isArray(content.items) && content.items.length > 0;
+	}
+}
+
+/** A direct https link to an .mp4 or .webm file (such as one in the public-videos bucket), played with a plain video element; null otherwise. */
+export function videoFile(link: string | undefined): string | null {
+	if (!link) return null;
+	try {
+		const url = new URL(link);
+		return url.protocol === 'https:' && /\.(mp4|webm)$/i.test(url.pathname) ? url.href : null;
+	} catch {
+		return null;
 	}
 }
 
